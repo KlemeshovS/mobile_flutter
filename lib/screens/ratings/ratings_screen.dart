@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:wobbly/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wobbly/models/api_models.dart';
@@ -38,7 +39,7 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() {
       if (_tabController.indexIsChanging) return;
-      _loadData(); // загружаем данные при переключении вкладки
+      _loadData(context);
     });
   }
 
@@ -68,9 +69,9 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
         if (!_isModalOpen) {
           _showProfileModal();
         }
-        if (mounted) await _loadData();
+        if (mounted) await _loadData(context);
       } else {
-        if (mounted) await _loadData();
+        if (mounted) await _loadData(context);
       }
     } finally {
       _isRefreshing = false;
@@ -123,7 +124,7 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
     if (mounted) setState(() => _participate = participate);
   }
 
-  Future<void> _loadData() async {
+  Future<void> _loadData(BuildContext ctx) async {
     if (!mounted) return;
     setState(() {
       _isLoading = true;
@@ -140,7 +141,15 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
       }
     } catch (e) {
       print('❌ Ошибка загрузки: $e');
-      if (mounted) setState(() => _error = e.toString());
+      String userMessage;
+      if (e is SocketException) {
+        // Ошибка сети – показываем понятное сообщение
+        userMessage = AppLocalizations.of(ctx).translate('no_internet');
+      } else {
+        // Другие ошибки – показываем техническое сообщение (или тоже можно общее)
+        userMessage = e.toString();
+      }
+      if (mounted) setState(() => _error = userMessage);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -487,7 +496,7 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
             Text(_error!, style: const TextStyle(color: Colors.white70), textAlign: TextAlign.center),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: _loadData,
+              onPressed: () => _loadData(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFC7FF00),
                 foregroundColor: Colors.black,
