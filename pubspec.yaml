@@ -1,0 +1,73 @@
+name: wobbly
+description: A flutter version of Wobbly alcohol tracker
+publish_to: 'none'
+version: 1.0.0+5
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  # Для ссылок
+  url_launcher: ^6.1.14
+  # Для получения информации о версии приложения
+  package_info_plus: ^9.0.0
+  provider: ^6.0.5
+  shared_preferences: ^2.5.4
+  share_plus: ^12.0.1  # Для шаринга файлов
+  path_provider: ^2.1.5  # Для работы с файловой системой
+  file_picker: ^8.1.4
+  google_fonts: ^6.2.1
+  http: ^1.1.0
+  vibration: ^2.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.7
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/icon.png"          # исходная квадратная иконка (1024x1024)
+  adaptive_icon_background: "#FFFFFF"  # фон (цвет или изображение)
+  adaptive_icon_foreground: "assets/icon/icon_foreground.png"  # передний план (обычно с прозрачностью)
+  remove_alpha_ios: true
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/images/icon.png
+    - assets/achievements/
+    - assets/ratings/
+    - assets/tutorial/
+
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Inter-ExtraBold.ttf
+          weight: 800
+
+flutter_icons:
+  android: true
+  ios: false
+  image_path: "assets/icons/icon.png"
+  adaptive_icon_background: "#000000"
+  adaptive_icon_foreground: "assets/icons/icon_foreground.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true
+  background_color_ios: "#000000"
