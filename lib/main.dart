@@ -27,6 +27,9 @@ import 'package:wobbly/utils/constants.dart';
 import 'package:wobbly/screens/ratings/ratings_screen.dart';
 import 'package:wobbly/services/score_sync_manager.dart';
 import 'package:wobbly/models/drink_level.dart';
+import 'package:wobbly/services/session_manager.dart';
+import 'package:wobbly/services/api/user_api_service.dart';
+import 'package:wobbly/services/auth_service.dart';
 
 void main() {
   final start = DateTime.now().millisecondsSinceEpoch;
@@ -103,6 +106,26 @@ class _MyAppState extends State<MyApp> {
       _initialScrollOffset = offset;
       _isFirstLaunch = isFirstLaunch;
     });
+  }
+
+  Future<void> _restoreSession() async {
+    await SessionManager().init();
+    final session = SessionManager();
+    if (session.accessToken != null && session.refreshToken != null) {
+      // Проверяем, валиден ли ещё accessToken
+      try {
+        await UserAPIService().getSession(session.accessToken!);
+        // сессия жива
+      } catch (e) {
+        if (e is UserAPIError && e == UserAPIError.invalidAuthToken) {
+          // Пробуем обновить
+          final success = await AuthService().refreshSession();
+          if (!success) {
+            // Если не удалось, остаёмся гостем
+          }
+        }
+      }
+    }
   }
 
   void _onTutorialComplete() async {
