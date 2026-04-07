@@ -1,6 +1,7 @@
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:wobbly/services/api/user_api_service.dart';
 import 'package:wobbly/services/session_manager.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
   //WEB CLIENT ID
@@ -26,6 +27,25 @@ class AuthService {
         refreshToken: authResponse.refreshToken,
         userId: authResponse.userId,
       );
+
+      // Загружаем профиль пользователя
+      final me = await _api.getMyProfile(authResponse.accessToken);
+      final prefs = await SharedPreferences.getInstance();
+      if (me.username != null && me.username!.isNotEmpty) {
+        await prefs.setString('userName', me.username!);
+      } else {
+        await prefs.remove('userName');
+      }
+      await prefs.setBool('userParticipateInRating', me.participateInRating);
+
+      // Если пользователь участвует в рейтингах, нужно отправить его текущий счёт
+      if (me.participateInRating) {
+        // Для отправки счёта нужны daysData – но в AuthService их нет.
+        // Лучше сделать это в main.dart после обновления данных, или вызвать отдельно.
+        // Пока просто залогируем.
+        print('User participates in ratings, score will be sent later');
+      }
+
       return true;
     } catch (e) {
       print('Google Sign-In error: $e');

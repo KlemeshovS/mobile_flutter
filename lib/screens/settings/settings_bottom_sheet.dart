@@ -10,6 +10,8 @@ import 'package:wobbly/screens/profile/user_profile_screen.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:wobbly/services/score_sync_manager.dart';
 import 'package:wobbly/screens/ratings/ratings_screen.dart';
+import 'package:wobbly/services/session_manager.dart';
+import 'package:wobbly/services/auth_service.dart';
 
 
 class SettingsBottomSheet extends StatefulWidget {
@@ -42,12 +44,22 @@ class _SettingsBottomSheetState extends State<SettingsBottomSheet> {
   int _totalAchievementsCount = 20;
   String _appVersion = '';
 
+  SessionType _sessionType = SessionType.guest;
+
+  Future<void> _loadSessionType() async {
+    await SessionManager().init();
+    setState(() {
+      _sessionType = SessionManager().sessionType;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     _updateBackupStatus();
     _loadAchievementsCount();
     _loadAppVersion();
+    _loadSessionType();
   }
 
   Future<void> _loadAppVersion() async {
@@ -130,11 +142,15 @@ class _SettingsBottomSheetState extends State<SettingsBottomSheet> {
     final localizations = AppLocalizations.of(context);
     final screenHeight = MediaQuery.of(context).size.height;
     final padding = MediaQuery.of(context).padding;
+    final bool isAuthenticated = _sessionType == SessionType.authenticated;
+    final double menuHeight = _showAboutApp
+        ? screenHeight - padding.top
+        : isAuthenticated
+        ? screenHeight * 0.70   // достаточно для всех пунктов + выход
+        : screenHeight * 0.60;  // меньше для гостя
 
     return Container(
-      height: _showAboutApp
-          ? screenHeight - padding.top
-          : screenHeight * 0.60, // Увеличена высота меню
+      height: menuHeight,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -179,6 +195,7 @@ class _SettingsBottomSheetState extends State<SettingsBottomSheet> {
                     appVersion: _appVersion,
                     ratingsKey: widget.ratingsKey,
                     daysData: widget.daysData,
+                    sessionType: _sessionType,
                   ),
                 ),
 
@@ -303,6 +320,7 @@ class MainMenuContent extends StatelessWidget {
   final String appVersion;
   final GlobalKey<RatingsScreenState> ratingsKey;
   final Map<String, DayRecord> daysData;
+  final SessionType sessionType;
 
   const MainMenuContent({
     super.key,
@@ -316,6 +334,7 @@ class MainMenuContent extends StatelessWidget {
     required this.appVersion,
     required this.ratingsKey,
     required this.daysData,
+    required this.sessionType,
   });
 
   @override
@@ -410,16 +429,6 @@ class MainMenuContent extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          // Сброс ачивок
-//          _buildMenuItem(
-//            icon: Icons.delete,
-//            title: localizations.menuResetTitle,
-//            subtitle: localizations.menuResetSubtitle,
-//            gradient: const [Color(0xFFFF6B6B), Color(0xFFFF4757)],
-//            onTap: onResetAchievements,
-//          ),
-//          const SizedBox(height: 12),
-
           // О приложении
           _buildMenuItem(
             icon: Icons.info,
@@ -429,6 +438,22 @@ class MainMenuContent extends StatelessWidget {
             onTap: onShowAbout,
             showChevron: true,
           ),
+          const SizedBox(height: 12),
+          // Выйти
+          if (SessionManager().sessionType == SessionType.authenticated)
+            _buildMenuItem(
+              icon: Icons.logout,
+              title: localizations.translate('logout_button'),
+              subtitle: '', // пустой подзаголовок
+              gradient: const [Color(0xFFF44336), Color(0xFFD32F2F)],
+              onTap: () async {
+                // Закрываем bottom sheet
+                Navigator.pop(context);
+                // Выполняем выход
+                await AuthService().signOut();
+                // Обновляем состояние приложения (например, перезагружаем рейтинги)
+              },
+            ),
         ],
       ),
     );
@@ -703,7 +728,7 @@ class MainMenuContent extends StatelessWidget {
                         title,
                         style: TextStyle(
                           fontFamily: 'Inter',
-                        color: Colors.white,
+                          color: Colors.white,
                           fontWeight: FontWeight.w600,
                           fontSize: 15,
                           height: 1.2,
@@ -711,18 +736,21 @@ class MainMenuContent extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                        color: Colors.white70,
-                          fontSize: 13,
-                          height: 1.2,
+                      // Показываем подзаголовок, только если он не пустой
+                      if (subtitle.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            color: Colors.white70,
+                            fontSize: 13,
+                            height: 1.2,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      ],
                     ],
                   ),
                 ),
@@ -735,7 +763,7 @@ class MainMenuContent extends StatelessWidget {
       ),
     );
   }
-}
+  }
 
 class AboutAppView extends StatefulWidget {
   final Map<String, DayRecord> daysData;

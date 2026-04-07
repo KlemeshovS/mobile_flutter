@@ -23,14 +23,16 @@ class UserProfileScreen extends StatefulWidget {
 }
 
 class _UserProfileScreenState extends State<UserProfileScreen> {
-  final TextEditingController _nameController = TextEditingController();
   bool _participate = true;
-  bool _isSaving = false;
+  bool _isLoading = true;
   String? _errorMessage;
 
   SessionType _sessionType = SessionType.guest;
-  bool _isLoading = true;
   String? _currentUsername;
+
+  // Для редактирования имени (если нет имени)
+  final TextEditingController _tempNameController = TextEditingController();
+  bool _isEditingName = false;
 
   @override
   void initState() {
@@ -47,20 +49,36 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     });
 
     if (_sessionType == SessionType.authenticated) {
-      await _loadUserData();
+      await _loadUserDataFromServer();
     }
     setState(() => _isLoading = false);
   }
 
-  Future<void> _loadUserData() async {
-    final prefs = await SharedPreferences.getInstance();
-    final name = prefs.getString('userName');
-    final participate = prefs.getBool('userParticipateInRating') ?? true;
-    setState(() {
-      _currentUsername = name;
-      _participate = participate;
-      _nameController.text = name ?? '';
-    });
+  Future<void> _loadUserDataFromServer() async {
+    final token = SessionManager().accessToken;
+    if (token == null) return;
+
+    try {
+      final me = await UserAPIService().getMyProfile(token);
+      final prefs = await SharedPreferences.getInstance();
+      if (me.username != null && me.username!.isNotEmpty) {
+        await prefs.setString('userName', me.username!);
+        setState(() {
+          _currentUsername = me.username;
+        });
+      } else {
+        await prefs.remove('userName');
+        setState(() {
+          _currentUsername = null;
+        });
+      }
+      await prefs.setBool('userParticipateInRating', me.participateInRating);
+      setState(() {
+        _participate = me.participateInRating;
+      });
+    } catch (e) {
+      print('Ошибка загрузки профиля с сервера: $e');
+    }
   }
 
   Future<void> _signInWithGoogle() async {
@@ -68,8 +86,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     final success = await AuthService().signInWithGoogle();
     if (success && mounted) {
       await _loadSessionAndUserData();
-      // Уведомляем родителя, чтобы обновить рейтинги и т.д.
-      widget.onRegisterSuccess?.call(_nameController.text.trim(), SessionManager().userId ?? 0, _participate);
+      widget.onRegisterSuccess?.call(_currentUsername ?? '', SessionManager().userId ?? 0, _participate);
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -90,93 +107,106 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     setState(() => _isLoading = false);
   }
 
-  Future<void> _save() async {
+  // Обновление имени через диалог
+  Future<void> _editUsername() async {
     final loc = AppLocalizations.of(context);
-    final trimmed = _nameController.text.trim();
-
-    if (!_participate && trimmed.isEmpty) {
-      // Отключаем участие, имя не нужно
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('userParticipateInRating', false);
-      if (mounted) Navigator.pop(context);
-      return;
+    final TextEditingController controller = TextEditingController(text: _currentUsername ?? '');
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF2D2B55),
+        title: Text(
+          loc.translate('edit_username_title') ?? 'Edit username',
+          style: const TextStyle(color: Colors.white),
+        ),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          style: const TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            hintText: loc.translate('user_name_label'),
+            hintStyle: const TextStyle(color: Colors.white54),
+            enabledBorder: const UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.white),
+            ),
+            focusedBorder: const UnderlineInputBorder(
+              borderSide: BorderSide(color: Color(0xFFC7FF00), width: 2),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              loc.translate('cancel') ?? 'Cancel',
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF8B5CF6),
+              foregroundColor: Colors.white,
+            ),
+            child: Text(loc.translate('save_button')),
+          ),
+        ],
+      ),
+    );
+    if (result == true) {
+      final newName = controller.text.trim();
+      if (newName.isEmpty) {
+        _showError(loc.translate('error_username_empty'));
+        return;
+      }
+      if (newName.contains(' ')) {
+        _showError(loc.translate('error_username_contains_space'));
+        return;
+      }
+      if (newName.length < 3) {
+        _showError(loc.translate('error_username_too_short'));
+        return;
+      }
+      if (newName.length > 20) {
+        _showError(loc.translate('error_username_too_long'));
+        return;
+      }
+      await _saveUsername(newName);
     }
+  }
 
-    if (_participate) {
-      if (trimmed.isEmpty) {
-        setState(() => _errorMessage = loc.translate('error_username_empty'));
-        return;
-      }
-      if (trimmed.contains(' ')) {
-        setState(() => _errorMessage = loc.translate('error_username_contains_space'));
-        return;
-      }
-      if (trimmed.length < 3) {
-        setState(() => _errorMessage = loc.translate('error_username_too_short'));
-        return;
-      }
-      if (trimmed.length > 20) {
-        setState(() => _errorMessage = loc.translate('error_username_too_long'));
-        return;
-      }
-    }
-
-    setState(() {
-      _isSaving = true;
-      _errorMessage = null;
-    });
-
+  Future<void> _saveUsername(String newName) async {
     final token = SessionManager().accessToken;
-    if (token == null) {
-      setState(() {
-        _errorMessage = loc.translate('error_missing_token');
-        _isSaving = false;
-      });
-      return;
-    }
-
+    if (token == null) return;
+    setState(() => _isLoading = true);
     try {
-      if (_participate) {
-        // Включаем участие – отправляем имя
-        await UserAPIService().updateMyProfile(
-          token: token,
-          username: trimmed,
-          participateInRating: true,
-        );
-      } else {
-        // Выключаем участие – отправляем только флаг
-        await UserAPIService().updateMyRating(
-          token: token,
-          participateInRating: false,
-        );
-      }
-
+      await UserAPIService().updateMyProfile(
+        token: token,
+        username: newName,
+        participateInRating: _participate,
+      );
       final prefs = await SharedPreferences.getInstance();
-      if (_participate && trimmed.isNotEmpty) {
-        await prefs.setString('userName', trimmed);
-        setState(() => _currentUsername = trimmed);
-      }
-      await prefs.setBool('userParticipateInRating', _participate);
-
-      widget.onRegisterSuccess?.call(trimmed, SessionManager().userId ?? 0, _participate);
-
-      if (mounted) Navigator.pop(context);
+      await prefs.setString('userName', newName);
+      setState(() {
+        _currentUsername = newName;
+        _isEditingName = false;
+      });
+      widget.onRegisterSuccess?.call(newName, SessionManager().userId ?? 0, _participate);
     } catch (e) {
-      print('❌ Ошибка сохранения профиля: $e');
       String msg;
       if (e is UserAPIError) {
         switch (e) {
           case UserAPIError.usernameAlreadyExists:
-            msg = loc.translate('error_username_already_exists');
+            msg = AppLocalizations.of(context).translate('error_username_already_exists');
             break;
           case UserAPIError.usernameTooShort:
-            msg = loc.translate('error_username_too_short');
+            msg = AppLocalizations.of(context).translate('error_username_too_short');
             break;
           case UserAPIError.usernameTooLong:
-            msg = loc.translate('error_username_too_long');
+            msg = AppLocalizations.of(context).translate('error_username_too_long');
             break;
           case UserAPIError.usernameInvalidCharacters:
-            msg = loc.translate('error_username_invalid_characters');
+            msg = AppLocalizations.of(context).translate('error_username_invalid_characters');
             break;
           default:
             msg = e.toString();
@@ -184,16 +214,63 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       } else {
         msg = e.toString();
       }
-      setState(() {
-        _errorMessage = msg;
-        _isSaving = false;
-      });
+      _showError(msg);
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _saveNewNameFromField() async {
+    final newName = _tempNameController.text.trim();
+    if (newName.isEmpty) {
+      _showError(AppLocalizations.of(context).translate('error_username_empty'));
+      return;
+    }
+    if (newName.contains(' ')) {
+      _showError(AppLocalizations.of(context).translate('error_username_contains_space'));
+      return;
+    }
+    if (newName.length < 3) {
+      _showError(AppLocalizations.of(context).translate('error_username_too_short'));
+      return;
+    }
+    if (newName.length > 20) {
+      _showError(AppLocalizations.of(context).translate('error_username_too_long'));
+      return;
+    }
+    await _saveUsername(newName);
+  }
+
+  void _showError(String message) {
+    setState(() => _errorMessage = message);
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) setState(() => _errorMessage = null);
+    });
+  }
+
+  // Сохранение переключателя участия
+  Future<void> _toggleParticipate(bool value) async {
+    setState(() => _participate = value);
+    final token = SessionManager().accessToken;
+    if (token == null) return;
+    try {
+      await UserAPIService().updateMyRating(
+        token: token,
+        participateInRating: value,
+      );
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('userParticipateInRating', value);
+      widget.onRegisterSuccess?.call(_currentUsername ?? '', SessionManager().userId ?? 0, value);
+    } catch (e) {
+      print('Ошибка сохранения участия: $e');
+      // Откатываем обратно
+      setState(() => _participate = !value);
     }
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _tempNameController.dispose();
     widget.onDisappear?.call();
     super.dispose();
   }
@@ -218,7 +295,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       );
     }
 
-    // Гостевой режим – показываем кнопку входа
+    // Гостевой режим
     if (_sessionType == SessionType.guest) {
       return Scaffold(
         backgroundColor: Colors.transparent,
@@ -292,7 +369,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       );
     }
 
-    // Авторизованный режим – форма профиля
+    // Авторизованный режим
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Container(
@@ -326,57 +403,88 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           backgroundColor: const Color(0xFF8B5CF6).withOpacity(0.3),
                           child: const Icon(Icons.person, size: 50, color: Colors.white),
                         ),
-                        const SizedBox(height: 24),
-                        Text(
-                          loc.translate('tutorial_title_profile'),
-                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                        const SizedBox(height: 16),
+                        // Заголовок: username или "Профиль"
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                _currentUsername?.isNotEmpty == true
+                                    ? _currentUsername!
+                                    : loc.translate('profile_default_title'),
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: _currentUsername?.isNotEmpty == true
+                                      ? const Color(0xFFC7FF00)
+                                      : Colors.white,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (_currentUsername?.isNotEmpty == true) ...[
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: _editUsername,
+                                child: const Icon(Icons.edit, color: Colors.white70, size: 20),
+                              ),
+                            ],
+                          ],
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          loc.translate('tutorial_desc_profile'),
+                          loc.translate('profile_authenticated_subtitle'),
                           style: const TextStyle(fontSize: 14, color: Colors.white70),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 32),
 
-                        // Поле имени
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              loc.translate('user_name_label'),
-                              style: const TextStyle(color: Colors.white70, fontSize: 12),
-                            ),
-                            const SizedBox(height: 8),
-                            TextField(
-                              controller: _nameController,
-                              style: const TextStyle(color: Colors.black),
-                              decoration: InputDecoration(
-                                filled: true,
-                                fillColor: Colors.white,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                  borderSide: BorderSide.none,
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                                enabled: !_isSaving,
+                        // Если нет имени – показываем поле для ввода
+                        if (_currentUsername == null || _currentUsername!.isEmpty) ...[
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                loc.translate('user_name_label'),
+                                style: const TextStyle(color: Colors.white70, fontSize: 12),
                               ),
-                              onChanged: (v) {
-                                if (v.length > 20) _nameController.text = v.substring(0, 20);
-                              },
-                            ),
-                          ],
-                        ),
-
-                        // Ошибка
-                        Container(
-                          height: 50,
-                          alignment: Alignment.centerLeft,
-                          padding: const EdgeInsets.only(top: 8),
-                          child: _errorMessage != null
-                              ? Text(_errorMessage!, style: const TextStyle(color: Colors.red, fontSize: 14))
-                              : null,
-                        ),
+                              const SizedBox(height: 8),
+                              TextField(
+                                controller: _tempNameController,
+                                style: const TextStyle(color: Colors.black),
+                                decoration: InputDecoration(
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 48,
+                                child: ElevatedButton(
+                                  onPressed: _saveNewNameFromField,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF8B5CF6),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  ),
+                                  child: Text(loc.translate('save_button')),
+                                ),
+                              ),
+                              if (_errorMessage != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8),
+                                  child: Text(_errorMessage!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+                                ),
+                              const SizedBox(height: 24),
+                            ],
+                          ),
+                        ],
 
                         // Переключатель участия
                         SwitchListTile(
@@ -385,49 +493,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             style: const TextStyle(color: Colors.white, fontSize: 14),
                           ),
                           value: _participate,
-                          onChanged: _isSaving ? null : (val) => setState(() => _participate = val),
+                          onChanged: _toggleParticipate,
                           activeColor: const Color(0xFF8B5CF6),
                           contentPadding: EdgeInsets.zero,
                         ),
-
                         const SizedBox(height: 24),
-
-                        // Кнопка сохранить
-                        SizedBox(
-                          width: double.infinity,
-                          height: 56,
-                          child: ElevatedButton(
-                            onPressed: _isSaving ? null : _save,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF8B5CF6),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                            child: _isSaving
-                                ? const CircularProgressIndicator(color: Colors.white)
-                                : Text(
-                              loc.translate('save_button'),
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // Кнопка выхода
-                        SizedBox(
-                          width: double.infinity,
-                          height: 56,
-                          child: OutlinedButton(
-                            onPressed: _logout,
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.red,
-                              side: const BorderSide(color: Colors.red),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                            child: const Text('Выйти', style: TextStyle(fontSize: 16)),
-                          ),
-                        ),
                       ],
                     ),
                   ),
