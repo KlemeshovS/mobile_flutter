@@ -24,11 +24,15 @@ enum UserAPIError {
   scoreTooLow,
   usernameInvalidCharacters,
   validationError,
+  invalidRefreshToken,
+  googleAuthInvalid,
+  appleAuthInvalid,
+  yandexAuthInvalid,
 }
 
 class UserAPIService {
   // Флаг переключения окружения: true = staging, false = production
-  static const bool _isStaging = false;
+  static const bool _isStaging = true;
 
   static String get _baseUrl => _isStaging
       ? 'https://staging-api.wobbly.site'
@@ -189,6 +193,64 @@ class UserAPIService {
     }
   }
 
+  // Аутентификация через Google
+  Future<AnonymousAuthResponse> authWithGoogle(String idToken) async {
+    final url = Uri.parse('$_baseUrl/auth/google');
+    final body = {'idToken': idToken};
+    final response = await http.post(
+      url,
+      headers: _buildHeaders(null),
+      body: json.encode(body),
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return AnonymousAuthResponse.fromJson(json.decode(response.body));
+    } else {
+      throw await _handleError(response);
+    }
+  }
+
+  // Получение текущей сессии (проверка валидности токена)
+  Future<MeResponse> getSession(String token) async {
+    final url = Uri.parse('$_baseUrl/auth/session');
+    final headers = _buildHeaders({'Authorization': 'Bearer $token'});
+    final response = await http.get(url, headers: headers);
+    if (response.statusCode == 200) {
+      return MeResponse.fromJson(json.decode(response.body));
+    } else if (response.statusCode == 401) {
+      throw UserAPIError.invalidAuthToken;
+    } else {
+      throw await _handleError(response);
+    }
+  }
+
+  // Обновление токенов
+  Future<AnonymousAuthResponse> refreshTokens(String refreshToken) async {
+    final url = Uri.parse('$_baseUrl/auth/refresh');
+    final body = {'refreshToken': refreshToken};
+    final response = await http.post(
+      url,
+      headers: _buildHeaders(null),
+      body: json.encode(body),
+    );
+    if (response.statusCode == 200) {
+      return AnonymousAuthResponse.fromJson(json.decode(response.body));
+    } else if (response.statusCode == 401) {
+      throw UserAPIError.invalidRefreshToken;
+    } else {
+      throw await _handleError(response);
+    }
+  }
+
+  // Выход
+  Future<void> logout(String token) async {
+    final url = Uri.parse('$_baseUrl/auth/logout');
+    final headers = _buildHeaders({'Authorization': 'Bearer $token'});
+    final response = await http.post(url, headers: headers);
+    if (response.statusCode != 200) {
+      throw await _handleError(response);
+    }
+  }
+
   Future<UserAPIError> _handleError(http.Response response) async {
     print('📥 _handleError: статус ${response.statusCode}, тело: ${response.body}');
     // Пытаемся распарсить тело ответа
@@ -218,6 +280,14 @@ class UserAPIService {
             return UserAPIError.usernameInvalidCharacters;
           case 'VALIDATION_ERROR':
             return UserAPIError.validationError;
+          case 'INVALID_REFRESH_TOKEN':
+            return UserAPIError.invalidRefreshToken;
+          case 'GOOGLE_AUTH_INVALID':
+            return UserAPIError.googleAuthInvalid;
+          case 'APPLE_AUTH_INVALID':
+            return UserAPIError.appleAuthInvalid;
+          case 'YANDEX_AUTH_INVALID':
+            return UserAPIError.yandexAuthInvalid;
           default:
             return UserAPIError.serverError;
         }

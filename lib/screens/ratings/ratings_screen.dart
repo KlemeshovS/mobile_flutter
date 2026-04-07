@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
-import 'package:wobbly/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wobbly/models/api_models.dart';
 import 'package:wobbly/services/api/user_api_service.dart';
@@ -8,8 +7,7 @@ import 'package:wobbly/services/session_manager.dart';
 import 'package:wobbly/utils/localization.dart';
 import 'package:wobbly/models/day_record.dart';
 import 'package:wobbly/services/score_sync_manager.dart';
-import 'package:wobbly/models/api_models.dart';
-
+import 'package:wobbly/screens/profile/user_profile_screen.dart';
 
 class RatingsScreen extends StatefulWidget {
   final Map<String, DayRecord> daysData;
@@ -29,9 +27,9 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
   bool _isEnsuringToken = false;
   bool _isModalOpen = false;
   bool _isRefreshing = false;
-  bool _participate = true; // текущее состояние участия
-  String? _myUsername;   // имя текущего пользователя для подсветки
-
+  bool _participate = true;
+  String? _myUsername;
+  SessionType _sessionType = SessionType.guest;
 
   @override
   void initState() {
@@ -41,6 +39,14 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
       if (_tabController.indexIsChanging) return;
       _loadData(context);
     });
+    _loadSessionType();
+  }
+
+  Future<void> _loadSessionType() async {
+    await SessionManager().init();
+    setState(() {
+      _sessionType = SessionManager().sessionType;
+    });
   }
 
   @override
@@ -49,12 +55,11 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
     super.dispose();
   }
 
-  // Вызывается из main.dart при переходе на вкладку
   Future<void> refreshData() async {
-    print('🔄 refreshData вызван, _isRefreshing=$_isRefreshing');
     if (_isRefreshing) return;
     _isRefreshing = true;
     try {
+      await _loadSessionType();
       await _ensureToken();
       final prefs = await SharedPreferences.getInstance();
       final participate = prefs.getBool('userParticipateInRating') ?? true;
@@ -62,20 +67,9 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
         _participate = participate;
         _myUsername = prefs.getString('userName');
       });
-      final userName = prefs.getString('userName');
-      print('🔄 refreshData: participate=$participate, userName=$userName');
-
-      if (_participate && (userName == null || userName.isEmpty)) {
-        if (!_isModalOpen) {
-          _showProfileModal();
-        }
-        if (mounted) await _loadData(context);
-      } else {
-        if (mounted) await _loadData(context);
-      }
+      if (mounted) await _loadData(context);
     } finally {
       _isRefreshing = false;
-      // Принудительно перерисовываем после загрузки
       if (mounted) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) setState(() {});
@@ -107,21 +101,18 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => RatingProfileSheet(
-        daysData: widget.daysData,
-        onSaveSuccess: () {
+      builder: (ctx) => UserProfileScreen(
+        onClose: () {
+          _isModalOpen = false;
+          Navigator.pop(ctx);
+        },
+        onRegisterSuccess: (username, userId, participate) {
           _isModalOpen = false;
           refreshData();
         },
-        onClose: () => _isModalOpen = false,
+        onDisappear: () => _isModalOpen = false,
       ),
     );
-  }
-
-  Future<void> _loadParticipationStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    final participate = prefs.getBool('userParticipateInRating') ?? true;
-    if (mounted) setState(() => _participate = participate);
   }
 
   Future<void> _loadData(BuildContext ctx) async {
@@ -134,19 +125,14 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
     try {
       if (_tabController.index == 0) {
         _topItems = await UserAPIService().fetchTop100();
-        print('✅ Топ-100 загружен, элементов: ${_topItems.length}');
       } else {
         _bottomItems = await UserAPIService().fetchBottom100();
-        print('✅ Дно-100 загружено, элементов: ${_bottomItems.length}');
       }
     } catch (e) {
-      print('❌ Ошибка загрузки: $e');
       String userMessage;
       if (e is SocketException) {
-        // Ошибка сети – показываем понятное сообщение
         userMessage = AppLocalizations.of(ctx).translate('no_internet');
       } else {
-        // Другие ошибки – показываем техническое сообщение (или тоже можно общее)
         userMessage = e.toString();
       }
       if (mounted) setState(() => _error = userMessage);
@@ -170,12 +156,9 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context);
     final items = _tabController.index == 0 ? _topItems : _bottomItems;
-
-    print('🔍 build: _isLoading=$_isLoading, _error=$_error, items.length=${items.length}, _participate=$_participate, tab=${_tabController.index}');
 
     return Scaffold(
       body: Container(
@@ -190,7 +173,9 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
           child: Column(
             children: [
               _buildCustomTabBar(loc),
-              if (!_participate) _buildNotParticipatingWidget(loc),
+              // Баннер-приглашение, если гость или не участвует
+              if (_sessionType == SessionType.guest || !_participate)
+                _buildParticipationBanner(loc),
               if (_isLoading)
                 const Expanded(child: Center(child: CircularProgressIndicator(color: Colors.white)))
               else if (_error != null)
@@ -230,10 +215,8 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
     );
   }
 
-
-
-  // MARK: - Блок для неучаствующих
-  Widget _buildNotParticipatingWidget(AppLocalizations loc) {
+  // Баннер с предложением участвовать (показывается над списком)
+  Widget _buildParticipationBanner(AppLocalizations loc) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -245,14 +228,18 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
         children: [
           Expanded(
             child: Text(
-              loc.ratingNotParticipating,
+              _sessionType == SessionType.guest
+                  ? loc.translate('profile_guest_message')
+                  : loc.translate('rating_not_participating'),
               style: const TextStyle(color: Colors.white70),
             ),
           ),
           TextButton(
             onPressed: _showProfileModal,
             child: Text(
-              loc.ratingParticipateButton,
+              _sessionType == SessionType.guest
+                  ? 'Войти через Google'
+                  : loc.translate('rating_participate_button'),
               style: const TextStyle(color: Color(0xFF8B5CF6), fontWeight: FontWeight.bold),
             ),
           ),
@@ -261,17 +248,15 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
     );
   }
 
-  // MARK: - Кастомные табы
   Widget _buildCustomTabBar(AppLocalizations loc) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final tabWidth = (screenWidth - 40) / 2; // ширина каждой вкладки
+    final tabWidth = (screenWidth - 40) / 2;
     final bool isTop = _tabController.index == 0;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Stack(
         children: [
-          // Фоновая подложка
           Container(
             height: 40,
             decoration: BoxDecoration(
@@ -283,14 +268,13 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
               ],
             ),
           ),
-          // Анимированный индикатор с обводкой
           AnimatedPositioned(
             duration: const Duration(milliseconds: 400),
             curve: Curves.easeInOut,
             left: _tabController.index == 0 ? 0 : tabWidth,
             child: Container(
               width: tabWidth,
-              height: 40, // теперь такой же высоты, как фон
+              height: 40,
               decoration: BoxDecoration(
                 color: const Color(0xFF2D2B55).withOpacity(0.9),
                 borderRadius: BorderRadius.circular(20),
@@ -307,7 +291,6 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
               ),
             ),
           ),
-          // Текст вкладок
           Row(
             children: [
               Expanded(
@@ -351,7 +334,6 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
     );
   }
 
-  // MARK: - Горизонтальный ряд топ-3
   Widget _buildTopThreeRow(List<LeaderboardItem> topThree) {
     return Container(
       height: 150,
@@ -417,11 +399,9 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
     }
   }
 
-  // MARK: - Обычная строка для мест 4+
   Widget _buildRow(LeaderboardItem item, int position) {
     final isCurrentUser = (item.username == _myUsername);
 
-    // Определяем цвета в зависимости от знака счёта (только для текущего пользователя)
     final Color highlightColor;
     final Color highlightBgColor;
     if (isCurrentUser) {
@@ -433,7 +413,7 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
         highlightBgColor = Colors.red.withOpacity(0.01);
       }
     } else {
-      highlightColor = Colors.white70;      // для номера места (не текущий)
+      highlightColor = Colors.white70;
       highlightBgColor = Colors.white.withOpacity(0.1);
     }
 
@@ -443,9 +423,7 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
       decoration: BoxDecoration(
         color: isCurrentUser ? highlightBgColor : Colors.white.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        border: isCurrentUser
-            ? Border.all(color: highlightColor, width: 1.5)
-            : null,
+        border: isCurrentUser ? Border.all(color: highlightColor, width: 1.5) : null,
       ),
       child: Row(
         children: [
@@ -483,8 +461,6 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
     );
   }
 
-
-  // MARK: - Экран ошибки
   Widget _buildError(AppLocalizations loc) {
     return Expanded(
       child: Center(
@@ -576,292 +552,8 @@ class _GlowingText extends StatelessWidget {
         color: color,
         fontWeight: FontWeight.bold,
         shadows: [
-          Shadow(
-            color: color.withOpacity(0.6),
-            blurRadius: 10,
-          ),
-          Shadow(
-            color: color.withOpacity(0.4),
-            blurRadius: 20,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// MARK: - Окно для участия в рейтинге
-class RatingProfileSheet extends StatefulWidget {
-  final Map<String, DayRecord> daysData;
-  final VoidCallback onSaveSuccess;
-  final VoidCallback? onClose;
-
-
-  const RatingProfileSheet({
-    super.key,
-    required this.daysData,
-    required this.onSaveSuccess,
-    this.onClose,
-  });
-
-  @override
-  State<RatingProfileSheet> createState() => _RatingProfileSheetState();
-}
-
-class _RatingProfileSheetState extends State<RatingProfileSheet> {
-  final TextEditingController _nameController = TextEditingController();
-  bool _participate = true;
-  bool _isSaving = false;
-  String? _errorMessage;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadData();
-  }
-
-  Future<void> _loadData() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _nameController.text = prefs.getString('userName') ?? '';
-      _participate = prefs.getBool('userParticipateInRating') ?? true;
-    });
-  }
-
-  @override
-  void dispose() {
-    widget.onClose?.call();
-    _nameController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _save() async {
-    final loc = AppLocalizations.of(context);
-    final trimmed = _nameController.text.trim();
-
-    if (!_participate && trimmed.isEmpty) {
-      // ничего не отправляем, просто сохраняем локально и закрываем
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('userParticipateInRating', false);
-      if (mounted) Navigator.pop(context);
-      return;
-    }
-
-    if (_participate) {
-      if (trimmed.isEmpty) {
-        setState(() => _errorMessage = loc.translate('error_username_empty'));
-        return;
-      }
-      if (trimmed.contains(' ')) {
-        setState(() => _errorMessage = loc.translate('error_username_contains_space'));
-        return;
-      }
-      if (trimmed.length < 3) {
-        setState(() => _errorMessage = loc.translate('error_username_too_short'));
-        return;
-      }
-      if (trimmed.length > 20) {
-        setState(() => _errorMessage = loc.translate('error_username_too_long'));
-        return;
-      }
-    }
-
-    setState(() {
-      _isSaving = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final token = SessionManager().accessToken;
-      if (token == null) {
-        throw Exception(loc.translate('error_missing_token'));
-      }
-
-      if (_participate) {
-        // Включаем участие – отправляем имя
-        await UserAPIService().updateMyProfile(
-          token: token,
-          username: trimmed,
-          participateInRating: true,
-        );
-      } else {
-        // Выключаем участие – отправляем только флаг
-        await UserAPIService().updateMyRating(
-          token: token,
-          participateInRating: false,
-        );
-      }
-
-      final prefs = await SharedPreferences.getInstance();
-      if (_participate && trimmed.isNotEmpty) {
-        await prefs.setString('userName', trimmed);
-      }
-      await prefs.setBool('userParticipateInRating', _participate);
-
-      if (mounted) {
-        widget.onSaveSuccess();
-        Navigator.pop(context);
-      }
-    } catch (e) {
-      print('❌ Ошибка сохранения профиля в рейтингах: $e');
-      String msg;
-      if (e is UserAPIError) {
-        switch (e) {
-          case UserAPIError.usernameAlreadyExists:
-            msg = loc.translate('error_username_already_exists');
-            break;
-          case UserAPIError.usernameTooShort:
-            msg = loc.translate('error_username_too_short');
-            break;
-          case UserAPIError.usernameTooLong:
-            msg = loc.translate('error_username_too_long');
-            break;
-          case UserAPIError.usernameInvalidCharacters:
-            msg = loc.translate('error_username_invalid_characters');
-            break;
-          default:
-            msg = e.toString();
-        }
-      } else {
-        msg = e.toString();
-      }
-      setState(() {
-        _errorMessage = msg;
-        _isSaving = false;
-      });
-    }
-  }
-
-
-  @override
-  Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context);
-    final screenHeight = MediaQuery.of(context).size.height;
-    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
-
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: screenHeight * 0.8,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFF2D2B55),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10)],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Заголовок с крестиком
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  loc.translate('tutorial_title_profile'),
-                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white70),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-          ),
-          // Основное содержимое с прокруткой
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.only(
-                left: 20,
-                right: 20,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-              ),
-              child: Column(
-                children: [
-                  // Поле ввода
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        loc.translate('user_name_label'),
-                        style: const TextStyle(color: Colors.white70, fontSize: 14),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: _nameController,
-                        style: const TextStyle(color: Colors.black),
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                          enabled: !_isSaving,
-                        ),
-                        onChanged: (v) {
-                          if (v.length > 20) _nameController.text = v.substring(0, 20);
-                        },
-                      ),
-                    ],
-                  ),
-                  // Место для ошибки
-                  Container(
-                    height: 50,
-                    alignment: Alignment.centerLeft,
-                    padding: const EdgeInsets.only(top: 8),
-                    child: _errorMessage != null
-                        ? Text(
-                      _errorMessage!,
-                      style: const TextStyle(color: Colors.red, fontSize: 14),
-                    )
-                        : null,
-                  ),
-                  // Switch
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          loc.translate('user_ranking_toggle'),
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ),
-                      Switch(
-                        value: _participate,
-                        onChanged: _isSaving ? null : (val) => setState(() => _participate = val),
-                        activeColor: const Color(0xFF8B5CF6),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  // Кнопка сохранения
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: _isSaving ? null : _save,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF8B5CF6),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: _isSaving
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : Text(
-                        loc.translate('save_button'),
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                ],
-              ),
-            ),
-          ),
+          Shadow(color: color.withOpacity(0.6), blurRadius: 10),
+          Shadow(color: color.withOpacity(0.4), blurRadius: 20),
         ],
       ),
     );

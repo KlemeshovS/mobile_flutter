@@ -536,6 +536,15 @@ class AppLocalizations {
 // Туториал – страница профиля
       'tutorial_title_profile': 'Ranking preferences',
       'tutorial_desc_profile': 'If you want to know who’s climbing the peaks or hitting rock bottom, join the rankings!',
+      'profile_guest_title': 'Not logged in',
+      'profile_guest_message': 'Sign in with Google to participate in ratings and save your progress.',
+      'profile_authenticated_title': 'Your profile',
+      'profile_authenticated_subtitle': 'Manage your name and rating participation',
+      'logout_button': 'Log out',
+      'profile_default_title': 'Profile',
+      'edit_username_title': 'Edit username',
+      'cancel': 'Cancel',
+
 
     },
     'ru': {
@@ -1069,6 +1078,14 @@ class AppLocalizations {
       // Туториал – страница профиля
       'tutorial_title_profile': 'Участвуй в рейтингах!',
       'tutorial_desc_profile': 'Хочешь знать, кто круче покоряет вершины, а кто сильнее погружается на дно? Участвуй в рейтингах!',
+      'profile_guest_title': 'Участвуй в рейтингах!',
+      'profile_guest_message': 'Хочешь знать, кто круче покоряет вершины, а кто сильнее погружается на дно? Участвуй в рейтингах!',
+      'profile_authenticated_title': 'Ваш профиль',
+      'profile_authenticated_subtitle': 'Теперь ты в игре!',
+      'logout_button': 'Выйти',
+      'profile_default_title': 'Профиль',
+      'edit_username_title': 'Изменить имя',
+      'cancel': 'Отмена',
 
     },
   };

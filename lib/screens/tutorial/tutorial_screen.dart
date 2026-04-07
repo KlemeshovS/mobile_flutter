@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:wobbly/utils/localization.dart';
 import 'package:wobbly/services/api/user_api_service.dart';
 import 'package:wobbly/services/session_manager.dart';
+import 'package:wobbly/services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wobbly/models/api_models.dart';
 
@@ -100,11 +101,16 @@ class TutorialProfilePage extends StatefulWidget {
   State<TutorialProfilePage> createState() => _TutorialProfilePageState();
 }
 
-class _TutorialProfilePageState extends State<TutorialProfilePage> with SingleTickerProviderStateMixin {
+class _TutorialProfilePageState extends State<TutorialProfilePage>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _nameController = TextEditingController();
   bool _participate = true;
   bool _isSaving = false;
   String? _errorMessage;
+  bool _isLoading = true;
+  String? _currentUsername;
+  SessionType _sessionType = SessionType.guest;
+  bool _showNameInput = false; // показывать ли поле имени после входа
 
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
@@ -113,8 +119,7 @@ class _TutorialProfilePageState extends State<TutorialProfilePage> with SingleTi
   @override
   void initState() {
     super.initState();
-    _loadUserData();
-    _ensureToken();
+    _loadSessionAndUserData();
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
@@ -125,57 +130,95 @@ class _TutorialProfilePageState extends State<TutorialProfilePage> with SingleTi
     _opacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeOut),
     );
-
     Future.delayed(const Duration(milliseconds: 100), () {
       if (mounted) _controller.forward();
     });
   }
 
-  Future<void> _loadUserData() async {
-    final prefs = await SharedPreferences.getInstance();
+  Future<void> _loadSessionAndUserData() async {
+    setState(() => _isLoading = true);
+    await SessionManager().init();
+    final session = SessionManager();
     setState(() {
-      _nameController.text = prefs.getString('userName') ?? '';
-      _participate = prefs.getBool('userParticipateInRating') ?? true;
-
+      _sessionType = session.sessionType;
     });
+    if (_sessionType == SessionType.authenticated) {
+      await _loadUserDataFromServer();
+      // Если уже есть имя, завершаем туториал
+      if (_currentUsername != null && _currentUsername!.isNotEmpty) {
+        widget.onComplete();
+        return;
+      } else {
+        // Авторизован, но имени нет – показываем поле ввода
+        setState(() {
+          _showNameInput = true;
+        });
+      }
+    }
+    setState(() => _isLoading = false);
   }
 
-  Future<void> _ensureToken() async {
-    await SessionManager().init();
-    if (SessionManager().accessToken == null) {
-      try {
-        final auth = await UserAPIService().anonymousAuth();
-        await SessionManager().setAccessToken(auth.accessToken);
-        await SessionManager().setUserId(auth.userId);
-        print('✅ Токен получен в туториале');
-      } catch (e) {
-        print('❌ Ошибка получения токена: $e');
-        if (mounted) {
-          setState(() {
-            _errorMessage = 'Ошибка авторизации. Проверьте интернет.';
-          });
-        }
+  Future<void> _loadUserDataFromServer() async {
+    final token = SessionManager().accessToken;
+    if (token == null) return;
+    try {
+      final me = await UserAPIService().getMyProfile(token);
+      final prefs = await SharedPreferences.getInstance();
+      if (me.username != null && me.username!.isNotEmpty) {
+        await prefs.setString('userName', me.username!);
+        setState(() {
+          _currentUsername = me.username;
+          _nameController.text = me.username!;
+        });
+      } else {
+        await prefs.remove('userName');
+        setState(() {
+          _currentUsername = null;
+          _nameController.text = '';
+        });
       }
+      await prefs.setBool('userParticipateInRating', me.participateInRating);
+      setState(() {
+        _participate = me.participateInRating;
+      });
+    } catch (e) {
+      print('Ошибка загрузки профиля с сервера: $e');
     }
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    _nameController.dispose();
-    super.dispose();
+  Future<void> _signInWithGoogle() async {
+    setState(() => _isSaving = true);
+    final success = await AuthService().signInWithGoogle();
+    if (success && mounted) {
+      await _loadSessionAndUserData();
+      // После входа проверяем, есть ли имя
+      if (_currentUsername != null && _currentUsername!.isNotEmpty) {
+        widget.onComplete(); // имя есть – завершаем
+      } else {
+        // Имени нет – показываем поле ввода
+        setState(() {
+          _showNameInput = true;
+          _isSaving = false;
+        });
+      }
+    } else {
+      setState(() => _isSaving = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Не удалось войти через Google')),
+        );
+      }
+    }
   }
 
   Future<void> _save() async {
     final loc = AppLocalizations.of(context);
     final trimmed = _nameController.text.trim();
 
-    // Если участие выключено И имя не введено – просто сохраняем локально и закрываем туториал
     if (!_participate && trimmed.isEmpty) {
-      print('⏭️ [TUTORIAL] Участие выключено, имя не задано – ничего не отправляем на сервер');
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('userParticipateInRating', false);
-      widget.onComplete(); // закрываем туториал
+      widget.onComplete();
       return;
     }
 
@@ -202,41 +245,27 @@ class _TutorialProfilePageState extends State<TutorialProfilePage> with SingleTi
       _isSaving = true;
       _errorMessage = null;
     });
-    print('🔍 [TUTORIAL] _save() started: participate=$_participate, trimmed="${_nameController.text.trim()}"');
 
     Future<bool> performSave() async {
-      print('🔍 [TUTORIAL] performSave: token получен, participate=$_participate, trimmed="$trimmed"');
-      await SessionManager().init();
-      var token = SessionManager().accessToken;
+      final token = SessionManager().accessToken;
       if (token == null) {
-        try {
-          final auth = await UserAPIService().anonymousAuth();
-          await SessionManager().setAccessToken(auth.accessToken);
-          await SessionManager().setUserId(auth.userId);
-          token = auth.accessToken;
-        } catch (e) {
-          setState(() {
-            _errorMessage = 'Ошибка авторизации. Повторите позже.';
-            _isSaving = false;
-          });
-          return false;
-        }
+        setState(() {
+          _errorMessage = loc.translate('error_missing_token');
+          _isSaving = false;
+        });
+        return false;
       }
 
       try {
         if (_participate) {
-          // Включаем участие – отправляем имя
-          print('📤 [TUTORIAL] Отправка updateMyProfile: username="$trimmed", participate=true');
           await UserAPIService().updateMyProfile(
-            token: token!,
+            token: token,
             username: trimmed,
             participateInRating: true,
           );
         } else {
-          // Выключаем участие – отправляем только флаг
-          print('📤 [TUTORIAL] Отправка updateMyRating: participate=false');
           await UserAPIService().updateMyRating(
-            token: token!,
+            token: token,
             participateInRating: false,
           );
         }
@@ -250,7 +279,6 @@ class _TutorialProfilePageState extends State<TutorialProfilePage> with SingleTi
         widget.onComplete();
         return true;
       } catch (e) {
-        print('❌ Ошибка сохранения профиля: $e');
         if (e is UserAPIError) {
           if (e == UserAPIError.invalidAuthToken || e == UserAPIError.unauthorized) {
             return false;
@@ -263,8 +291,6 @@ class _TutorialProfilePageState extends State<TutorialProfilePage> with SingleTi
             } else if (e == UserAPIError.usernameTooLong) {
               msg = loc.translate('error_username_too_long');
             } else if (e == UserAPIError.usernameInvalidCharacters) {
-              msg = loc.translate('error_username_invalid_characters');
-            } else if (e == UserAPIError.validationError) {
               msg = loc.translate('error_username_invalid_characters');
             } else {
               msg = e.toString();
@@ -288,15 +314,11 @@ class _TutorialProfilePageState extends State<TutorialProfilePage> with SingleTi
     bool success = await performSave();
     if (success) return;
 
-    setState(() {
-      _errorMessage = null;
-    });
-
+    setState(() => _errorMessage = null);
     try {
       final auth = await UserAPIService().anonymousAuth();
       await SessionManager().setAccessToken(auth.accessToken);
       await SessionManager().setUserId(auth.userId);
-      print('🔄 Токен обновлён, повторяем запрос...');
       await performSave();
     } catch (e) {
       setState(() {
@@ -307,8 +329,19 @@ class _TutorialProfilePageState extends State<TutorialProfilePage> with SingleTi
   }
 
   @override
+  void dispose() {
+    _controller.dispose();
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context);
+
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
     return Column(
       children: [
@@ -318,7 +351,6 @@ class _TutorialProfilePageState extends State<TutorialProfilePage> with SingleTi
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
               child: Column(
                 children: [
-                  // Анимированный скриншот (вместо иконки)
                   AnimatedBuilder(
                     animation: _controller,
                     builder: (context, child) {
@@ -352,7 +384,6 @@ class _TutorialProfilePageState extends State<TutorialProfilePage> with SingleTi
                     },
                   ),
                   const SizedBox(height: 20),
-                  // Текст заголовка и описания
                   Column(
                     children: [
                       Text(
@@ -377,87 +408,88 @@ class _TutorialProfilePageState extends State<TutorialProfilePage> with SingleTi
                     ],
                   ),
                   const SizedBox(height: 32),
-                  // Поле ввода имени
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        loc.translate('user_name_label'),
-                        style: const TextStyle(color: Colors.white70, fontSize: 12),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: _nameController,
-                        style: const TextStyle(color: Colors.black),
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                          enabled: !_isSaving,
+
+                  // Гость: только кнопка входа
+                  if (_sessionType == SessionType.guest && !_showNameInput) ...[
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton.icon(
+                        onPressed: _isSaving ? null : _signInWithGoogle,
+                        icon: const Icon(Icons.login, color: Colors.white),
+                        label: const Text('Войти через Google', style: TextStyle(fontSize: 16)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF8B5CF6),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        onChanged: (v) {
-                          if (v.length > 20) _nameController.text = v.substring(0, 20);
-                        },
-                      ),
-                    ],
-                  ),
-                  // Сообщение об ошибке
-                  // Сообщение об ошибке (показываем только если есть ошибка)
-                  if (_errorMessage != null)
-                    Container(
-                      height: 30,
-                      alignment: Alignment.centerLeft,
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Text(
-                        _errorMessage!,
-                        style: const TextStyle(color: Colors.red, fontSize: 10),
                       ),
                     ),
-                  // Переключатель участия в рейтинге
-                  SwitchListTile(
-                    title: Text(
-                      loc.translate('user_ranking_toggle'),
-                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                  ],
+
+                  // Авторизован, но нет имени: показываем поле ввода и переключатель
+                  if (_showNameInput) ...[
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          loc.translate('user_name_label'),
+                          style: const TextStyle(color: Colors.white70, fontSize: 12),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _nameController,
+                          style: const TextStyle(color: Colors.black),
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            enabled: !_isSaving,
+                          ),
+                          onChanged: (v) {
+                            if (v.length > 20) _nameController.text = v.substring(0, 20);
+                          },
+                        ),
+                        if (_errorMessage != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              _errorMessage!,
+                              style: const TextStyle(color: Colors.red, fontSize: 12),
+                            ),
+                          ),
+                      ],
                     ),
-                    value: _participate,
-                    onChanged: _isSaving ? null : (val) => setState(() => _participate = val),
-                    activeColor: const Color(0xFF8B5CF6),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                  const SizedBox(height: 20),
+                    const SizedBox(height: 16),
+                    SwitchListTile(
+                      title: Text(
+                        loc.translate('user_ranking_toggle'),
+                        style: const TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                      value: _participate,
+                      onChanged: _isSaving ? null : (val) => setState(() => _participate = val),
+                      activeColor: const Color(0xFF8B5CF6),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: _isSaving ? null : _save,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF8B5CF6),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: Text(loc.tutorialStartSufferingButton),
+                      ),
+                    ),
+                  ],
                 ],
-              ),
-            ),
-          ),
-        ),
-        // Кнопка сохранения внизу экрана
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 0),
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 20),
-            child: SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: _isSaving ? null : _save,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF8B5CF6),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
-                child: _isSaving
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : Text(
-                  loc.tutorialStartSufferingButton,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                ),
               ),
             ),
           ),

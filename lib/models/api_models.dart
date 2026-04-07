@@ -2,13 +2,20 @@
 class AnonymousAuthResponse {
   final int userId;
   final String accessToken;
+  final String refreshToken;
   final String tokenType;
 
-  AnonymousAuthResponse({required this.userId, required this.accessToken, required this.tokenType});
+  AnonymousAuthResponse({
+    required this.userId,
+    required this.accessToken,
+    required this.refreshToken,
+    required this.tokenType,
+  });
 
   factory AnonymousAuthResponse.fromJson(Map<String, dynamic> json) => AnonymousAuthResponse(
     userId: json['userId'],
     accessToken: json['accessToken'],
+    refreshToken: json['refreshToken'] ?? '',  // если бэкенд пока не отдаёт – пустая строка
     tokenType: json['tokenType'],
   );
 }
