@@ -110,7 +110,6 @@ class _TutorialProfilePageState extends State<TutorialProfilePage>
   bool _isLoading = true;
   String? _currentUsername;
   SessionType _sessionType = SessionType.guest;
-  bool _showNameInput = false; // показывать ли поле имени после входа
 
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
@@ -144,16 +143,6 @@ class _TutorialProfilePageState extends State<TutorialProfilePage>
     });
     if (_sessionType == SessionType.authenticated) {
       await _loadUserDataFromServer();
-      // Если уже есть имя, завершаем туториал
-      if (_currentUsername != null && _currentUsername!.isNotEmpty) {
-        widget.onComplete();
-        return;
-      } else {
-        // Авторизован, но имени нет – показываем поле ввода
-        setState(() {
-          _showNameInput = true;
-        });
-      }
     }
     setState(() => _isLoading = false);
   }
@@ -191,24 +180,13 @@ class _TutorialProfilePageState extends State<TutorialProfilePage>
     final success = await AuthService().signInWithGoogle();
     if (success && mounted) {
       await _loadSessionAndUserData();
-      // После входа проверяем, есть ли имя
+      // Если после входа имя уже есть, сразу завершаем туториал
       if (_currentUsername != null && _currentUsername!.isNotEmpty) {
-        widget.onComplete(); // имя есть – завершаем
-      } else {
-        // Имени нет – показываем поле ввода
-        setState(() {
-          _showNameInput = true;
-          _isSaving = false;
-        });
+        widget.onComplete();
       }
-    } else {
-      setState(() => _isSaving = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Не удалось войти через Google')),
-        );
-      }
+      // Если имени нет – остаёмся на экране, покажем форму ввода
     }
+    setState(() => _isSaving = false);
   }
 
   Future<void> _save() async {
@@ -279,6 +257,7 @@ class _TutorialProfilePageState extends State<TutorialProfilePage>
         widget.onComplete();
         return true;
       } catch (e) {
+        print('❌ Ошибка сохранения профиля: $e');
         if (e is UserAPIError) {
           if (e == UserAPIError.invalidAuthToken || e == UserAPIError.unauthorized) {
             return false;
@@ -314,11 +293,15 @@ class _TutorialProfilePageState extends State<TutorialProfilePage>
     bool success = await performSave();
     if (success) return;
 
-    setState(() => _errorMessage = null);
+    setState(() {
+      _errorMessage = null;
+    });
+
     try {
       final auth = await UserAPIService().anonymousAuth();
       await SessionManager().setAccessToken(auth.accessToken);
       await SessionManager().setUserId(auth.userId);
+      print('🔄 Токен обновлён, повторяем запрос...');
       await performSave();
     } catch (e) {
       setState(() {
@@ -326,6 +309,10 @@ class _TutorialProfilePageState extends State<TutorialProfilePage>
         _isSaving = false;
       });
     }
+  }
+
+  void _skip() {
+    widget.onComplete();
   }
 
   @override
@@ -343,6 +330,247 @@ class _TutorialProfilePageState extends State<TutorialProfilePage>
       return const Center(child: CircularProgressIndicator());
     }
 
+    // Случай 1: гость – только кнопки Google и Пропустить
+    if (_sessionType == SessionType.guest) {
+      return Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+                child: Column(
+                  children: [
+                    AnimatedBuilder(
+                      animation: _controller,
+                      builder: (context, child) {
+                        return Opacity(
+                          opacity: _opacityAnimation.value,
+                          child: Transform.scale(
+                            scale: _scaleAnimation.value,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(24),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 10),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(24),
+                                child: Image.asset(
+                                  loc.getTutorialProfileImageAsset(),
+                                  width: 300,
+                                  height: 300,
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      loc.translate('tutorial_title_profile'),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      loc.translate('tutorial_desc_profile'),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white70,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 32),
+                    // Кнопка Google
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton.icon(
+                        onPressed: _isSaving ? null : _signInWithGoogle,
+                        icon: const Icon(Icons.login, color: Colors.white),
+                        label: Text(loc.translate('google_sign_in_button'), style: const TextStyle(fontSize: 16)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF8B5CF6),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Кнопка "Пропустить"
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: OutlinedButton(
+                        onPressed: _skip,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: const BorderSide(color: Colors.white54),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: Text(
+                          loc.translate('skip_button') ?? 'Skip',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Случай 2: авторизован, но нет имени – показываем форму
+    if (_currentUsername == null || _currentUsername!.isEmpty) {
+      return Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+                child: Column(
+                  children: [
+                    AnimatedBuilder(
+                      animation: _controller,
+                      builder: (context, child) {
+                        return Opacity(
+                          opacity: _opacityAnimation.value,
+                          child: Transform.scale(
+                            scale: _scaleAnimation.value,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(24),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 10),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(24),
+                                child: Image.asset(
+                                  loc.getTutorialProfileImageAsset(),
+                                  width: 300,
+                                  height: 300,
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      loc.translate('tutorial_title_profile'),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      loc.translate('tutorial_desc_profile'),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white70,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 32),
+                    // Поле имени
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          loc.translate('user_name_label'),
+                          style: const TextStyle(color: Colors.white70, fontSize: 12),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _nameController,
+                          style: const TextStyle(color: Colors.black),
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            enabled: !_isSaving,
+                          ),
+                          onChanged: (v) {
+                            if (v.length > 20) _nameController.text = v.substring(0, 20);
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    // Переключатель участия
+                    SwitchListTile(
+                      title: Text(
+                        loc.translate('user_ranking_toggle'),
+                        style: const TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                      value: _participate,
+                      onChanged: _isSaving ? null : (val) => setState(() => _participate = val),
+                      activeColor: const Color(0xFF8B5CF6),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    const SizedBox(height: 20),
+                    // Ошибка под полем
+                    if (_errorMessage != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Text(
+                          _errorMessage!,
+                          style: const TextStyle(color: Colors.red, fontSize: 12),
+                        ),
+                      ),
+                    // Кнопка "Начать страдать"
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: _isSaving ? null : _save,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF8B5CF6),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: Text(loc.tutorialStartSufferingButton),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Случай 3: авторизован и имя есть – сразу кнопка "Начать страдать"
     return Column(
       children: [
         Expanded(
@@ -384,111 +612,44 @@ class _TutorialProfilePageState extends State<TutorialProfilePage>
                     },
                   ),
                   const SizedBox(height: 20),
-                  Column(
-                    children: [
-                      Text(
-                        loc.translate('tutorial_title_profile'),
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        loc.translate('tutorial_desc_profile'),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white70,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                  Text(
+                    loc.translate('tutorial_title_profile'),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    loc.translate('tutorial_desc_profile'),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white70,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 32),
-
-                  // Гость: только кнопка входа
-                  if (_sessionType == SessionType.guest && !_showNameInput) ...[
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton.icon(
-                        onPressed: _isSaving ? null : _signInWithGoogle,
-                        icon: const Icon(Icons.login, color: Colors.white),
-                        label: const Text('Войти через Google', style: TextStyle(fontSize: 16)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF8B5CF6),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
+                  // Приветствие
+                  Text(
+                    '${loc.translate('welcome_back') ?? 'Welcome back'}, $_currentUsername!',
+                    style: const TextStyle(fontSize: 16, color: Color(0xFFC7FF00)),
+                  ),
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: widget.onComplete,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF8B5CF6),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
+                      child: Text(loc.tutorialStartSufferingButton),
                     ),
-                  ],
-
-                  // Авторизован, но нет имени: показываем поле ввода и переключатель
-                  if (_showNameInput) ...[
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          loc.translate('user_name_label'),
-                          style: const TextStyle(color: Colors.white70, fontSize: 12),
-                        ),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: _nameController,
-                          style: const TextStyle(color: Colors.black),
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: Colors.white,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide.none,
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                            enabled: !_isSaving,
-                          ),
-                          onChanged: (v) {
-                            if (v.length > 20) _nameController.text = v.substring(0, 20);
-                          },
-                        ),
-                        if (_errorMessage != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Text(
-                              _errorMessage!,
-                              style: const TextStyle(color: Colors.red, fontSize: 12),
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    SwitchListTile(
-                      title: Text(
-                        loc.translate('user_ranking_toggle'),
-                        style: const TextStyle(color: Colors.white, fontSize: 12),
-                      ),
-                      value: _participate,
-                      onChanged: _isSaving ? null : (val) => setState(() => _participate = val),
-                      activeColor: const Color(0xFF8B5CF6),
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed: _isSaving ? null : _save,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF8B5CF6),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        child: Text(loc.tutorialStartSufferingButton),
-                      ),
-                    ),
-                  ],
+                  ),
                 ],
               ),
             ),

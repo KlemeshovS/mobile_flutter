@@ -349,7 +349,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             child: ElevatedButton.icon(
                               onPressed: _signInWithGoogle,
                               icon: const Icon(Icons.login, color: Colors.white),
-                              label: const Text('Войти через Google', style: TextStyle(fontSize: 16)),
+                              label: Text(loc.translate('google_sign_in_button'), style: const TextStyle(fontSize: 16)),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF8B5CF6),
                                 foregroundColor: Colors.white,
