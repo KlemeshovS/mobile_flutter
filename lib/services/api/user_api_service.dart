@@ -32,11 +32,11 @@ enum UserAPIError {
 
 class UserAPIService {
   // Флаг переключения окружения: true = staging, false = production
-  static const bool _isStaging = true;
+  static const bool _isStaging = false;
 
   static String get _baseUrl => _isStaging
-      ? 'https://staging-api.wobbly.site'
-      : 'https://api.wobbly.site';
+      ? 'https://staging-api.wobbly.site/api/v1'
+      : 'https://api.wobbly.site/api/v1';
 
   static final UserAPIService _instance = UserAPIService._internal();
   factory UserAPIService() => _instance;
