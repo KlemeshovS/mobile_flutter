@@ -533,6 +533,7 @@ class AppLocalizations {
       'bottom_2_place_description': 'You\'re almost the champion of libations. Just a bit more',
       'bottom_3_place_title': 'Bronze Reveler',
       'bottom_3_place_description': 'You\'re in the top three toughest alcohol tourists. Here\'s your cup, you\'ll need it.',
+
 // Туториал – страница профиля
       'tutorial_title_profile': 'Ranking preferences',
       'tutorial_desc_profile': 'If you want to know who’s climbing the peaks or hitting rock bottom, join the rankings!',
@@ -544,6 +545,10 @@ class AppLocalizations {
       'profile_default_title': 'Profile',
       'edit_username_title': 'Edit username',
       'cancel': 'Cancel',
+      'google_sign_in_button': 'Sign in with Google',
+      'skip_button': 'Skip',
+      'welcome_back': 'Welcome back',
+
 
 
     },
@@ -1086,6 +1091,10 @@ class AppLocalizations {
       'profile_default_title': 'Профиль',
       'edit_username_title': 'Изменить имя',
       'cancel': 'Отмена',
+      'google_sign_in_button': 'Войти через Google',
+      'skip_button': 'Пропустить',
+      'welcome_back': 'С возвращением',
+
 
     },
   };

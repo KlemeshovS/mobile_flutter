@@ -228,18 +228,14 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
         children: [
           Expanded(
             child: Text(
-              _sessionType == SessionType.guest
-                  ? loc.translate('profile_guest_message')
-                  : loc.translate('rating_not_participating'),
+              loc.translate('rating_not_participating'),
               style: const TextStyle(color: Colors.white70),
             ),
           ),
           TextButton(
             onPressed: _showProfileModal,
             child: Text(
-              _sessionType == SessionType.guest
-                  ? 'Войти через Google'
-                  : loc.translate('rating_participate_button'),
+              loc.translate('rating_participate_button'),
               style: const TextStyle(color: Color(0xFF8B5CF6), fontWeight: FontWeight.bold),
             ),
           ),
