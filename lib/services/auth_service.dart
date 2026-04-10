@@ -15,13 +15,18 @@ class AuthService {
 
   Future<bool> signInWithGoogle() async {
     try {
+      // Инициализируем SessionManager, чтобы получить текущий токен (возможно guest)
+      await _session.init();
+      final currentToken = _session.accessToken; // может быть null, если нет сессии
+
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) return false;
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final idToken = googleAuth.idToken;
       if (idToken == null) throw Exception('No idToken from Google');
 
-      final authResponse = await _api.authWithGoogle(idToken);
+      // Передаём текущий токен как guestAccessToken (если есть)
+      final authResponse = await _api.authWithGoogle(idToken, guestAccessToken: currentToken);
       await _session.setAuthenticatedSession(
         accessToken: authResponse.accessToken,
         refreshToken: authResponse.refreshToken,
@@ -40,9 +45,6 @@ class AuthService {
 
       // Если пользователь участвует в рейтингах, нужно отправить его текущий счёт
       if (me.participateInRating) {
-        // Для отправки счёта нужны daysData – но в AuthService их нет.
-        // Лучше сделать это в main.dart после обновления данных, или вызвать отдельно.
-        // Пока просто залогируем.
         print('User participates in ratings, score will be sent later');
       }
 
