@@ -32,7 +32,7 @@ enum UserAPIError {
 
 class UserAPIService {
   // Флаг переключения окружения: true = staging, false = production
-  static const bool _isStaging = false;
+  static const bool _isStaging = true;
 
   static String get _baseUrl => _isStaging
       ? 'https://staging-api.wobbly.site/api/v1'
@@ -194,12 +194,16 @@ class UserAPIService {
   }
 
   // Аутентификация через Google
-  Future<AnonymousAuthResponse> authWithGoogle(String idToken) async {
+  Future<AnonymousAuthResponse> authWithGoogle(String idToken, {String? guestAccessToken}) async {
     final url = Uri.parse('$_baseUrl/auth/google');
     final body = {'idToken': idToken};
+    // Формируем заголовки: если передан guestAccessToken, добавляем Authorization
+    final headers = _buildHeaders(
+      guestAccessToken != null ? {'Authorization': 'Bearer $guestAccessToken'} : null,
+    );
     final response = await http.post(
       url,
-      headers: _buildHeaders(null),
+      headers: headers,
       body: json.encode(body),
     );
     if (response.statusCode == 200 || response.statusCode == 201) {
