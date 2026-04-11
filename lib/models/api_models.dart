@@ -35,6 +35,31 @@ class MeResponse {
   );
 }
 
+// Ответ /auth/session (отдельная модель)
+class SessionResponse {
+  final int userId;
+  final String? username;
+  final bool participateInRating;
+  final String sessionType;   // "guest" или "authenticated"
+  final String? provider;     // например "google", "apple", "yandex" или null
+
+  SessionResponse({
+    required this.userId,
+    this.username,
+    required this.participateInRating,
+    required this.sessionType,
+    this.provider,
+  });
+
+  factory SessionResponse.fromJson(Map<String, dynamic> json) => SessionResponse(
+    userId: json['userId'],
+    username: json['username'],
+    participateInRating: json['participateInRating'] ?? false,
+    sessionType: json['sessionType'] ?? 'guest',
+    provider: json['provider'],
+  );
+}
+
 // Ответ на отправку счёта
 class ScoreResponse {
   final String username;

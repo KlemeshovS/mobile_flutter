@@ -117,7 +117,7 @@ class _MyAppState extends State<MyApp> {
         await UserAPIService().getSession(session.accessToken!);
         // сессия жива
       } catch (e) {
-        if (e is UserAPIError && e == UserAPIError.invalidAuthToken) {
+        if (e is UserAPIError && e == UserAPIError.invalidToken) {
           // Пробуем обновить
           final success = await AuthService().refreshSession();
           if (!success) {

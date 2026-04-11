@@ -151,13 +151,13 @@ class _TutorialProfilePageState extends State<TutorialProfilePage>
     final token = SessionManager().accessToken;
     if (token == null) return;
     try {
-      final me = await UserAPIService().getMyProfile(token);
+      final session = await UserAPIService().getSession(token);
       final prefs = await SharedPreferences.getInstance();
-      if (me.username != null && me.username!.isNotEmpty) {
-        await prefs.setString('userName', me.username!);
+      if (session.username != null && session.username!.isNotEmpty) {
+        await prefs.setString('userName', session.username!);
         setState(() {
-          _currentUsername = me.username;
-          _nameController.text = me.username!;
+          _currentUsername = session.username;
+          _nameController.text = session.username!;
         });
       } else {
         await prefs.remove('userName');
@@ -166,9 +166,9 @@ class _TutorialProfilePageState extends State<TutorialProfilePage>
           _nameController.text = '';
         });
       }
-      await prefs.setBool('userParticipateInRating', me.participateInRating);
+      await prefs.setBool('userParticipateInRating', session.participateInRating);
       setState(() {
-        _participate = me.participateInRating;
+        _participate = session.participateInRating;
       });
     } catch (e) {
       print('Ошибка загрузки профиля с сервера: $e');
@@ -259,7 +259,7 @@ class _TutorialProfilePageState extends State<TutorialProfilePage>
       } catch (e) {
         print('❌ Ошибка сохранения профиля: $e');
         if (e is UserAPIError) {
-          if (e == UserAPIError.invalidAuthToken || e == UserAPIError.unauthorized) {
+          if (e == UserAPIError.invalidToken || e == UserAPIError.unauthorized) {
             return false;
           } else {
             String msg;
