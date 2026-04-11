@@ -154,22 +154,27 @@ class _TutorialProfilePageState extends State<TutorialProfilePage>
       final session = await UserAPIService().getSession(token);
       final prefs = await SharedPreferences.getInstance();
       if (session.username != null && session.username!.isNotEmpty) {
+        // Существующий пользователь – загружаем имя и настройку участия
         await prefs.setString('userName', session.username!);
         setState(() {
           _currentUsername = session.username;
           _nameController.text = session.username!;
         });
+        await prefs.setBool('userParticipateInRating', session.participateInRating);
+        setState(() {
+          _participate = session.participateInRating;
+        });
       } else {
+        // Новый пользователь – имени нет, оставляем флаг участия по умолчанию (true)
         await prefs.remove('userName');
         setState(() {
           _currentUsername = null;
           _nameController.text = '';
         });
+        // Не перезаписываем _participate, оставляем текущее значение (true)
+        // Но сохраняем его в prefs, чтобы синхронизировать
+        await prefs.setBool('userParticipateInRating', _participate);
       }
-      await prefs.setBool('userParticipateInRating', session.participateInRating);
-      setState(() {
-        _participate = session.participateInRating;
-      });
     } catch (e) {
       print('Ошибка загрузки профиля с сервера: $e');
     }
