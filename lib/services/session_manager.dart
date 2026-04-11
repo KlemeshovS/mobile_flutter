@@ -84,6 +84,15 @@ class SessionManager {
     await prefs.setString(_sessionTypeKey, 'guest');
   }
 
+  // Новый метод
+  Future<void> updateTokens({required String accessToken, required String refreshToken}) async {
+    _accessToken = accessToken;
+    _refreshToken = refreshToken;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_accessTokenKey, accessToken);
+    await prefs.setString(_refreshTokenKey, refreshToken);
+  }
+
   Future<void> setUserId(int id) async {
     _userId = id;
     final prefs = await SharedPreferences.getInstance();
