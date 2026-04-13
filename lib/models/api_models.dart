@@ -86,6 +86,35 @@ class LeaderboardItem {
   );
 }
 
+// Привязанный identity provider
+class LinkedIdentityItem {
+  final String provider;
+  final String? providerEmail;
+  final bool providerEmailVerified;
+
+  LinkedIdentityItem({
+    required this.provider,
+    this.providerEmail,
+    required this.providerEmailVerified,
+  });
+
+  factory LinkedIdentityItem.fromJson(Map<String, dynamic> json) => LinkedIdentityItem(
+    provider: json['provider'],
+    providerEmail: json['providerEmail'],
+    providerEmailVerified: json['providerEmailVerified'] ?? false,
+  );
+}
+
+class LinkedIdentityListResponse {
+  final List<LinkedIdentityItem> items;
+
+  LinkedIdentityListResponse({required this.items});
+
+  factory LinkedIdentityListResponse.fromJson(Map<String, dynamic> json) => LinkedIdentityListResponse(
+    items: (json['items'] as List).map((e) => LinkedIdentityItem.fromJson(e)).toList(),
+  );
+}
+
 // Ответ лидерборда
 class LeaderboardResponse {
   final List<LeaderboardItem> items;

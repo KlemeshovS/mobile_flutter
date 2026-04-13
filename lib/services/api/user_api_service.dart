@@ -34,6 +34,11 @@ enum UserAPIError {
   guestCannotEnableRating,
   usernameRequiredForRating,
   ratingDisabledForScore,
+  identityAlreadyLinked,
+  providerAlreadyLinked,
+  providerNotLinked,
+  lastIdentityRequired,
+  authRequiredForProviderManagement,
 }
 
 class UserAPIService {
@@ -252,6 +257,46 @@ class UserAPIService {
     }
   }
 
+  // Список привязанных providers
+  Future<LinkedIdentityListResponse> getProviders(String token) async {
+    final url = Uri.parse('$_baseUrl/auth/providers');
+    final headers = _buildHeaders({'Authorization': 'Bearer $token'});
+    final response = await http.get(url, headers: headers);
+    if (response.statusCode == 200) {
+      return LinkedIdentityListResponse.fromJson(json.decode(response.body));
+    } else {
+      throw await _handleError(response);
+    }
+  }
+
+  // Привязка Google к текущему аккаунту
+  Future<LinkedIdentityListResponse> linkGoogle(String token, String idToken) async {
+    final url = Uri.parse('$_baseUrl/auth/providers/google/link');
+    final headers = _buildHeaders({'Authorization': 'Bearer $token'});
+    final response = await http.post(
+      url,
+      headers: headers,
+      body: json.encode({'idToken': idToken}),
+    );
+    if (response.statusCode == 200) {
+      return LinkedIdentityListResponse.fromJson(json.decode(response.body));
+    } else {
+      throw await _handleError(response);
+    }
+  }
+
+  // Отвязка provider
+  Future<LinkedIdentityListResponse> unlinkProvider(String token, String provider) async {
+    final url = Uri.parse('$_baseUrl/auth/providers/$provider');
+    final headers = _buildHeaders({'Authorization': 'Bearer $token'});
+    final response = await http.delete(url, headers: headers);
+    if (response.statusCode == 200) {
+      return LinkedIdentityListResponse.fromJson(json.decode(response.body));
+    } else {
+      throw await _handleError(response);
+    }
+  }
+
   // Выход
   Future<void> logout(String token) async {
     final url = Uri.parse('$_baseUrl/auth/logout');
@@ -309,6 +354,16 @@ class UserAPIService {
             return UserAPIError.usernameRequiredForRating;
           case 'RATING_DISABLED_FOR_SCORE':
             return UserAPIError.ratingDisabledForScore;
+          case 'IDENTITY_ALREADY_LINKED':
+            return UserAPIError.identityAlreadyLinked;
+          case 'PROVIDER_ALREADY_LINKED':
+            return UserAPIError.providerAlreadyLinked;
+          case 'PROVIDER_NOT_LINKED':
+            return UserAPIError.providerNotLinked;
+          case 'LAST_IDENTITY_REQUIRED':
+            return UserAPIError.lastIdentityRequired;
+          case 'AUTH_REQUIRED_FOR_PROVIDER_MANAGEMENT':
+            return UserAPIError.authRequiredForProviderManagement;
           default:
             return UserAPIError.serverError;
         }

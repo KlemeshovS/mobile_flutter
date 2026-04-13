@@ -4,7 +4,6 @@ import 'package:wobbly/services/session_manager.dart';
 import 'package:wobbly/services/auth_service.dart';
 import 'package:wobbly/utils/localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:wobbly/models/api_models.dart';
 
 class UserProfileScreen extends StatefulWidget {
   final VoidCallback? onClose;
@@ -29,7 +28,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
   SessionType _sessionType = SessionType.guest;
   String? _currentUsername;
-
   // Для редактирования имени (если нет имени)
   final TextEditingController _tempNameController = TextEditingController();
   bool _isEditingName = false;
