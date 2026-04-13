@@ -519,6 +519,9 @@ class AppLocalizations {
       'no_leaderboard_data': 'No data available',
       'rating_not_participating': 'You are not participating in the ratings',
       'rating_participate_button': 'Participate',
+      'tutorialStartSufferingButton': 'Let the game begin',
+
+
 // Попапы топ-3 (верх)
       'top_1_place_title': 'King of the Hill',
       'top_1_place_description': 'You\'re on top! But remember: the higher you climb, the harder you fall.',
@@ -1065,6 +1068,8 @@ class AppLocalizations {
       'no_leaderboard_data': 'Нет данных',
       'rating_not_participating': 'Вы не участвуете в рейтингах',
       'rating_participate_button': 'Участвовать',
+      'tutorialStartSufferingButton': 'Пусть игра начнется!',
+
 
       // для топ-3 попапов
       'top_1_place_title': 'Царь горы',

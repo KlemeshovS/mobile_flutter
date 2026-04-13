@@ -20,7 +20,7 @@ enum UserAPIError {
   unauthorized,
   missingToken,
   missingAuthorizationHeader,
-  invalidAuthToken,
+  invalidToken,
   rateLimitExceeded,
   scoreTooLow,
   usernameInvalidCharacters,
@@ -29,11 +29,16 @@ enum UserAPIError {
   googleAuthInvalid,
   appleAuthInvalid,
   yandexAuthInvalid,
+  authRequiredForRating,
+  authRequiredForUsername,
+  guestCannotEnableRating,
+  usernameRequiredForRating,
+  ratingDisabledForScore,
 }
 
 class UserAPIService {
   // Флаг переключения окружения: true = staging, false = production
-  static const bool _isStaging = true;
+  static const bool _isStaging = false;
 
   static String get _baseUrl => _isStaging
       ? 'https://staging-api.wobbly.site/api/v1'
@@ -216,14 +221,14 @@ class UserAPIService {
   }
 
   // Получение текущей сессии (проверка валидности токена)
-  Future<MeResponse> getSession(String token) async {
+  Future<SessionResponse> getSession(String token) async {
     final url = Uri.parse('$_baseUrl/auth/session');
     final headers = _buildHeaders({'Authorization': 'Bearer $token'});
     final response = await http.get(url, headers: headers);
     if (response.statusCode == 200) {
-      return MeResponse.fromJson(json.decode(response.body));
+      return SessionResponse.fromJson(json.decode(response.body));
     } else if (response.statusCode == 401) {
-      throw UserAPIError.invalidAuthToken;
+      throw UserAPIError.invalidToken;
     } else {
       throw await _handleError(response);
     }
@@ -267,8 +272,8 @@ class UserAPIService {
         switch (code) {
           case 'MISSING_AUTHORIZATION_HEADER':
             return UserAPIError.missingAuthorizationHeader;
-          case 'INVALID_AUTH_TOKEN':
-            return UserAPIError.invalidAuthToken;
+          case 'INVALID_TOKEN':
+            return UserAPIError.invalidToken;
           case 'USERNAME_ALREADY_EXISTS':
             return UserAPIError.usernameAlreadyExists;
           case 'USERNAME_TOO_SHORT':
@@ -294,6 +299,16 @@ class UserAPIService {
             return UserAPIError.appleAuthInvalid;
           case 'YANDEX_AUTH_INVALID':
             return UserAPIError.yandexAuthInvalid;
+          case 'AUTH_REQUIRED_FOR_RATING':
+            return UserAPIError.authRequiredForRating;
+          case 'AUTH_REQUIRED_FOR_USERNAME':
+            return UserAPIError.authRequiredForUsername;
+          case 'GUEST_CANNOT_ENABLE_RATING':
+            return UserAPIError.guestCannotEnableRating;
+          case 'USERNAME_REQUIRED_FOR_RATING':
+            return UserAPIError.usernameRequiredForRating;
+          case 'RATING_DISABLED_FOR_SCORE':
+            return UserAPIError.ratingDisabledForScore;
           default:
             return UserAPIError.serverError;
         }

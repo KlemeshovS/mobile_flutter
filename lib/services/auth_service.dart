@@ -34,17 +34,17 @@ class AuthService {
       );
 
       // Загружаем профиль пользователя
-      final me = await _api.getMyProfile(authResponse.accessToken);
+      final session = await _api.getSession(authResponse.accessToken);
       final prefs = await SharedPreferences.getInstance();
-      if (me.username != null && me.username!.isNotEmpty) {
-        await prefs.setString('userName', me.username!);
+      if (session.username != null && session.username!.isNotEmpty) {
+        await prefs.setString('userName', session.username!);
       } else {
         await prefs.remove('userName');
       }
-      await prefs.setBool('userParticipateInRating', me.participateInRating);
+      await prefs.setBool('userParticipateInRating', session.participateInRating);
 
       // Если пользователь участвует в рейтингах, нужно отправить его текущий счёт
-      if (me.participateInRating) {
+      if (session.participateInRating) {
         print('User participates in ratings, score will be sent later');
       }
 
@@ -60,7 +60,11 @@ class AuthService {
     if (refreshToken == null) return false;
     try {
       final newTokens = await _api.refreshTokens(refreshToken);
-      await _session.updateAccessToken(newTokens.accessToken);
+      // Обновляем оба токена
+      await _session.updateTokens(
+        accessToken: newTokens.accessToken,
+        refreshToken: newTokens.refreshToken,
+      );
       return true;
     } catch (e) {
       print('Refresh failed: $e');
@@ -80,5 +84,10 @@ class AuthService {
     }
     await _googleSignIn.signOut();
     await _session.setGuestSession();
+
+    // Дополнительно: очищаем данные пользователя в SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('userName');
+    await prefs.setBool('userParticipateInRating', false);
   }
 }
