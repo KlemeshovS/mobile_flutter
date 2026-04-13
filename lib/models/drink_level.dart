@@ -20,7 +20,7 @@ enum DrinkLevel {
 
   static DrinkLevel fromValue(int value) {
     return DrinkLevel.values.firstWhere(
-          (e) => e.value == value,
+      (e) => e.value == value,
       orElse: () => DrinkLevel.unknown,
     );
   }

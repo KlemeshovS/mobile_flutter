@@ -12,12 +12,14 @@ class AnonymousAuthResponse {
     required this.tokenType,
   });
 
-  factory AnonymousAuthResponse.fromJson(Map<String, dynamic> json) => AnonymousAuthResponse(
-    userId: json['userId'],
-    accessToken: json['accessToken'],
-    refreshToken: json['refreshToken'] ?? '',  // если бэкенд пока не отдаёт – пустая строка
-    tokenType: json['tokenType'],
-  );
+  factory AnonymousAuthResponse.fromJson(Map<String, dynamic> json) =>
+      AnonymousAuthResponse(
+        userId: json['userId'],
+        accessToken: json['accessToken'],
+        refreshToken: json['refreshToken'] ??
+            '', // если бэкенд пока не отдаёт – пустая строка
+        tokenType: json['tokenType'],
+      );
 }
 
 // Профиль пользователя (ответ /me)
@@ -26,13 +28,14 @@ class MeResponse {
   final String? username;
   final bool participateInRating;
 
-  MeResponse({required this.id, this.username, required this.participateInRating});
+  MeResponse(
+      {required this.id, this.username, required this.participateInRating});
 
   factory MeResponse.fromJson(Map<String, dynamic> json) => MeResponse(
-    id: json['id'],
-    username: json['username'],
-    participateInRating: json['participateInRating'],
-  );
+        id: json['id'],
+        username: json['username'],
+        participateInRating: json['participateInRating'],
+      );
 }
 
 // Ответ /auth/session (отдельная модель)
@@ -40,8 +43,8 @@ class SessionResponse {
   final int userId;
   final String? username;
   final bool participateInRating;
-  final String sessionType;   // "guest" или "authenticated"
-  final String? provider;     // например "google", "apple", "yandex" или null
+  final String sessionType; // "guest" или "authenticated"
+  final String? provider; // например "google", "apple", "yandex" или null
 
   SessionResponse({
     required this.userId,
@@ -51,13 +54,14 @@ class SessionResponse {
     this.provider,
   });
 
-  factory SessionResponse.fromJson(Map<String, dynamic> json) => SessionResponse(
-    userId: json['userId'],
-    username: json['username'],
-    participateInRating: json['participateInRating'] ?? false,
-    sessionType: json['sessionType'] ?? 'guest',
-    provider: json['provider'],
-  );
+  factory SessionResponse.fromJson(Map<String, dynamic> json) =>
+      SessionResponse(
+        userId: json['userId'],
+        username: json['username'],
+        participateInRating: json['participateInRating'] ?? false,
+        sessionType: json['sessionType'] ?? 'guest',
+        provider: json['provider'],
+      );
 }
 
 // Ответ на отправку счёта
@@ -68,9 +72,9 @@ class ScoreResponse {
   ScoreResponse({required this.username, required this.score});
 
   factory ScoreResponse.fromJson(Map<String, dynamic> json) => ScoreResponse(
-    username: json['username'],
-    score: json['score'],
-  );
+        username: json['username'],
+        score: json['score'],
+      );
 }
 
 // Элемент лидерборда
@@ -80,10 +84,11 @@ class LeaderboardItem {
 
   LeaderboardItem({required this.username, required this.score});
 
-  factory LeaderboardItem.fromJson(Map<String, dynamic> json) => LeaderboardItem(
-    username: json['username'],
-    score: json['score'],
-  );
+  factory LeaderboardItem.fromJson(Map<String, dynamic> json) =>
+      LeaderboardItem(
+        username: json['username'],
+        score: json['score'],
+      );
 }
 
 // Привязанный identity provider
@@ -98,11 +103,12 @@ class LinkedIdentityItem {
     required this.providerEmailVerified,
   });
 
-  factory LinkedIdentityItem.fromJson(Map<String, dynamic> json) => LinkedIdentityItem(
-    provider: json['provider'],
-    providerEmail: json['providerEmail'],
-    providerEmailVerified: json['providerEmailVerified'] ?? false,
-  );
+  factory LinkedIdentityItem.fromJson(Map<String, dynamic> json) =>
+      LinkedIdentityItem(
+        provider: json['provider'],
+        providerEmail: json['providerEmail'],
+        providerEmailVerified: json['providerEmailVerified'] ?? false,
+      );
 }
 
 class LinkedIdentityListResponse {
@@ -110,9 +116,12 @@ class LinkedIdentityListResponse {
 
   LinkedIdentityListResponse({required this.items});
 
-  factory LinkedIdentityListResponse.fromJson(Map<String, dynamic> json) => LinkedIdentityListResponse(
-    items: (json['items'] as List).map((e) => LinkedIdentityItem.fromJson(e)).toList(),
-  );
+  factory LinkedIdentityListResponse.fromJson(Map<String, dynamic> json) =>
+      LinkedIdentityListResponse(
+        items: (json['items'] as List)
+            .map((e) => LinkedIdentityItem.fromJson(e))
+            .toList(),
+      );
 }
 
 // Ответ лидерборда
@@ -122,8 +131,11 @@ class LeaderboardResponse {
 
   LeaderboardResponse({required this.items, required this.total});
 
-  factory LeaderboardResponse.fromJson(Map<String, dynamic> json) => LeaderboardResponse(
-    items: (json['items'] as List).map((e) => LeaderboardItem.fromJson(e)).toList(),
-    total: json['total'],
-  );
+  factory LeaderboardResponse.fromJson(Map<String, dynamic> json) =>
+      LeaderboardResponse(
+        items: (json['items'] as List)
+            .map((e) => LeaderboardItem.fromJson(e))
+            .toList(),
+        total: json['total'],
+      );
 }

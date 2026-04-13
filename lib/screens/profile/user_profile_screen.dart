@@ -64,7 +64,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         setState(() {
           _currentUsername = session.username;
         });
-        await prefs.setBool('userParticipateInRating', session.participateInRating);
+        await prefs.setBool(
+            'userParticipateInRating', session.participateInRating);
         setState(() {
           _participate = session.participateInRating;
         });
@@ -87,7 +88,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     final success = await AuthService().signInWithGoogle();
     if (success && mounted) {
       await _loadSessionAndUserData();
-      widget.onRegisterSuccess?.call(_currentUsername ?? '', SessionManager().userId ?? 0, _participate);
+      widget.onRegisterSuccess?.call(
+          _currentUsername ?? '', SessionManager().userId ?? 0, _participate);
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -111,7 +113,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   // Обновление имени через диалог
   Future<void> _editUsername() async {
     final loc = AppLocalizations.of(context);
-    final TextEditingController controller = TextEditingController(text: _currentUsername ?? '');
+    final TextEditingController controller =
+        TextEditingController(text: _currentUsername ?? '');
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -192,22 +195,27 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         _currentUsername = newName;
         _isEditingName = false;
       });
-      widget.onRegisterSuccess?.call(newName, SessionManager().userId ?? 0, _participate);
+      widget.onRegisterSuccess
+          ?.call(newName, SessionManager().userId ?? 0, _participate);
     } catch (e) {
       String msg;
       if (e is UserAPIError) {
         switch (e) {
           case UserAPIError.usernameAlreadyExists:
-            msg = AppLocalizations.of(context).translate('error_username_already_exists');
+            msg = AppLocalizations.of(context)
+                .translate('error_username_already_exists');
             break;
           case UserAPIError.usernameTooShort:
-            msg = AppLocalizations.of(context).translate('error_username_too_short');
+            msg = AppLocalizations.of(context)
+                .translate('error_username_too_short');
             break;
           case UserAPIError.usernameTooLong:
-            msg = AppLocalizations.of(context).translate('error_username_too_long');
+            msg = AppLocalizations.of(context)
+                .translate('error_username_too_long');
             break;
           case UserAPIError.usernameInvalidCharacters:
-            msg = AppLocalizations.of(context).translate('error_username_invalid_characters');
+            msg = AppLocalizations.of(context)
+                .translate('error_username_invalid_characters');
             break;
           default:
             msg = e.toString();
@@ -224,19 +232,23 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   Future<void> _saveNewNameFromField() async {
     final newName = _tempNameController.text.trim();
     if (newName.isEmpty) {
-      _showError(AppLocalizations.of(context).translate('error_username_empty'));
+      _showError(
+          AppLocalizations.of(context).translate('error_username_empty'));
       return;
     }
     if (newName.contains(' ')) {
-      _showError(AppLocalizations.of(context).translate('error_username_contains_space'));
+      _showError(AppLocalizations.of(context)
+          .translate('error_username_contains_space'));
       return;
     }
     if (newName.length < 3) {
-      _showError(AppLocalizations.of(context).translate('error_username_too_short'));
+      _showError(
+          AppLocalizations.of(context).translate('error_username_too_short'));
       return;
     }
     if (newName.length > 20) {
-      _showError(AppLocalizations.of(context).translate('error_username_too_long'));
+      _showError(
+          AppLocalizations.of(context).translate('error_username_too_long'));
       return;
     }
     await _saveUsername(newName);
@@ -261,7 +273,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       );
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('userParticipateInRating', value);
-      widget.onRegisterSuccess?.call(_currentUsername ?? '', SessionManager().userId ?? 0, value);
+      widget.onRegisterSuccess
+          ?.call(_currentUsername ?? '', SessionManager().userId ?? 0, value);
     } catch (e) {
       print('Ошибка сохранения участия: $e');
       // Откатываем обратно
@@ -286,7 +299,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         body: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF1E1E2E).withOpacity(0.98), Color(0xFF2A2A3A).withOpacity(0.98)],
+              colors: [
+                Color(0xFF1E1E2E).withOpacity(0.98),
+                Color(0xFF2A2A3A).withOpacity(0.98)
+              ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -303,7 +319,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         body: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF1E1E2E).withOpacity(0.98), Color(0xFF2A2A3A).withOpacity(0.98)],
+              colors: [
+                Color(0xFF1E1E2E).withOpacity(0.98),
+                Color(0xFF2A2A3A).withOpacity(0.98)
+              ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -329,18 +348,23 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           const CircleAvatar(
                             radius: 50,
                             backgroundColor: Color(0xFF8B5CF6),
-                            child: Icon(Icons.person_outline, size: 50, color: Colors.white),
+                            child: Icon(Icons.person_outline,
+                                size: 50, color: Colors.white),
                           ),
                           const SizedBox(height: 24),
                           Text(
                             loc.translate('profile_guest_title'),
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                            style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white),
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 12),
                           Text(
                             loc.translate('profile_guest_message'),
-                            style: const TextStyle(fontSize: 14, color: Colors.white70),
+                            style: const TextStyle(
+                                fontSize: 14, color: Colors.white70),
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 32),
@@ -349,12 +373,16 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             height: 56,
                             child: ElevatedButton.icon(
                               onPressed: _signInWithGoogle,
-                              icon: const Icon(Icons.login, color: Colors.white),
-                              label: Text(loc.translate('google_sign_in_button'), style: const TextStyle(fontSize: 16)),
+                              icon:
+                                  const Icon(Icons.login, color: Colors.white),
+                              label: Text(
+                                  loc.translate('google_sign_in_button'),
+                                  style: const TextStyle(fontSize: 16)),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF8B5CF6),
                                 foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12)),
                               ),
                             ),
                           ),
@@ -376,7 +404,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF1E1E2E).withOpacity(0.98), Color(0xFF2A2A3A).withOpacity(0.98)],
+            colors: [
+              Color(0xFF1E1E2E).withOpacity(0.98),
+              Color(0xFF2A2A3A).withOpacity(0.98)
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -401,8 +432,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       children: [
                         CircleAvatar(
                           radius: 50,
-                          backgroundColor: const Color(0xFF8B5CF6).withOpacity(0.3),
-                          child: const Icon(Icons.person, size: 50, color: Colors.white),
+                          backgroundColor:
+                              const Color(0xFF8B5CF6).withOpacity(0.3),
+                          child: const Icon(Icons.person,
+                              size: 50, color: Colors.white),
                         ),
                         const SizedBox(height: 16),
                         // Заголовок: username или "Профиль"
@@ -428,7 +461,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                               const SizedBox(width: 8),
                               GestureDetector(
                                 onTap: _editUsername,
-                                child: const Icon(Icons.edit, color: Colors.white70, size: 20),
+                                child: const Icon(Icons.edit,
+                                    color: Colors.white70, size: 20),
                               ),
                             ],
                           ],
@@ -436,19 +470,22 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         const SizedBox(height: 8),
                         Text(
                           loc.translate('profile_authenticated_subtitle'),
-                          style: const TextStyle(fontSize: 14, color: Colors.white70),
+                          style: const TextStyle(
+                              fontSize: 14, color: Colors.white70),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 32),
 
                         // Если нет имени – показываем поле для ввода
-                        if (_currentUsername == null || _currentUsername!.isEmpty) ...[
+                        if (_currentUsername == null ||
+                            _currentUsername!.isEmpty) ...[
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 loc.translate('user_name_label'),
-                                style: const TextStyle(color: Colors.white70, fontSize: 12),
+                                style: const TextStyle(
+                                    color: Colors.white70, fontSize: 12),
                               ),
                               const SizedBox(height: 8),
                               TextField(
@@ -461,7 +498,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                     borderRadius: BorderRadius.circular(8),
                                     borderSide: BorderSide.none,
                                   ),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 14),
                                 ),
                               ),
                               const SizedBox(height: 16),
@@ -472,7 +510,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                   onPressed: _saveNewNameFromField,
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xFF8B5CF6),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8)),
                                   ),
                                   child: Text(loc.translate('save_button')),
                                 ),
@@ -480,7 +519,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                               if (_errorMessage != null)
                                 Padding(
                                   padding: const EdgeInsets.only(top: 8),
-                                  child: Text(_errorMessage!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+                                  child: Text(_errorMessage!,
+                                      style: const TextStyle(
+                                          color: Colors.red, fontSize: 12)),
                                 ),
                               const SizedBox(height: 24),
                             ],
@@ -491,7 +532,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         SwitchListTile(
                           title: Text(
                             loc.translate('user_ranking_toggle'),
-                            style: const TextStyle(color: Colors.white, fontSize: 14),
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 14),
                           ),
                           value: _participate,
                           onChanged: _toggleParticipate,

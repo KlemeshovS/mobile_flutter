@@ -7,7 +7,6 @@ import 'package:wobbly/utils/achievement_manager.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:wobbly/widgets/gradient_background.dart';
 
-
 class SettingsScreen extends StatefulWidget {
   final Map<String, DayRecord> daysData;
   final Function()? onExport;
@@ -57,8 +56,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
-
-
   Future<void> _openTelegram() async {
     const telegramUsername = 'wobbly_app';
     final telegramUrl = Uri.parse('tg://resolve?domain=$telegramUsername');
@@ -78,14 +75,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
       // Если ни то, ни другое не сработало – показываем ошибку
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Не удалось открыть Telegram. Проверьте интернет-соединение.')),
+          const SnackBar(
+              content: Text(
+                  'Не удалось открыть Telegram. Проверьте интернет-соединение.')),
         );
       }
     } catch (e) {
       print('Error opening Telegram: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ошибка при открытии ссылки. Попробуйте позже.')),
+          const SnackBar(
+              content: Text('Ошибка при открытии ссылки. Попробуйте позже.')),
         );
       }
     }
@@ -104,8 +104,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context).achievementsResetNotificationTitle),
-        content: Text(AppLocalizations.of(context).achievementsResetNotificationMessage),
+        title: Text(
+            AppLocalizations.of(context).achievementsResetNotificationTitle),
+        content: Text(
+            AppLocalizations.of(context).achievementsResetNotificationMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -132,31 +134,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   duration: const Duration(milliseconds: 300),
                   child: _showAboutApp
                       ? AboutAppView(
-                    daysData: widget.daysData,
-                    unlockedAchievementsCount: _unlockedAchievementsCount,
-                    totalAchievementsCount: _totalAchievementsCount,
-                    onBack: () {
-                      setState(() {
-                        _showAboutApp = false;
-                      });
-                    },
-                    onTelegramTap: _openTelegram,
-                    appVersion: _appVersion,
-                  )
+                          daysData: widget.daysData,
+                          unlockedAchievementsCount: _unlockedAchievementsCount,
+                          totalAchievementsCount: _totalAchievementsCount,
+                          onBack: () {
+                            setState(() {
+                              _showAboutApp = false;
+                            });
+                          },
+                          onTelegramTap: _openTelegram,
+                          appVersion: _appVersion,
+                        )
                       : MainMenuContent(
-                    localizations: localizations,
-                    backupStatus: _backupStatus,
-                    onExport: widget.onExport ?? () {},
-                    onRestoreFromBackup: widget.onRestoreFromBackup ?? () {},
-                    onImportFromFile: widget.onImportFromFile ?? () {},
-                    onShowAbout: () {
-                      setState(() {
-                        _showAboutApp = true;
-                      });
-                    },
-                    onResetAchievements: _resetAllAchievements,
-                    appVersion: _appVersion,
-                  ),
+                          localizations: localizations,
+                          backupStatus: _backupStatus,
+                          onExport: widget.onExport ?? () {},
+                          onRestoreFromBackup:
+                              widget.onRestoreFromBackup ?? () {},
+                          onImportFromFile: widget.onImportFromFile ?? () {},
+                          onShowAbout: () {
+                            setState(() {
+                              _showAboutApp = true;
+                            });
+                          },
+                          onResetAchievements: _resetAllAchievements,
+                          appVersion: _appVersion,
+                        ),
                 ),
               ),
             ],
@@ -194,9 +197,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(width: 8),
                   Text(
                     localizations.back,
-                    style: TextStyle(
-                        fontFamily: 'Inter',
-                        color: Colors.white70),
+                    style:
+                        TextStyle(fontFamily: 'Inter', color: Colors.white70),
                   ),
                 ],
               ),
@@ -330,15 +332,13 @@ class MainMenuContent extends StatelessWidget {
                 localizations.about,
                 style: TextStyle(
                   fontFamily: 'Inter',
-                color: Colors.white,
+                  color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),
               ),
               subtitle: Text(
                 appVersion,
-                style: TextStyle(
-                    fontFamily: 'Inter',
-              color: Colors.white70),
+                style: TextStyle(fontFamily: 'Inter', color: Colors.white70),
               ),
               trailing: const Icon(Icons.chevron_right, color: Colors.white70),
             ),
@@ -391,15 +391,13 @@ class MenuItem extends StatelessWidget {
           title,
           style: TextStyle(
             fontFamily: 'Inter',
-          color: Colors.white,
+            color: Colors.white,
             fontWeight: FontWeight.w600,
           ),
         ),
         subtitle: Text(
           subtitle,
-          style: TextStyle(
-              fontFamily: 'Inter',
-              color: Colors.white70),
+          style: TextStyle(fontFamily: 'Inter', color: Colors.white70),
         ),
       ),
     );
@@ -428,7 +426,8 @@ class AboutAppView extends StatefulWidget {
   State<AboutAppView> createState() => _AboutAppViewState();
 }
 
-class _AboutAppViewState extends State<AboutAppView> with SingleTickerProviderStateMixin {
+class _AboutAppViewState extends State<AboutAppView>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _opacityAnimation;
   late Animation<double> _translateAnimation;
@@ -497,14 +496,15 @@ class _AboutAppViewState extends State<AboutAppView> with SingleTickerProviderSt
                             end: Alignment.bottomRight,
                           ),
                         ),
-                        child: const Icon(Icons.fitness_center, color: Colors.white, size: 40),
+                        child: const Icon(Icons.fitness_center,
+                            color: Colors.white, size: 40),
                       ),
                       const SizedBox(height: 16),
                       Text(
                         localizations.appTitle,
                         style: TextStyle(
                           fontFamily: 'Inter',
-                        fontSize: 24,
+                          fontSize: 24,
                           fontWeight: FontWeight.w900,
                           color: Colors.white,
                         ),
@@ -514,7 +514,7 @@ class _AboutAppViewState extends State<AboutAppView> with SingleTickerProviderSt
                         localizations.appSubtitle,
                         style: TextStyle(
                           fontFamily: 'Inter',
-                        fontSize: 14,
+                          fontSize: 14,
                           color: Colors.white70,
                         ),
                         textAlign: TextAlign.center,
@@ -547,7 +547,9 @@ class _AboutAppViewState extends State<AboutAppView> with SingleTickerProviderSt
                       StatRow(
                         icon: Icons.emoji_events,
                         title: localizations.menuAchievementsTitle,
-                        value: '${achievementManager.unlockedAchievementsCount}/${achievementManager.totalAchievementsCount}',                      ),
+                        value:
+                            '${achievementManager.unlockedAchievementsCount}/${achievementManager.totalAchievementsCount}',
+                      ),
                       const SizedBox(height: 8),
                       StatRow(
                         icon: Icons.info,
@@ -584,7 +586,7 @@ class _AboutAppViewState extends State<AboutAppView> with SingleTickerProviderSt
                           localizations.about,
                           style: TextStyle(
                             fontFamily: 'Inter',
-                          fontSize: 16,
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
@@ -594,7 +596,7 @@ class _AboutAppViewState extends State<AboutAppView> with SingleTickerProviderSt
                           localizations.appOriginStoryPart1,
                           style: TextStyle(
                             fontFamily: 'Inter',
-                          fontSize: 12,
+                            fontSize: 12,
                             color: Colors.white70,
                             height: 1.2,
                           ),
@@ -604,7 +606,7 @@ class _AboutAppViewState extends State<AboutAppView> with SingleTickerProviderSt
                           localizations.appOriginStoryPart2,
                           style: TextStyle(
                             fontFamily: 'Inter',
-                          fontSize: 12,
+                            fontSize: 12,
                             color: Colors.white70,
                             height: 1.2,
                           ),
@@ -614,7 +616,7 @@ class _AboutAppViewState extends State<AboutAppView> with SingleTickerProviderSt
                           localizations.aboutCreatorDescription,
                           style: TextStyle(
                             fontFamily: 'Inter',
-                          fontSize: 12,
+                            fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: Color(0xFFC7FF00),
                           ),
@@ -643,7 +645,7 @@ class _AboutAppViewState extends State<AboutAppView> with SingleTickerProviderSt
                         localizations.aboutCapabilitiesTitle,
                         style: TextStyle(
                           fontFamily: 'Inter',
-                        fontSize: 16,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
@@ -712,7 +714,7 @@ class StatRow extends StatelessWidget {
                 title,
                 style: TextStyle(
                   fontFamily: 'Inter',
-                fontSize: 16,
+                  fontSize: 16,
                   color: Colors.white70,
                 ),
               ),
@@ -721,7 +723,7 @@ class StatRow extends StatelessWidget {
               value,
               style: TextStyle(
                 fontFamily: 'Inter',
-              fontSize: 16,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
@@ -773,7 +775,7 @@ class FeatureRow extends StatelessWidget {
                   title,
                   style: TextStyle(
                     fontFamily: 'Inter',
-                  fontSize: 16,
+                    fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
                   ),
@@ -783,7 +785,7 @@ class FeatureRow extends StatelessWidget {
                   description,
                   style: TextStyle(
                     fontFamily: 'Inter',
-                  fontSize: 14,
+                    fontSize: 14,
                     color: Colors.white70,
                   ),
                 ),

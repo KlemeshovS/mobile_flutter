@@ -36,7 +36,8 @@ void main() {
   print('🕐 main start: $start');
 
   WidgetsFlutterBinding.ensureInitialized();
-  print('🕐 after ensureInitialized: ${DateTime.now().millisecondsSinceEpoch - start}ms');
+  print(
+      '🕐 after ensureInitialized: ${DateTime.now().millisecondsSinceEpoch - start}ms');
 
   // Запускаем все асинхронные задачи параллельно, НЕ ждём их
   final prefsFuture = SharedPreferences.getInstance();
@@ -44,7 +45,8 @@ void main() {
   final dataManager = DataManager();
   final dataFuture = dataManager.loadData();
 
-  print('🕐 after creating futures: ${DateTime.now().millisecondsSinceEpoch - start}ms');
+  print(
+      '🕐 after creating futures: ${DateTime.now().millisecondsSinceEpoch - start}ms');
 
   runApp(MyApp(
     prefsFuture: prefsFuture,
@@ -52,7 +54,6 @@ void main() {
     dataFuture: dataFuture,
   ));
   print('🕐 after runApp: ${DateTime.now().millisecondsSinceEpoch - start}ms');
-
 }
 
 class MyApp extends StatefulWidget {
@@ -70,7 +71,6 @@ class MyApp extends StatefulWidget {
   @override
   State<MyApp> createState() => _MyAppState();
 }
-
 
 class _MyAppState extends State<MyApp> {
   late LanguageManager _languageManager;
@@ -154,17 +154,17 @@ class _MyAppState extends State<MyApp> {
             locale: languageManager.currentLocale,
             home: _showSplash
                 ? SplashScreen(
-              onAnimationComplete: _onSplashComplete,
-              dataFuture: widget.dataFuture,
-              prefsFuture: widget.prefsFuture,
-              achievementsFuture: widget.achievementsFuture,
-            )
+                    onAnimationComplete: _onSplashComplete,
+                    dataFuture: widget.dataFuture,
+                    prefsFuture: widget.prefsFuture,
+                    achievementsFuture: widget.achievementsFuture,
+                  )
                 : (_isFirstLaunch
-                ? TutorialScreen(onComplete: _onTutorialComplete)
-                : MainApp(
-              initialData: _loadedData ?? {},
-              initialScrollOffset: _initialScrollOffset,
-            )),
+                    ? TutorialScreen(onComplete: _onTutorialComplete)
+                    : MainApp(
+                        initialData: _loadedData ?? {},
+                        initialScrollOffset: _initialScrollOffset,
+                      )),
           );
         },
       ),
@@ -242,7 +242,8 @@ class MainAppState extends State<MainApp> {
                   width: 24,
                   height: 24,
                   fit: BoxFit.contain,
-                  errorBuilder: (context, error, stack) => const Icon(Icons.error, color: Colors.red),
+                  errorBuilder: (context, error, stack) =>
+                      const Icon(Icons.error, color: Colors.red),
                 ),
               ),
             ),
@@ -308,12 +309,13 @@ class MainAppState extends State<MainApp> {
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      AchievementManager().updateAchievements(_progressDays, _daysData).then((_) {
+      AchievementManager()
+          .updateAchievements(_progressDays, _daysData)
+          .then((_) {
         _statsKey.currentState?.refreshAchievements();
       });
     });
   }
-
 
   Future<void> _reloadData() async {
     final newData = await _dataManager.loadData();
@@ -392,7 +394,8 @@ class MainAppState extends State<MainApp> {
       final jsonString = JsonEncoder.withIndent('  ').convert(exportData);
 
       final directory = await getTemporaryDirectory();
-      final timestamp = DateTime.now().toString()
+      final timestamp = DateTime.now()
+          .toString()
           .replaceAll(' ', '_')
           .replaceAll(':', '-')
           .split('.')[0];
@@ -409,7 +412,6 @@ class MainAppState extends State<MainApp> {
         subject: 'Wobbly Data Export',
         text: 'Here is my Wobbly data export file.',
       );
-
 
       Future.delayed(const Duration(seconds: 30)).then((_) async {
         if (await file.exists()) {
@@ -431,7 +433,8 @@ class MainAppState extends State<MainApp> {
   }
 
   Future<void> _updateDayRecord(DayData dayData, DayRecord record) async {
-    print("🔄 _updateDayRecord: day=${dayData.key}, record: drinkLevel=${record.drinkLevel}, hasSport=${record.hasSport}");
+    print(
+        "🔄 _updateDayRecord: day=${dayData.key}, record: drinkLevel=${record.drinkLevel}, hasSport=${record.hasSport}");
     setState(() {
       if (record.drinkLevel == DrinkLevel.unknown) {
         _daysData.remove(dayData.key);
@@ -462,35 +465,36 @@ class MainAppState extends State<MainApp> {
 
     return GradientBackground(
       child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: IndexedStack(
-          index: _selectedTab,
-          children: [
-            CalendarScreen(
-              key: _calendarKey,
-              daysData: _daysData,
-              onDayRecordUpdated: _updateDayRecord,
-              initialScrollOffset: widget.initialScrollOffset,
-            ),
-            StatsScreen(
-              key: _statsKey,
-        //      key: ValueKey(_daysData.length),
-              daysData: _daysData,
-              progressDays: _progressDays,
-              onExport: _exportData,
-              onDataChanged: _reloadData,
-              onAchievementsReset: _resetAchievements,
-              ratingsKey: _ratingsKey,
-            ),
-            RatingsScreen(
-              key: _ratingsKey,
-              daysData: _daysData,
-            ),
-          ],
-        ),
+          backgroundColor: Colors.transparent,
+          body: IndexedStack(
+            index: _selectedTab,
+            children: [
+              CalendarScreen(
+                key: _calendarKey,
+                daysData: _daysData,
+                onDayRecordUpdated: _updateDayRecord,
+                initialScrollOffset: widget.initialScrollOffset,
+              ),
+              StatsScreen(
+                key: _statsKey,
+                //      key: ValueKey(_daysData.length),
+                daysData: _daysData,
+                progressDays: _progressDays,
+                onExport: _exportData,
+                onDataChanged: _reloadData,
+                onAchievementsReset: _resetAchievements,
+                ratingsKey: _ratingsKey,
+              ),
+              RatingsScreen(
+                key: _ratingsKey,
+                daysData: _daysData,
+              ),
+            ],
+          ),
           bottomNavigationBar: SafeArea(
             child: Container(
-              padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
+              padding: EdgeInsets.symmetric(
+                  horizontal: horizontalPadding, vertical: verticalPadding),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: const BorderRadius.only(
@@ -529,8 +533,7 @@ class MainAppState extends State<MainApp> {
                 ],
               ),
             ),
-          )
-      ),
+          )),
     );
   }
 }

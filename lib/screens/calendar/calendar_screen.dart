@@ -39,7 +39,8 @@ class CalendarScreenState extends State<CalendarScreen> {
 
   static const String _prefLastMotivationDate = 'last_motivation_date';
 // Для тестов можно выставить в true, чтобы показывать при каждом открытии
-  final bool _debugShowEveryTime = false; // включение маотивационных сообщений на постоянку
+  final bool _debugShowEveryTime =
+      false; // включение маотивационных сообщений на постоянку
 
   Future<void> _maybeShowMotivation() async {
     // Не показываем, если нет данных (после туториала)
@@ -146,7 +147,8 @@ class CalendarScreenState extends State<CalendarScreen> {
     }
 
     // Получаем случайный текст
-    final message = AppLocalizations.of(context).getRandomMotivationText(isDrinking);
+    final message =
+        AppLocalizations.of(context).getRandomMotivationText(isDrinking);
 
     _showMotivationSheet(title, message);
   }
@@ -188,8 +190,7 @@ class CalendarScreenState extends State<CalendarScreen> {
               Text(
                 message,
                 style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 14, color: Colors.white70),
+                    fontFamily: 'Inter', fontSize: 14, color: Colors.white70),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -254,7 +255,8 @@ class CalendarScreenState extends State<CalendarScreen> {
     if (dayData.isFuture) return;
 
     // Вибрация при долгом нажатии
-    Vibration.vibrate(duration: 50);   // 50 миллисекунд – короткий тактильный отклик
+    Vibration.vibrate(
+        duration: 50); // 50 миллисекунд – короткий тактильный отклик
 
     final currentRecord = widget.daysData[dayData.key] ?? DayRecord();
     var newRecord = currentRecord.copyWith(

@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import '../utils/sobriety_progress_calculator.dart';
 import '../utils/localization.dart';
 
-
 class SobrietyProgressView extends StatefulWidget {
   final int progressDays;
 
@@ -48,7 +47,9 @@ class _SobrietyProgressViewState extends State<SobrietyProgressView>
       _animationController.forward();
 
       if (widget.progressDays > 365 ||
-          (widget.progressDays < 0 && widget.progressDays.abs() > SobrietyProgressCalculator.maxNegativeDays)) {
+          (widget.progressDays < 0 &&
+              widget.progressDays.abs() >
+                  SobrietyProgressCalculator.maxNegativeDays)) {
         Future.delayed(const Duration(milliseconds: 800), () {
           if (mounted) {
             setState(() {
@@ -77,7 +78,9 @@ class _SobrietyProgressViewState extends State<SobrietyProgressView>
       _resetAndStartAnimation();
 
       // Включение свечения для больших отрицательных
-      if (widget.progressDays < 0 && widget.progressDays.abs() > SobrietyProgressCalculator.maxNegativeDays) {
+      if (widget.progressDays < 0 &&
+          widget.progressDays.abs() >
+              SobrietyProgressCalculator.maxNegativeDays) {
         setState(() {
           _glowAnimation = true;
         });
@@ -113,7 +116,8 @@ class _SobrietyProgressViewState extends State<SobrietyProgressView>
       const maxNegativeDays = 500.0;
       return (widget.progressDays.abs() / maxNegativeDays).clamp(0.0, 1.0);
     } else if (widget.progressDays <= SobrietyProgressCalculator.maxDays) {
-      return (widget.progressDays / SobrietyProgressCalculator.maxDays).clamp(0.0, 1.0);
+      return (widget.progressDays / SobrietyProgressCalculator.maxDays)
+          .clamp(0.0, 1.0);
     } else {
       return 1.0;
     }
@@ -147,7 +151,8 @@ class _SobrietyProgressViewState extends State<SobrietyProgressView>
 
           // Основной контент в зависимости от типа прогресса
           if (widget.progressDays < 0)
-            widget.progressDays.abs() > SobrietyProgressCalculator.maxNegativeDays
+            widget.progressDays.abs() >
+                    SobrietyProgressCalculator.maxNegativeDays
                 ? _buildLargeNegativeProgress()
                 : _buildNegativeProgress()
           else if (widget.progressDays <= SobrietyProgressCalculator.maxDays)
@@ -181,11 +186,12 @@ class _SobrietyProgressViewState extends State<SobrietyProgressView>
         ),
         const SizedBox(width: 8),
         if (widget.progressDays <= SobrietyProgressCalculator.maxDays &&
-            widget.progressDays >= -SobrietyProgressCalculator.maxNegativeDays)          Text(
+            widget.progressDays >= -SobrietyProgressCalculator.maxNegativeDays)
+          Text(
             _getFormattedValue(widget.progressDays),
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 15,
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 15,
               fontWeight: FontWeight.w500,
               color: widget.progressDays < 0
                   ? Colors.red.withOpacity(0.9)
@@ -198,10 +204,10 @@ class _SobrietyProgressViewState extends State<SobrietyProgressView>
   }
 
   Widget _buildNegativeProgress() {
-    final nextMilestone = SobrietyProgressCalculator.nextNegativeMilestone(widget.progressDays);
-    final daysToNext = nextMilestone != null
-        ? nextMilestone - widget.progressDays.abs()
-        : 0;
+    final nextMilestone =
+        SobrietyProgressCalculator.nextNegativeMilestone(widget.progressDays);
+    final daysToNext =
+        nextMilestone != null ? nextMilestone - widget.progressDays.abs() : 0;
 
     return Column(
       children: [
@@ -223,7 +229,8 @@ class _SobrietyProgressViewState extends State<SobrietyProgressView>
                   AnimatedBuilder(
                     animation: _progressAnimation,
                     builder: (context, child) {
-                      final width = constraints.maxWidth * min(_progressAnimation.value, 1.0);
+                      final width = constraints.maxWidth *
+                          min(_progressAnimation.value, 1.0);
                       return Align(
                         alignment: Alignment.centerRight,
                         child: Container(
@@ -276,7 +283,8 @@ class _SobrietyProgressViewState extends State<SobrietyProgressView>
         // Вехи для отрицательного прогресса
         const SizedBox(height: 12),
         Row(
-          children: SobrietyProgressCalculator.negativeMilestones.map((milestone) {
+          children:
+              SobrietyProgressCalculator.negativeMilestones.map((milestone) {
             final isNext = nextMilestone == milestone;
             final isCompleted = widget.progressDays.abs() >= milestone;
 
@@ -295,10 +303,10 @@ class _SobrietyProgressViewState extends State<SobrietyProgressView>
   }
 
   Widget _buildLargeNegativeProgress() {
-    final nextMilestone = SobrietyProgressCalculator.nextNegativeMilestone(widget.progressDays);
-    final daysToNext = nextMilestone != null
-        ? nextMilestone - widget.progressDays.abs()
-        : 0;
+    final nextMilestone =
+        SobrietyProgressCalculator.nextNegativeMilestone(widget.progressDays);
+    final daysToNext =
+        nextMilestone != null ? nextMilestone - widget.progressDays.abs() : 0;
 
     return Column(
       children: [
@@ -324,14 +332,17 @@ class _SobrietyProgressViewState extends State<SobrietyProgressView>
                 _localize('next_negative_step_title'),
                 style: TextStyle(
                     fontFamily: 'Inter',
-                    fontSize: 12, color: Colors.white.withOpacity(0.7)),
+                    fontSize: 12,
+                    color: Colors.white.withOpacity(0.7)),
               ),
               const SizedBox(width: 4),
               Text(
                 "$daysToNext ${_localize('days')}",
                 style: TextStyle(
                     fontFamily: 'Inter',
-                    fontSize: 12, fontWeight: FontWeight.bold, color: Colors.red),
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red),
               ),
             ],
           ),
@@ -339,7 +350,8 @@ class _SobrietyProgressViewState extends State<SobrietyProgressView>
         // Вехи после 500
         const SizedBox(height: 12),
         Row(
-          children: SobrietyProgressCalculator.postNegativeMilestones.map((milestone) {
+          children: SobrietyProgressCalculator.postNegativeMilestones
+              .map((milestone) {
             final isNext = nextMilestone == milestone;
             final isCompleted = widget.progressDays.abs() >= milestone;
 
@@ -358,10 +370,10 @@ class _SobrietyProgressViewState extends State<SobrietyProgressView>
   }
 
   Widget _buildPositiveProgress() {
-    final nextMilestone = SobrietyProgressCalculator.nextMilestone(widget.progressDays);
-    final daysToNext = nextMilestone != null
-        ? nextMilestone.days - widget.progressDays
-        : 0;
+    final nextMilestone =
+        SobrietyProgressCalculator.nextMilestone(widget.progressDays);
+    final daysToNext =
+        nextMilestone != null ? nextMilestone.days - widget.progressDays : 0;
 
     return Column(
       children: [
@@ -383,13 +395,19 @@ class _SobrietyProgressViewState extends State<SobrietyProgressView>
                   AnimatedBuilder(
                     animation: _progressAnimation,
                     builder: (context, child) {
-                      final width = constraints.maxWidth * min(_progressAnimation.value, 1.0);
+                      final width = constraints.maxWidth *
+                          min(_progressAnimation.value, 1.0);
                       return Container(
                         width: width,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(8),
                           gradient: const LinearGradient(
-                            colors: [Colors.red, Colors.orange, Colors.yellow, Colors.green],
+                            colors: [
+                              Colors.red,
+                              Colors.orange,
+                              Colors.yellow,
+                              Colors.green
+                            ],
                             stops: [0.0, 0.33, 0.66, 1.0],
                             begin: Alignment.centerLeft,
                             end: Alignment.centerRight,
@@ -450,10 +468,10 @@ class _SobrietyProgressViewState extends State<SobrietyProgressView>
   }
 
   Widget _buildPostYearProgress() {
-    final nextMilestone = SobrietyProgressCalculator.nextPostYearMilestone(widget.progressDays);
-    final daysToNext = nextMilestone != null
-        ? nextMilestone - widget.progressDays
-        : 0;
+    final nextMilestone =
+        SobrietyProgressCalculator.nextPostYearMilestone(widget.progressDays);
+    final daysToNext =
+        nextMilestone != null ? nextMilestone - widget.progressDays : 0;
 
     return Column(
       children: [
@@ -500,7 +518,8 @@ class _SobrietyProgressViewState extends State<SobrietyProgressView>
         // Вехи после года
         const SizedBox(height: 12),
         Row(
-          children: SobrietyProgressCalculator.postYearMilestones.map((milestone) {
+          children:
+              SobrietyProgressCalculator.postYearMilestones.map((milestone) {
             final isNext = nextMilestone == milestone;
 
             return Expanded(
@@ -551,7 +570,8 @@ class _SobrietyProgressViewState extends State<SobrietyProgressView>
                       ..style = PaintingStyle.stroke
                       ..strokeWidth = 6
                       ..color = effectiveGlowColor.withOpacity(0.3)
-                      ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 20),
+                      ..maskFilter =
+                          const ui.MaskFilter.blur(ui.BlurStyle.normal, 20),
                   ),
                 ),
                 // Среднее свечение
@@ -562,7 +582,8 @@ class _SobrietyProgressViewState extends State<SobrietyProgressView>
                       ..style = PaintingStyle.stroke
                       ..strokeWidth = 4
                       ..color = effectiveGlowColor.withOpacity(0.5)
-                      ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 12),
+                      ..maskFilter =
+                          const ui.MaskFilter.blur(ui.BlurStyle.normal, 12),
                   ),
                 ),
                 // Ближнее свечение
@@ -573,7 +594,8 @@ class _SobrietyProgressViewState extends State<SobrietyProgressView>
                       ..style = PaintingStyle.stroke
                       ..strokeWidth = 2
                       ..color = effectiveGlowColor.withOpacity(0.8)
-                      ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 6),
+                      ..maskFilter =
+                          const ui.MaskFilter.blur(ui.BlurStyle.normal, 6),
                   ),
                 ),
               ],
@@ -641,22 +663,25 @@ class MilestoneIndicator extends StatelessWidget {
           alignment: Alignment.center,
           child: isCompleted
               ? const Icon(
-            Icons.check_circle,
-            color: Colors.green,
-            size: 16,
-          )
+                  Icons.check_circle,
+                  color: Colors.green,
+                  size: 16,
+                )
               : Container(
-            width: 16,
-            height: 16,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: isNext ? Colors.white : Colors.white.withOpacity(0.3),
-                width: 1.5,
-              ),
-              color: isNext ? Colors.white.withOpacity(0.1) : Colors.transparent,
-            ),
-          ),
+                  width: 16,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color:
+                          isNext ? Colors.white : Colors.white.withOpacity(0.3),
+                      width: 1.5,
+                    ),
+                    color: isNext
+                        ? Colors.white.withOpacity(0.1)
+                        : Colors.transparent,
+                  ),
+                ),
         ),
         const SizedBox(height: 4),
         Text(
@@ -668,8 +693,8 @@ class MilestoneIndicator extends StatelessWidget {
             color: isCompleted
                 ? Colors.green
                 : isNext
-                ? Colors.white
-                : Colors.white.withOpacity(0.6),
+                    ? Colors.white
+                    : Colors.white.withOpacity(0.6),
           ),
           textAlign: TextAlign.center,
           maxLines: 2,
@@ -704,27 +729,30 @@ class PostYearMilestoneIndicator extends StatelessWidget {
           alignment: Alignment.center,
           child: isCompleted
               ? const Icon(
-            Icons.emoji_events,
-            color: Colors.yellow,
-            size: 16,
-          )
+                  Icons.emoji_events,
+                  color: Colors.yellow,
+                  size: 16,
+                )
               : Container(
-            width: 16,
-            height: 16,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: isNext ? Colors.white : Colors.white.withOpacity(0.3),
-                width: 1.5,
-              ),
-              color: isNext ? Colors.white.withOpacity(0.1) : Colors.transparent,
-            ),
-            child: const Icon(
-              Icons.emoji_events_outlined,
-              color: Colors.white,
-              size: 9,
-            ),
-          ),
+                  width: 16,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color:
+                          isNext ? Colors.white : Colors.white.withOpacity(0.3),
+                      width: 1.5,
+                    ),
+                    color: isNext
+                        ? Colors.white.withOpacity(0.1)
+                        : Colors.transparent,
+                  ),
+                  child: const Icon(
+                    Icons.emoji_events_outlined,
+                    color: Colors.white,
+                    size: 9,
+                  ),
+                ),
         ),
         const SizedBox(height: 4),
         Text(
@@ -768,34 +796,37 @@ class NegativeMilestoneIndicator extends StatelessWidget {
           alignment: Alignment.center,
           child: isCompleted
               ? Container(
-            width: 16,
-            height: 16,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.red.withOpacity(0.2),
-              border: Border.all(
-                color: Colors.red,
-                width: 2,
-              ),
-            ),
-            child: const Icon(
-              Icons.check,
-              color: Colors.red,
-              size: 8,
-            ),
-          )
+                  width: 16,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.red.withOpacity(0.2),
+                    border: Border.all(
+                      color: Colors.red,
+                      width: 2,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.check,
+                    color: Colors.red,
+                    size: 8,
+                  ),
+                )
               : Container(
-            width: 16,
-            height: 16,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: isNext ? Colors.white : Colors.white.withOpacity(0.3),
-                width: 1.5,
-              ),
-              color: isNext ? Colors.white.withOpacity(0.1) : Colors.transparent,
-            ),
-          ),
+                  width: 16,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color:
+                          isNext ? Colors.white : Colors.white.withOpacity(0.3),
+                      width: 1.5,
+                    ),
+                    color: isNext
+                        ? Colors.white.withOpacity(0.1)
+                        : Colors.transparent,
+                  ),
+                ),
         ),
         const SizedBox(height: 4),
         Text(
@@ -839,27 +870,30 @@ class PostNegativeMilestoneIndicator extends StatelessWidget {
           alignment: Alignment.center,
           child: isCompleted
               ? Container(
-            width: 16,
-            height: 16,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.red.withOpacity(0.2),
-              border: Border.all(color: Colors.red, width: 2),
-            ),
-            child: const Icon(Icons.check, color: Colors.red, size: 8),
-          )
+                  width: 16,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.red.withOpacity(0.2),
+                    border: Border.all(color: Colors.red, width: 2),
+                  ),
+                  child: const Icon(Icons.check, color: Colors.red, size: 8),
+                )
               : Container(
-            width: 16,
-            height: 16,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: isNext ? Colors.white : Colors.white.withOpacity(0.3),
-                width: 1.5,
-              ),
-              color: isNext ? Colors.white.withOpacity(0.1) : Colors.transparent,
-            ),
-          ),
+                  width: 16,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color:
+                          isNext ? Colors.white : Colors.white.withOpacity(0.3),
+                      width: 1.5,
+                    ),
+                    color: isNext
+                        ? Colors.white.withOpacity(0.1)
+                        : Colors.transparent,
+                  ),
+                ),
         ),
         const SizedBox(height: 4),
         Text(

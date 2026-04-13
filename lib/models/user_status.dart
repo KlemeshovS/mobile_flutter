@@ -113,7 +113,8 @@ class UserStatusManager {
   static int extremeDaysThreshold = 7;
   static double sportFanaticThreshold = 30.0;
   static double alcoholicThreshold = 30.0;
-  static double alcoCyborgThreshold = 55.0; // Процент дней medium/heavy для статуса Алкокиборг
+  static double alcoCyborgThreshold =
+      55.0; // Процент дней medium/heavy для статуса Алкокиборг
 
   /// Основной метод расчёта статуса
   static UserStatus calculateStatus(Map<String, DayRecord> daysData) {
@@ -122,7 +123,8 @@ class UserStatusManager {
   }
 
   /// Расчёт статистики за последние N дней
-  static UserStatusStats _calculateRecentStats(Map<String, DayRecord> daysData) {
+  static UserStatusStats _calculateRecentStats(
+      Map<String, DayRecord> daysData) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     int drinkingDays = 0;
@@ -145,8 +147,10 @@ class UserStatusManager {
             record.drinkLevel == DrinkLevel.heavy ||
             record.drinkLevel == DrinkLevel.little_sport) {
           drinkingDays++;
-          if (record.drinkLevel == DrinkLevel.medium || record.drinkLevel == DrinkLevel.heavy ||
-              record.drinkLevel == DrinkLevel.medium_sport || record.drinkLevel == DrinkLevel.heavy_sport) {
+          if (record.drinkLevel == DrinkLevel.medium ||
+              record.drinkLevel == DrinkLevel.heavy ||
+              record.drinkLevel == DrinkLevel.medium_sport ||
+              record.drinkLevel == DrinkLevel.heavy_sport) {
             mediumHeavyDays++;
           }
         }
@@ -158,10 +162,12 @@ class UserStatusManager {
     }
 
     final soberDays = totalDays - drinkingDays - sportDays;
-    final drinkingPercentage = totalDays > 0 ? (drinkingDays / totalDays * 100) : 0.0;
+    final drinkingPercentage =
+        totalDays > 0 ? (drinkingDays / totalDays * 100) : 0.0;
     final sportPercentage = totalDays > 0 ? (sportDays / totalDays * 100) : 0.0;
     final soberPercentage = totalDays > 0 ? (soberDays / totalDays * 100) : 0.0;
-    final mediumHeavyPercentage = totalDays > 0 ? (mediumHeavyDays / totalDays * 100) : 0.0;
+    final mediumHeavyPercentage =
+        totalDays > 0 ? (mediumHeavyDays / totalDays * 100) : 0.0;
 
     return UserStatusStats(
       drinkingDays: drinkingDays,
@@ -236,7 +242,11 @@ class UserStatusManager {
     }
 
     // 11. Баланс – и спорт и алкоголь в сопоставимых количествах
-    if (sport >= 5 && sport <= 15 && drink >= 5 && drink <= 15 && (sport - drink).abs() <= 5) {
+    if (sport >= 5 &&
+        sport <= 15 &&
+        drink >= 5 &&
+        drink <= 15 &&
+        (sport - drink).abs() <= 5) {
       return UserStatus.balanced;
     }
 
@@ -246,7 +256,9 @@ class UserStatusManager {
       return sport >= 3 ? UserStatus.sporty : UserStatus.boring;
     } else if (drink > sport) {
       // Если алкоголя больше
-      return drink >= 2 ? UserStatus.moderateDrinker : UserStatus.weekendWarrior;
+      return drink >= 2
+          ? UserStatus.moderateDrinker
+          : UserStatus.weekendWarrior;
     } else {
       // Равное количество
       return UserStatus.balanced;

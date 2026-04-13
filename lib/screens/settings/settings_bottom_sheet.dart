@@ -13,7 +13,6 @@ import 'package:wobbly/screens/ratings/ratings_screen.dart';
 import 'package:wobbly/services/session_manager.dart';
 import 'package:wobbly/services/auth_service.dart';
 
-
 class SettingsBottomSheet extends StatefulWidget {
   final Map<String, DayRecord> daysData;
   final Function()? onExport;
@@ -21,7 +20,6 @@ class SettingsBottomSheet extends StatefulWidget {
   final Function()? onImportFromFile;
   final Function()? onAchievementsReset;
   final GlobalKey<RatingsScreenState> ratingsKey;
-
 
   const SettingsBottomSheet({
     super.key,
@@ -103,14 +101,17 @@ class _SettingsBottomSheetState extends State<SettingsBottomSheet> {
       // Если ни то, ни другое не сработало – показываем ошибку
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Не удалось открыть Telegram. Проверьте интернет-соединение.')),
+          const SnackBar(
+              content: Text(
+                  'Не удалось открыть Telegram. Проверьте интернет-соединение.')),
         );
       }
     } catch (e) {
       print('Error opening Telegram: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ошибка при открытии ссылки. Попробуйте позже.')),
+          const SnackBar(
+              content: Text('Ошибка при открытии ссылки. Попробуйте позже.')),
         );
       }
     }
@@ -124,8 +125,10 @@ class _SettingsBottomSheetState extends State<SettingsBottomSheet> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context).achievementsResetNotificationTitle),
-        content: Text(AppLocalizations.of(context).achievementsResetNotificationMessage),
+        title: Text(
+            AppLocalizations.of(context).achievementsResetNotificationTitle),
+        content: Text(
+            AppLocalizations.of(context).achievementsResetNotificationMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -138,7 +141,8 @@ class _SettingsBottomSheetState extends State<SettingsBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final languageManager = Provider.of<LanguageManager>(context, listen: false);
+    final languageManager =
+        Provider.of<LanguageManager>(context, listen: false);
     final localizations = AppLocalizations.of(context);
     final screenHeight = MediaQuery.of(context).size.height;
     final padding = MediaQuery.of(context).padding;
@@ -146,8 +150,8 @@ class _SettingsBottomSheetState extends State<SettingsBottomSheet> {
     final double menuHeight = _showAboutApp
         ? screenHeight - padding.top
         : isAuthenticated
-        ? screenHeight * 0.70   // достаточно для всех пунктов + выход
-        : screenHeight * 0.60;  // меньше для гостя
+            ? screenHeight * 0.70 // достаточно для всех пунктов + выход
+            : screenHeight * 0.60; // меньше для гостя
 
     return Container(
       height: menuHeight,
@@ -167,9 +171,9 @@ class _SettingsBottomSheetState extends State<SettingsBottomSheet> {
         border: _showAboutApp
             ? null
             : Border.all(
-          color: Colors.white.withOpacity(0.15),
-          width: 1,
-        ),
+                color: Colors.white.withOpacity(0.15),
+                width: 1,
+              ),
       ),
       child: Column(
         children: [
@@ -198,7 +202,6 @@ class _SettingsBottomSheetState extends State<SettingsBottomSheet> {
                     sessionType: _sessionType,
                   ),
                 ),
-
                 AnimatedPositioned(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeInOut,
@@ -272,7 +275,6 @@ class _SettingsBottomSheetState extends State<SettingsBottomSheet> {
             )
           else
             const SizedBox(width: 48),
-
           Expanded(
             child: Center(
               child: Text(
@@ -286,7 +288,6 @@ class _SettingsBottomSheetState extends State<SettingsBottomSheet> {
               ),
             ),
           ),
-
           if (!_showAboutApp)
             IconButton(
               onPressed: () => Navigator.pop(context),
@@ -349,13 +350,15 @@ class MainMenuContent extends StatelessWidget {
           // Кнопка переключения языка
           Consumer<LanguageManager>(
             builder: (context, languageManager, child) {
-              final currentLanguage = languageManager.currentLanguageCode == 'en'
-                  ? localizations.languageEnglish
-                  : localizations.languageRussian;
+              final currentLanguage =
+                  languageManager.currentLanguageCode == 'en'
+                      ? localizations.languageEnglish
+                      : localizations.languageRussian;
 
-              final oppositeLanguage = languageManager.currentLanguageCode == 'en'
-                  ? localizations.languageRussian
-                  : localizations.languageEnglish;
+              final oppositeLanguage =
+                  languageManager.currentLanguageCode == 'en'
+                      ? localizations.languageRussian
+                      : localizations.languageEnglish;
 
               final switchToText = languageManager.currentLanguageCode == 'en'
                   ? localizations.switchToRussian
@@ -388,7 +391,8 @@ class MainMenuContent extends StatelessWidget {
                   onRegisterSuccess: (username, userId, participate) {
                     ScoreSyncManager().sendScore(daysData);
                     ratingsKey.currentState?.refreshData();
-                    print('Профиль сохранён: $username, participate: $participate');
+                    print(
+                        'Профиль сохранён: $username, participate: $participate');
                   },
                   onDisappear: null,
                 ),
@@ -403,7 +407,8 @@ class MainMenuContent extends StatelessWidget {
             subtitle: localizations.menuExportSubtitle,
             gradient: const [Color(0xFFFF6B6B), Color(0xFFFF8E53)],
             onTap: () {
-              print('Export tapped, onExport is ${onExport != null ? 'not null' : 'null'}');
+              print(
+                  'Export tapped, onExport is ${onExport != null ? 'not null' : 'null'}');
               if (onExport == null) {
                 print('onExport is null, cannot export');
                 return;
@@ -554,7 +559,8 @@ class MainMenuContent extends StatelessWidget {
     );
   }
 
-  void _showLanguageSelector(BuildContext context, LanguageManager languageManager) {
+  void _showLanguageSelector(
+      BuildContext context, LanguageManager languageManager) {
     final localizations = AppLocalizations.of(context);
 
     showModalBottomSheet(
@@ -585,7 +591,7 @@ class MainMenuContent extends StatelessWidget {
               localizations.menuLanguage,
               style: TextStyle(
                 fontFamily: 'Inter',
-              color: Colors.white,
+                color: Colors.white,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
               ),
@@ -614,7 +620,8 @@ class MainMenuContent extends StatelessWidget {
                   : localizations.languageEnglish,
               isCurrent: false,
               onTap: () {
-                languageManager.switchLanguage(languageManager.oppositeLanguageCode);
+                languageManager
+                    .switchLanguage(languageManager.oppositeLanguageCode);
                 Navigator.pop(context);
               },
             ),
@@ -649,9 +656,7 @@ class MainMenuContent extends StatelessWidget {
           child: Text(
             languageCode.toUpperCase(),
             style: TextStyle(
-              color: isCurrent
-                  ? const Color(0xFF6366F1)
-                  : Colors.white70,
+              color: isCurrent ? const Color(0xFF6366F1) : Colors.white70,
               fontWeight: FontWeight.bold,
               fontSize: 14,
             ),
@@ -666,13 +671,13 @@ class MainMenuContent extends StatelessWidget {
         ),
         subtitle: isCurrent
             ? Text(
-          AppLocalizations.of(context).languageCurrent,
-          style: TextStyle(
-            fontFamily: 'Inter',
-          color: Color(0xFFC7FF00),
-            fontSize: 12,
-          ),
-        )
+                AppLocalizations.of(context).languageCurrent,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  color: Color(0xFFC7FF00),
+                  fontSize: 12,
+                ),
+              )
             : null,
         trailing: isCurrent
             ? const Icon(Icons.check, color: Color(0xFF6366F1))
@@ -680,7 +685,6 @@ class MainMenuContent extends StatelessWidget {
       ),
     );
   }
-
 
   Widget _buildMenuItem({
     required IconData icon,
@@ -755,7 +759,8 @@ class MainMenuContent extends StatelessWidget {
                   ),
                 ),
                 if (showChevron)
-                  const Icon(Icons.chevron_right, color: Colors.white70, size: 20),
+                  const Icon(Icons.chevron_right,
+                      color: Colors.white70, size: 20),
               ],
             ),
           ),
@@ -763,7 +768,7 @@ class MainMenuContent extends StatelessWidget {
       ),
     );
   }
-  }
+}
 
 class AboutAppView extends StatefulWidget {
   final Map<String, DayRecord> daysData;
@@ -787,7 +792,8 @@ class AboutAppView extends StatefulWidget {
   State<AboutAppView> createState() => _AboutAppViewState();
 }
 
-class _AboutAppViewState extends State<AboutAppView> with SingleTickerProviderStateMixin {
+class _AboutAppViewState extends State<AboutAppView>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _opacityAnimation;
   late Animation<double> _translateAnimation;
@@ -873,7 +879,7 @@ class _AboutAppViewState extends State<AboutAppView> with SingleTickerProviderSt
                           localizations.appTitle,
                           style: TextStyle(
                             fontFamily: 'Inter',
-                          fontSize: 24,
+                            fontSize: 24,
                             fontWeight: FontWeight.w900,
                             color: Colors.white,
                           ),
@@ -883,7 +889,7 @@ class _AboutAppViewState extends State<AboutAppView> with SingleTickerProviderSt
                           localizations.appSubtitle,
                           style: TextStyle(
                             fontFamily: 'Inter',
-                          fontSize: 14,
+                            fontSize: 14,
                             color: Colors.white70,
                           ),
                           textAlign: TextAlign.center,
@@ -897,7 +903,6 @@ class _AboutAppViewState extends State<AboutAppView> with SingleTickerProviderSt
           ),
         ),
         const SizedBox(height: 24),
-
         AnimatedBuilder(
           animation: _animationController,
           builder: (context, child) {
@@ -917,7 +922,8 @@ class _AboutAppViewState extends State<AboutAppView> with SingleTickerProviderSt
                     _buildStatRow(
                       icon: Icons.emoji_events,
                       title: localizations.menuAchievementsTitle,
-                      value: '${widget.unlockedAchievementsCount}/${widget.totalAchievementsCount}',
+                      value:
+                          '${widget.unlockedAchievementsCount}/${widget.totalAchievementsCount}',
                     ),
                     const SizedBox(height: 8),
                     _buildStatRow(
@@ -932,7 +938,6 @@ class _AboutAppViewState extends State<AboutAppView> with SingleTickerProviderSt
           },
         ),
         const SizedBox(height: 24),
-
         AnimatedBuilder(
           animation: _animationController,
           builder: (context, child) {
@@ -954,7 +959,7 @@ class _AboutAppViewState extends State<AboutAppView> with SingleTickerProviderSt
                         localizations.about,
                         style: TextStyle(
                           fontFamily: 'Inter',
-                        fontSize: 16,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
@@ -964,7 +969,7 @@ class _AboutAppViewState extends State<AboutAppView> with SingleTickerProviderSt
                         localizations.appOriginStoryPart1,
                         style: TextStyle(
                           fontFamily: 'Inter',
-                        fontSize: 14,
+                          fontSize: 14,
                           color: Colors.white70,
                           height: 1.5,
                         ),
@@ -974,7 +979,7 @@ class _AboutAppViewState extends State<AboutAppView> with SingleTickerProviderSt
                         localizations.appOriginStoryPart2,
                         style: TextStyle(
                           fontFamily: 'Inter',
-                        fontSize: 14,
+                          fontSize: 14,
                           color: Colors.white70,
                           height: 1.5,
                         ),
@@ -984,7 +989,7 @@ class _AboutAppViewState extends State<AboutAppView> with SingleTickerProviderSt
                         localizations.aboutCreatorDescription,
                         style: TextStyle(
                           fontFamily: 'Inter',
-                        fontSize: 13,
+                          fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: Color(0xFFC7FF00),
                         ),
@@ -997,7 +1002,6 @@ class _AboutAppViewState extends State<AboutAppView> with SingleTickerProviderSt
           },
         ),
         const SizedBox(height: 24),
-
         AnimatedBuilder(
           animation: _animationController,
           builder: (context, child) {
@@ -1012,7 +1016,7 @@ class _AboutAppViewState extends State<AboutAppView> with SingleTickerProviderSt
                       localizations.aboutCapabilitiesTitle,
                       style: TextStyle(
                         fontFamily: 'Inter',
-                      fontSize: 16,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
@@ -1068,7 +1072,7 @@ class _AboutAppViewState extends State<AboutAppView> with SingleTickerProviderSt
                 title,
                 style: TextStyle(
                   fontFamily: 'Inter',
-                fontSize: 14,
+                  fontSize: 14,
                   color: Colors.white70,
                 ),
               ),
@@ -1077,7 +1081,7 @@ class _AboutAppViewState extends State<AboutAppView> with SingleTickerProviderSt
               value,
               style: TextStyle(
                 fontFamily: 'Inter',
-              fontSize: 14,
+                fontSize: 14,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
@@ -1119,7 +1123,7 @@ class _AboutAppViewState extends State<AboutAppView> with SingleTickerProviderSt
                   title,
                   style: TextStyle(
                     fontFamily: 'Inter',
-                  fontSize: 13,
+                    fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
                   ),
@@ -1129,7 +1133,7 @@ class _AboutAppViewState extends State<AboutAppView> with SingleTickerProviderSt
                   description,
                   style: TextStyle(
                     fontFamily: 'Inter',
-                  fontSize: 12,
+                    fontSize: 12,
                     color: Colors.white70,
                   ),
                 ),

@@ -25,7 +25,6 @@ import 'package:wobbly/models/achievement.dart';
 import 'package:wobbly/services/score_sync_manager.dart';
 import 'package:wobbly/screens/ratings/ratings_screen.dart';
 
-
 // Класс для хранения статистики за год (оставлен как был)
 class YearStats {
   final int little;
@@ -162,7 +161,8 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
 
   Future<void> _recalculateAchievements() async {
     print('🔄 Проверка ачивок');
-    await _achievementManager.updateAchievements(widget.progressDays, widget.daysData);
+    await _achievementManager.updateAchievements(
+        widget.progressDays, widget.daysData);
     if (mounted) {
       setState(() {
         _unlockedAchievements = _achievementManager.getUnlockedAchievements();
@@ -221,8 +221,7 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
               Text(
                 description,
                 style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 13, color: Colors.white70),
+                    fontFamily: 'Inter', fontSize: 13, color: Colors.white70),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -275,8 +274,7 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
               Text(
                 localizations.getUserStatusDescription(status),
                 style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 13, color: Colors.white70),
+                    fontFamily: 'Inter', fontSize: 13, color: Colors.white70),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -301,8 +299,10 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
 
   void _showAchievementDetail(Achievement achievement) {
     final localizations = AppLocalizations.of(context);
-    final bool isDrinking = achievement.type == AchievementType.drinkingStreak ||
-        (achievement.type == AchievementType.milestone && achievement.id.contains('negative'));
+    final bool isDrinking =
+        achievement.type == AchievementType.drinkingStreak ||
+            (achievement.type == AchievementType.milestone &&
+                achievement.id.contains('negative'));
     final bool isMarianaTrench = achievement.id == 'milestone_11022_negative';
 
     showModalBottomSheet(
@@ -342,8 +342,14 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
                     colors: isMarianaTrench
                         ? [const Color(0xFF8B0000), const Color(0xFFB22222)]
                         : isDrinking
-                        ? [const Color(0xFFDC143C), const Color(0xFFFF4500)] // красный → оранжево-красный
-                        : [const Color(0xFF4ECDC4), const Color(0xFF44A08D)],
+                            ? [
+                                const Color(0xFFDC143C),
+                                const Color(0xFFFF4500)
+                              ] // красный → оранжево-красный
+                            : [
+                                const Color(0xFF4ECDC4),
+                                const Color(0xFF44A08D)
+                              ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -406,12 +412,15 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
     );
   }
 
-  String _getConditionText(Achievement achievement, AppLocalizations localizations) {
+  String _getConditionText(
+      Achievement achievement, AppLocalizations localizations) {
     switch (achievement.type) {
       case AchievementType.drinkingStreak:
-        return localizations.translate('condition_drinking_days', [achievement.requiredValue]);
+        return localizations
+            .translate('condition_drinking_days', [achievement.requiredValue]);
       case AchievementType.soberStreak:
-        return localizations.translate('condition_sober_days', [achievement.requiredValue]);
+        return localizations
+            .translate('condition_sober_days', [achievement.requiredValue]);
       case AchievementType.sportCount:
         return localizations.translate(
           'condition_sport_count',
@@ -425,9 +434,11 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
         return '';
       case AchievementType.milestone:
         if (achievement.id.contains('negative')) {
-          return localizations.translate('condition_milestone_negative', [achievement.requiredValue]);
+          return localizations.translate(
+              'condition_milestone_negative', [achievement.requiredValue]);
         } else {
-          return localizations.translate('condition_milestone_positive', [achievement.requiredValue]);
+          return localizations.translate(
+              'condition_milestone_positive', [achievement.requiredValue]);
         }
     }
   }
@@ -447,7 +458,8 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
     final yearStats = _calculateYearStats(_selectedYear);
     final currentSoberStreak = _calculateCurrentSoberStreak(_selectedYear);
     final longestSoberStreak = _calculateLongestSoberStreak(_selectedYear);
-    final longestDrinkingStreak = _calculateLongestDrinkingStreak(_selectedYear);
+    final longestDrinkingStreak =
+        _calculateLongestDrinkingStreak(_selectedYear);
     final sportDays = _calculateSportDays(_selectedYear);
     final drinkingVsSportStats = _calculateDrinkingVsSportStats(yearStats);
 
@@ -460,13 +472,15 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
               Expanded(
                 child: SingleChildScrollView(
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 8, left: 16, right: 16, bottom: 16),
+                    padding: const EdgeInsets.only(
+                        top: 8, left: 16, right: 16, bottom: 16),
                     child: Column(
                       children: [
                         if (_userStatus != null) ...[
                           UserStatusWidget(
                             status: _userStatus!,
-                            onTap: () => _showStatusDescription(context, _userStatus!),
+                            onTap: () =>
+                                _showStatusDescription(context, _userStatus!),
                           ),
                           const SizedBox(height: 16),
                         ] else ...[
@@ -489,10 +503,12 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
                         const SizedBox(height: 12),
                         _buildDrinkingVsSportGlassCard(drinkingVsSportStats),
                         const SizedBox(height: 16),
-                        AdaptiveSobrietyFactsView(soberDays: currentSoberStreak),
+                        AdaptiveSobrietyFactsView(
+                            soberDays: currentSoberStreak),
                         const SizedBox(height: 16),
                         AchievementsSection(
-                          key: ValueKey('achievements_$_achievementsVersion'),                          achievements: _unlockedAchievements,
+                          key: ValueKey('achievements_$_achievementsVersion'),
+                          achievements: _unlockedAchievements,
                           onSeeAllTap: _showAllAchievements,
                           onAchievementTap: _showAchievementDetail,
                         ),
@@ -563,7 +579,8 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
       if (!monthAvailable) continue;
 
       final daysInMonth = _getDaysInMonth(month, year);
-      final endDay = (isCurrentYear && month == currentMonth) ? currentDay : daysInMonth;
+      final endDay =
+          (isCurrentYear && month == currentMonth) ? currentDay : daysInMonth;
 
       if (startDay > endDay) continue;
 
@@ -630,9 +647,11 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
     if (isCurrentYear) {
       var streak = 0;
       for (int dayOffset = 0; dayOffset < 365; dayOffset++) {
-        final date = DateTime(now.year, now.month, now.day).subtract(Duration(days: dayOffset));
+        final date = DateTime(now.year, now.month, now.day)
+            .subtract(Duration(days: dayOffset));
         if (date.isBefore(firstActivity)) break;
-        final dayData = DayData(day: date.day, month: date.month - 1, year: date.year);
+        final dayData =
+            DayData(day: date.day, month: date.month - 1, year: date.year);
         final record = widget.daysData[dayData.key] ?? DayRecord();
         if (_isAlcoholic(record)) break;
         streak++;
@@ -645,7 +664,8 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
         final date = lastDayOfYear.subtract(Duration(days: dayOffset));
         if (date.isBefore(firstActivity)) break;
         if (date.year < year) break;
-        final dayData = DayData(day: date.day, month: date.month - 1, year: date.year);
+        final dayData =
+            DayData(day: date.day, month: date.month - 1, year: date.year);
         final record = widget.daysData[dayData.key] ?? DayRecord();
         if (_isAlcoholic(record)) break;
         streak++;
@@ -661,7 +681,8 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
     final startDate = DateTime(year, 1, 1);
     final endDate = isCurrentYear ? now : DateTime(year, 12, 31);
 
-    final effectiveStartDate = firstActivity.isAfter(startDate) ? firstActivity : startDate;
+    final effectiveStartDate =
+        firstActivity.isAfter(startDate) ? firstActivity : startDate;
     if (effectiveStartDate.isAfter(endDate)) return 0;
 
     var maxStreak = 0;
@@ -669,7 +690,8 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
     var date = effectiveStartDate;
 
     while (!date.isAfter(endDate)) {
-      final dayData = DayData(day: date.day, month: date.month - 1, year: date.year);
+      final dayData =
+          DayData(day: date.day, month: date.month - 1, year: date.year);
       final record = widget.daysData[dayData.key] ?? DayRecord();
       if (!_isAlcoholic(record)) {
         currentStreak++;
@@ -697,7 +719,8 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
     var sportDays = 0;
     for (int month = 0; month <= (isCurrentYear ? currentMonth : 11); month++) {
       final daysInMonth = _getDaysInMonth(month, year);
-      final daysToCheck = (isCurrentYear && month == currentMonth) ? currentDay : daysInMonth;
+      final daysToCheck =
+          (isCurrentYear && month == currentMonth) ? currentDay : daysInMonth;
       for (int day = 1; day <= daysToCheck; day++) {
         final dayData = DayData(day: day, month: month, year: year);
         final record = widget.daysData[dayData.key] ?? DayRecord();
@@ -714,7 +737,8 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
     var date = startDate;
 
     while (date.isBefore(endDate) || date.isAtSameMomentAs(endDate)) {
-      final dayData = DayData(day: date.day, month: date.month - 1, year: date.year);
+      final dayData =
+          DayData(day: date.day, month: date.month - 1, year: date.year);
       final record = widget.daysData[dayData.key] ?? DayRecord();
       if (record.drinkLevel != DrinkLevel.none) {
         currentStreak++;
@@ -729,9 +753,11 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
   }
 
   _DrinkingVsSportStats _calculateDrinkingVsSportStats(YearStats yearStats) {
-    final totalTrackedDays = yearStats.drinkingDays + yearStats.sport - yearStats.comboDays;
+    final totalTrackedDays =
+        yearStats.drinkingDays + yearStats.sport - yearStats.comboDays;
     if (totalTrackedDays > 0) {
-      var drinkingPercentage = (yearStats.drinkingDays / totalTrackedDays * 100);
+      var drinkingPercentage =
+          (yearStats.drinkingDays / totalTrackedDays * 100);
       var sportPercentage = (yearStats.sport / totalTrackedDays * 100);
       final total = drinkingPercentage + sportPercentage;
       if (total > 100) {
@@ -834,7 +860,8 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
 
                     try {
                       // Выбор файла с помощью file_picker
-                      FilePickerResult? result = await FilePicker.platform.pickFiles(
+                      FilePickerResult? result =
+                          await FilePicker.platform.pickFiles(
                         type: FileType.custom,
                         allowedExtensions: ['json'],
                         allowMultiple: false,
@@ -843,19 +870,22 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
                       if (result != null && result.files.single.path != null) {
                         final filePath = result.files.single.path!;
                         final dataManager = DataManager();
-                        final success = await dataManager.importFromFile(filePath);
+                        final success =
+                            await dataManager.importFromFile(filePath);
 
                         if (success) {
                           if (widget.onDataChanged != null) {
                             widget.onDataChanged!();
                           }
-                          ScoreSyncManager().sendScore(widget.daysData); // используйте актуальные daysData
+                          ScoreSyncManager().sendScore(widget
+                              .daysData); // используйте актуальные daysData
                           // Ждём, пока экран перестроится, потом показываем SnackBar
                           WidgetsBinding.instance.addPostFrameCallback((_) {
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(localizations.translate('import_success')),
+                                  content: Text(localizations
+                                      .translate('import_success')),
                                   backgroundColor: Colors.green,
                                 ),
                               );
@@ -864,7 +894,8 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(AppLocalizations.of(context).translate('import_error')),
+                              content: Text(AppLocalizations.of(context)
+                                  .translate('import_error')),
                             ),
                           );
                         }
@@ -872,7 +903,8 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('${AppLocalizations.of(context).translate('import_error')}: $e'),
+                          content: Text(
+                              '${AppLocalizations.of(context).translate('import_error')}: $e'),
                           backgroundColor: Colors.red,
                         ),
                       );
@@ -881,7 +913,8 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
                   onAchievementsReset: () {
                     print('Achievements reset tapped');
                     if (widget.onAchievementsReset != null) {
-                      widget.onAchievementsReset!(); // вызываем метод из main.dart
+                      widget
+                          .onAchievementsReset!(); // вызываем метод из main.dart
                     }
                     if (Navigator.of(context).canPop()) {
                       Navigator.of(context).pop();
@@ -1036,7 +1069,8 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
                   imageAsset: 'assets/icons/max_sober_icon.png',
                   onTap: () => _showStatInfo(
                     localizations.translate('stat_max_sober_streak_title'),
-                    localizations.translate('stat_max_sober_streak_description'),
+                    localizations
+                        .translate('stat_max_sober_streak_description'),
                   ),
                 ),
               ),
@@ -1053,7 +1087,8 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
                   imageAsset: 'assets/icons/total_drunk_icon.png',
                   onTap: () => _showStatInfo(
                     localizations.translate('stat_total_drinking_days_title'),
-                    localizations.translate('stat_total_drinking_days_description'),
+                    localizations
+                        .translate('stat_total_drinking_days_description'),
                   ),
                 ),
               ),
@@ -1066,7 +1101,8 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
                   imageAsset: 'assets/icons/total_sober_icon.png',
                   onTap: () => _showStatInfo(
                     localizations.translate('stat_total_sober_days_title'),
-                    localizations.translate('stat_total_sober_days_description'),
+                    localizations
+                        .translate('stat_total_sober_days_description'),
                   ),
                 ),
               ),
@@ -1083,7 +1119,8 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
                   imageAsset: 'assets/icons/little_normal.png',
                   onTap: () => _showStatInfo(
                     localizations.translate('stat_drink_level_little_title'),
-                    localizations.translate('stat_drink_level_little_description'),
+                    localizations
+                        .translate('stat_drink_level_little_description'),
                   ),
                 ),
               ),
@@ -1096,7 +1133,8 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
                   imageAsset: 'assets/icons/medium_normal.png',
                   onTap: () => _showStatInfo(
                     localizations.translate('stat_drink_level_medium_title'),
-                    localizations.translate('stat_drink_level_medium_description'),
+                    localizations
+                        .translate('stat_drink_level_medium_description'),
                   ),
                 ),
               ),
@@ -1109,7 +1147,8 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
                   imageAsset: 'assets/icons/heavy_normal.png',
                   onTap: () => _showStatInfo(
                     localizations.translate('stat_drink_level_heavy_title'),
-                    localizations.translate('stat_drink_level_heavy_description'),
+                    localizations
+                        .translate('stat_drink_level_heavy_description'),
                   ),
                 ),
               ),
@@ -1170,8 +1209,7 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
             Text(
               localizations.currentSoberStreak,
               style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 12, color: Colors.black),
+                  fontFamily: 'Inter', fontSize: 12, color: Colors.black),
             ),
             const Spacer(),
             Padding(
@@ -1213,8 +1251,7 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
             Text(
               localizations.sportDaysLabel,
               style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 12, color: Colors.black),
+                  fontFamily: 'Inter', fontSize: 12, color: Colors.black),
             ),
             const Spacer(),
             Padding(
@@ -1274,8 +1311,7 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
             Text(
               title,
               style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 12, color: Colors.black),
+                  fontFamily: 'Inter', fontSize: 12, color: Colors.black),
               textAlign: TextAlign.center,
             ),
           ],
@@ -1359,7 +1395,8 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
     var date = startDate;
 
     while (date.isBefore(endDate) || date.isAtSameMomentAs(endDate)) {
-      final dayData = DayData(day: date.day, month: date.month - 1, year: date.year);
+      final dayData =
+          DayData(day: date.day, month: date.month - 1, year: date.year);
       final record = widget.daysData[dayData.key] ?? DayRecord();
       if (record.drinkLevel == DrinkLevel.none) {
         currentStreak++;

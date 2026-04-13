@@ -78,7 +78,8 @@ class DataManager {
   }
 
   Future<void> updateDayRecord(String key, DayRecord? record) async {
-    print("📝 updateDayRecord: key=$key, record=${record != null ? '${record.drinkLevel},${record.hasSport}' : 'null'}");
+    print(
+        "📝 updateDayRecord: key=$key, record=${record != null ? '${record.drinkLevel},${record.hasSport}' : 'null'}");
     final data = await loadData();
     if (record == null) {
       data.remove(key);

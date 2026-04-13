@@ -7,7 +7,6 @@ import 'package:wobbly/services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wobbly/models/api_models.dart';
 
-
 class TutorialScreen extends StatefulWidget {
   final VoidCallback onComplete;
 
@@ -29,7 +28,11 @@ class _TutorialScreenState extends State<TutorialScreen> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.black, const Color(0xFF2A1E5C), const Color(0xFF4B3A91)],
+            colors: [
+              Colors.black,
+              const Color(0xFF2A1E5C),
+              const Color(0xFF4B3A91)
+            ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -160,7 +163,8 @@ class _TutorialProfilePageState extends State<TutorialProfilePage>
           _currentUsername = session.username;
           _nameController.text = session.username!;
         });
-        await prefs.setBool('userParticipateInRating', session.participateInRating);
+        await prefs.setBool(
+            'userParticipateInRating', session.participateInRating);
         setState(() {
           _participate = session.participateInRating;
         });
@@ -211,15 +215,18 @@ class _TutorialProfilePageState extends State<TutorialProfilePage>
         return;
       }
       if (trimmed.contains(' ')) {
-        setState(() => _errorMessage = loc.translate('error_username_contains_space'));
+        setState(() =>
+            _errorMessage = loc.translate('error_username_contains_space'));
         return;
       }
       if (trimmed.length < 3) {
-        setState(() => _errorMessage = loc.translate('error_username_too_short'));
+        setState(
+            () => _errorMessage = loc.translate('error_username_too_short'));
         return;
       }
       if (trimmed.length > 20) {
-        setState(() => _errorMessage = loc.translate('error_username_too_long'));
+        setState(
+            () => _errorMessage = loc.translate('error_username_too_long'));
         return;
       }
     }
@@ -264,7 +271,8 @@ class _TutorialProfilePageState extends State<TutorialProfilePage>
       } catch (e) {
         print('❌ Ошибка сохранения профиля: $e');
         if (e is UserAPIError) {
-          if (e == UserAPIError.invalidToken || e == UserAPIError.unauthorized) {
+          if (e == UserAPIError.invalidToken ||
+              e == UserAPIError.unauthorized) {
             return false;
           } else {
             String msg;
@@ -342,7 +350,8 @@ class _TutorialProfilePageState extends State<TutorialProfilePage>
           Expanded(
             child: SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
                 child: Column(
                   children: [
                     AnimatedBuilder(
@@ -405,11 +414,13 @@ class _TutorialProfilePageState extends State<TutorialProfilePage>
                       child: ElevatedButton.icon(
                         onPressed: _isSaving ? null : _signInWithGoogle,
                         icon: const Icon(Icons.login, color: Colors.white),
-                        label: Text(loc.translate('google_sign_in_button'), style: const TextStyle(fontSize: 16)),
+                        label: Text(loc.translate('google_sign_in_button'),
+                            style: const TextStyle(fontSize: 16)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF8B5CF6),
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
                         ),
                       ),
                     ),
@@ -423,7 +434,8 @@ class _TutorialProfilePageState extends State<TutorialProfilePage>
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.white,
                           side: const BorderSide(color: Colors.white54),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
                         ),
                         child: Text(
                           loc.translate('skip_button') ?? 'Skip',
@@ -447,7 +459,8 @@ class _TutorialProfilePageState extends State<TutorialProfilePage>
           Expanded(
             child: SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
                 child: Column(
                   children: [
                     AnimatedBuilder(
@@ -509,7 +522,8 @@ class _TutorialProfilePageState extends State<TutorialProfilePage>
                       children: [
                         Text(
                           loc.translate('user_name_label'),
-                          style: const TextStyle(color: Colors.white70, fontSize: 12),
+                          style: const TextStyle(
+                              color: Colors.white70, fontSize: 12),
                         ),
                         const SizedBox(height: 8),
                         TextField(
@@ -522,11 +536,13 @@ class _TutorialProfilePageState extends State<TutorialProfilePage>
                               borderRadius: BorderRadius.circular(8),
                               borderSide: BorderSide.none,
                             ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 14),
                             enabled: !_isSaving,
                           ),
                           onChanged: (v) {
-                            if (v.length > 20) _nameController.text = v.substring(0, 20);
+                            if (v.length > 20)
+                              _nameController.text = v.substring(0, 20);
                           },
                         ),
                       ],
@@ -536,10 +552,13 @@ class _TutorialProfilePageState extends State<TutorialProfilePage>
                     SwitchListTile(
                       title: Text(
                         loc.translate('user_ranking_toggle'),
-                        style: const TextStyle(color: Colors.white, fontSize: 12),
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 12),
                       ),
                       value: _participate,
-                      onChanged: _isSaving ? null : (val) => setState(() => _participate = val),
+                      onChanged: _isSaving
+                          ? null
+                          : (val) => setState(() => _participate = val),
                       activeColor: const Color(0xFF8B5CF6),
                       contentPadding: EdgeInsets.zero,
                     ),
@@ -550,7 +569,8 @@ class _TutorialProfilePageState extends State<TutorialProfilePage>
                         padding: const EdgeInsets.only(bottom: 12),
                         child: Text(
                           _errorMessage!,
-                          style: const TextStyle(color: Colors.red, fontSize: 12),
+                          style:
+                              const TextStyle(color: Colors.red, fontSize: 12),
                         ),
                       ),
                     // Кнопка "Начать страдать"
@@ -561,7 +581,8 @@ class _TutorialProfilePageState extends State<TutorialProfilePage>
                         onPressed: _isSaving ? null : _save,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF8B5CF6),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
                         ),
                         child: Text(loc.tutorialStartSufferingButton),
                       ),
@@ -640,7 +661,8 @@ class _TutorialProfilePageState extends State<TutorialProfilePage>
                   // Приветствие
                   Text(
                     '${loc.translate('welcome_back') ?? 'Welcome back'}, $_currentUsername!',
-                    style: const TextStyle(fontSize: 16, color: Color(0xFFC7FF00)),
+                    style:
+                        const TextStyle(fontSize: 16, color: Color(0xFFC7FF00)),
                   ),
                   const SizedBox(height: 32),
                   SizedBox(
@@ -650,7 +672,8 @@ class _TutorialProfilePageState extends State<TutorialProfilePage>
                       onPressed: widget.onComplete,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF8B5CF6),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
                       ),
                       child: Text(loc.tutorialStartSufferingButton),
                     ),

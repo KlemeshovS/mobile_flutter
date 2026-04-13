@@ -4,7 +4,6 @@ import 'package:wobbly/utils/localization.dart';
 import 'package:wobbly/models/milestone.dart';
 import 'package:wobbly/screens/stats/all_milestones_sheet.dart';
 
-
 class AdaptiveSobrietyFactsView extends StatelessWidget {
   final int soberDays;
 
@@ -15,17 +14,35 @@ class AdaptiveSobrietyFactsView extends StatelessWidget {
     _HangoverMessage(
       titleKey: 'hangover_title_1',
       points: [
-        _MessagePoint(icon: Icons.person_off, color: Color(0xFFFF6B6B), textKey: 'hangover_1_point_1'),
-        _MessagePoint(icon: Icons.auto_awesome, color: Color(0xFF8B5CF6), textKey: 'hangover_1_point_2'),
-        _MessagePoint(icon: Icons.attach_money, color: Color(0xFF4ECDC4), textKey: 'hangover_1_point_3'),
+        _MessagePoint(
+            icon: Icons.person_off,
+            color: Color(0xFFFF6B6B),
+            textKey: 'hangover_1_point_1'),
+        _MessagePoint(
+            icon: Icons.auto_awesome,
+            color: Color(0xFF8B5CF6),
+            textKey: 'hangover_1_point_2'),
+        _MessagePoint(
+            icon: Icons.attach_money,
+            color: Color(0xFF4ECDC4),
+            textKey: 'hangover_1_point_3'),
       ],
     ),
     _HangoverMessage(
       titleKey: 'hangover_title_2',
       points: [
-        _MessagePoint(icon: Icons.whatshot, color: Color(0xFFFF6B6B), textKey: 'hangover_2_point_1'),
-        _MessagePoint(icon: Icons.psychology, color: Color(0xFF8B5CF6), textKey: 'hangover_2_point_2'),
-        _MessagePoint(icon: Icons.favorite, color: Color(0xFF4ECDC4), textKey: 'hangover_2_point_3'),
+        _MessagePoint(
+            icon: Icons.whatshot,
+            color: Color(0xFFFF6B6B),
+            textKey: 'hangover_2_point_1'),
+        _MessagePoint(
+            icon: Icons.psychology,
+            color: Color(0xFF8B5CF6),
+            textKey: 'hangover_2_point_2'),
+        _MessagePoint(
+            icon: Icons.favorite,
+            color: Color(0xFF4ECDC4),
+            textKey: 'hangover_2_point_3'),
       ],
     ),
     // ... добавьте остальные сообщения из Swift (всего 10)
@@ -123,30 +140,30 @@ class AdaptiveSobrietyFactsView extends StatelessWidget {
         children: [
           const SizedBox(height: 12),
           ...facts.map((fact) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(
-                  Icons.check_circle,
-                  size: 12,
-                  color: Color(0xFF4ECDC4),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    fact,
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                    fontSize: 12,
-                      color: Colors.white70,
-                      height: 1.4,
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.check_circle,
+                      size: 12,
+                      color: Color(0xFF4ECDC4),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        fact,
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 12,
+                          color: Colors.white70,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          )),
+              )),
         ],
       ),
     );
@@ -155,7 +172,8 @@ class AdaptiveSobrietyFactsView extends StatelessWidget {
   Widget _buildHangoverContent(BuildContext context) {
     final localizations = AppLocalizations.of(context);
     // Выбираем случайное сообщение
-    final randomIndex = DateTime.now().millisecondsSinceEpoch % _hangoverMessages.length;
+    final randomIndex =
+        DateTime.now().millisecondsSinceEpoch % _hangoverMessages.length;
     final message = _hangoverMessages[randomIndex];
 
     return Container(
@@ -186,30 +204,30 @@ class AdaptiveSobrietyFactsView extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           ...message.points.map((point) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  point.icon,
-                  size: 12,
-                  color: point.color,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    localizations.translate(point.textKey),
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                    fontSize: 12,
-                      color: Colors.white70,
-                      height: 1.4,
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      point.icon,
+                      size: 12,
+                      color: point.color,
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        localizations.translate(point.textKey),
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 12,
+                          color: Colors.white70,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          )),
+              )),
         ],
       ),
     );
@@ -239,7 +257,8 @@ class AdaptiveSobrietyFactsView extends StatelessWidget {
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFF8B5CF6).withOpacity(0.3), width: 1),
+          border: Border.all(
+              color: const Color(0xFF8B5CF6).withOpacity(0.3), width: 1),
         ),
         child: Row(
           children: [
@@ -303,5 +322,6 @@ class _MessagePoint {
   final Color color;
   final String textKey;
 
-  const _MessagePoint({required this.icon, required this.color, required this.textKey});
+  const _MessagePoint(
+      {required this.icon, required this.color, required this.textKey});
 }

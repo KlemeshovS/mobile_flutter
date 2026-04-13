@@ -18,7 +18,8 @@ class RatingsScreen extends StatefulWidget {
   State<RatingsScreen> createState() => RatingsScreenState();
 }
 
-class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderStateMixin {
+class RatingsScreenState extends State<RatingsScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<LeaderboardItem> _topItems = [];
   List<LeaderboardItem> _bottomItems = [];
@@ -177,37 +178,40 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
               if (_sessionType == SessionType.guest || !_participate)
                 _buildParticipationBanner(loc),
               if (_isLoading)
-                const Expanded(child: Center(child: CircularProgressIndicator(color: Colors.white)))
+                const Expanded(
+                    child: Center(
+                        child: CircularProgressIndicator(color: Colors.white)))
               else if (_error != null)
                 _buildError(loc)
               else if (items.isEmpty)
-                  Expanded(
-                    child: Center(
-                      child: Text(
-                        loc.translate('no_leaderboard_data'),
-                        style: const TextStyle(color: Colors.white70),
-                      ),
-                    ),
-                  )
-                else
-                  Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      itemCount: items.length,
-                      itemBuilder: (ctx, index) {
-                        if (items.length < 3) {
-                          return _buildRow(items[index], index + 1);
-                        }
-                        if (index == 0) {
-                          return _buildTopThreeRow(items.sublist(0, 3));
-                        } else if (index < 3) {
-                          return const SizedBox.shrink();
-                        } else {
-                          return _buildRow(items[index], index + 1);
-                        }
-                      },
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      loc.translate('no_leaderboard_data'),
+                      style: const TextStyle(color: Colors.white70),
                     ),
                   ),
+                )
+              else
+                Expanded(
+                  child: ListView.builder(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    itemCount: items.length,
+                    itemBuilder: (ctx, index) {
+                      if (items.length < 3) {
+                        return _buildRow(items[index], index + 1);
+                      }
+                      if (index == 0) {
+                        return _buildTopThreeRow(items.sublist(0, 3));
+                      } else if (index < 3) {
+                        return const SizedBox.shrink();
+                      } else {
+                        return _buildRow(items[index], index + 1);
+                      }
+                    },
+                  ),
+                ),
             ],
           ),
         ),
@@ -236,7 +240,8 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
             onPressed: _showProfileModal,
             child: Text(
               loc.translate('rating_participate_button'),
-              style: const TextStyle(color: Color(0xFF8B5CF6), fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                  color: Color(0xFF8B5CF6), fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -260,7 +265,10 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: Colors.white.withOpacity(0.2)),
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4)),
+                BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4)),
               ],
             ),
           ),
@@ -275,12 +283,16 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
                 color: const Color(0xFF2D2B55).withOpacity(0.9),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: isTop ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                  color:
+                      isTop ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: (isTop ? const Color(0xFF2E7D32) : const Color(0xFFC62828)).withOpacity(0.4),
+                    color: (isTop
+                            ? const Color(0xFF2E7D32)
+                            : const Color(0xFFC62828))
+                        .withOpacity(0.4),
                     blurRadius: 10,
                   ),
                 ],
@@ -299,7 +311,9 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
                     child: Text(
                       loc.translate('top_100'),
                       style: TextStyle(
-                        color: _tabController.index == 0 ? Colors.white : Colors.white.withOpacity(0.6),
+                        color: _tabController.index == 0
+                            ? Colors.white
+                            : Colors.white.withOpacity(0.6),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -316,7 +330,9 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
                     child: Text(
                       loc.translate('bottom_100'),
                       style: TextStyle(
-                        color: _tabController.index == 1 ? Colors.white : Colors.white.withOpacity(0.6),
+                        color: _tabController.index == 1
+                            ? Colors.white
+                            : Colors.white.withOpacity(0.6),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -363,13 +379,16 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
                     const SizedBox(height: 8),
                     Text(
                       item.username,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     _GlowingText(
                       text: '${item.score.abs()}',
-                      color: item.score >= 0 ? Colors.greenAccent : Colors.pinkAccent,
+                      color: item.score >= 0
+                          ? Colors.greenAccent
+                          : Colors.pinkAccent,
                     ),
                   ],
                 ),
@@ -419,7 +438,9 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
       decoration: BoxDecoration(
         color: isCurrentUser ? highlightBgColor : Colors.white.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        border: isCurrentUser ? Border.all(color: highlightColor, width: 1.5) : null,
+        border: isCurrentUser
+            ? Border.all(color: highlightColor, width: 1.5)
+            : null,
       ),
       child: Row(
         children: [
@@ -465,7 +486,9 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
           children: [
             const Icon(Icons.error, color: Colors.white70, size: 48),
             const SizedBox(height: 16),
-            Text(_error!, style: const TextStyle(color: Colors.white70), textAlign: TextAlign.center),
+            Text(_error!,
+                style: const TextStyle(color: Colors.white70),
+                textAlign: TextAlign.center),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => _loadData(context),
@@ -566,14 +589,18 @@ class _TopThreePopup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context);
-    final titleKey = isTop ? 'top_${place}_place_title' : 'bottom_${place}_place_title';
-    final descKey = isTop ? 'top_${place}_place_description' : 'bottom_${place}_place_description';
+    final titleKey =
+        isTop ? 'top_${place}_place_title' : 'bottom_${place}_place_title';
+    final descKey = isTop
+        ? 'top_${place}_place_description'
+        : 'bottom_${place}_place_description';
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       decoration: const BoxDecoration(
-        gradient: LinearGradient(colors: [Color(0xFF2D2B55), Color(0xFF3E3B6B)]),
+        gradient:
+            LinearGradient(colors: [Color(0xFF2D2B55), Color(0xFF3E3B6B)]),
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
@@ -581,7 +608,8 @@ class _TopThreePopup extends StatelessWidget {
         children: [
           Text(
             loc.translate(titleKey),
-            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+                color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),

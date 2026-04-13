@@ -4,7 +4,6 @@ import 'package:wobbly/models/day_record.dart';
 import 'package:wobbly/models/day_data.dart';
 import 'package:wobbly/models/drink_level.dart';
 
-
 class DayCell extends StatelessWidget {
   final int day;
   final int month;
@@ -116,8 +115,9 @@ class DayCell extends StatelessWidget {
     // Для дней с записью - черный текст (хорошая читаемость)
     if (record != null) {
       if ((record.drinkLevel == DrinkLevel.little ||
-          record.drinkLevel == DrinkLevel.medium ||
-          record.drinkLevel == DrinkLevel.heavy) && record.hasSport) {
+              record.drinkLevel == DrinkLevel.medium ||
+              record.drinkLevel == DrinkLevel.heavy) &&
+          record.hasSport) {
         return Colors.black;
       } else if (record.hasSport) {
         return Colors.black;

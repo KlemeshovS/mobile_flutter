@@ -5,7 +5,6 @@ import 'package:wobbly/models/drink_level.dart';
 import 'package:wobbly/utils/localization.dart';
 import 'day_cell.dart';
 
-
 class CalendarGrid extends StatelessWidget {
   final int month;
   final int year;

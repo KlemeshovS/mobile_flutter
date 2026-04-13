@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:wobbly/models/achievement.dart';
 import 'package:wobbly/utils/localization.dart';
 
-
 class AchievementsSection extends StatelessWidget {
   final List<Achievement> achievements;
   final VoidCallback onSeeAllTap;
@@ -73,9 +72,7 @@ class AchievementsSection extends StatelessWidget {
               child: Center(
                 child: Text(
                   localizations.translate('no_achievements_yet'),
-                  style: TextStyle(
-                      fontFamily: 'Inter',
-                      color: Colors.white70),
+                  style: TextStyle(fontFamily: 'Inter', color: Colors.white70),
                 ),
               ),
             )
@@ -87,7 +84,8 @@ class AchievementsSection extends StatelessWidget {
                 crossAxisCount: 3, // кол-во колонок
                 crossAxisSpacing: 16, // Расстояние между колонками
                 mainAxisSpacing: 0,
-                childAspectRatio: 0.95, // Немного вытянутые ячейки для текста под иконкой
+                childAspectRatio:
+                    0.95, // Немного вытянутые ячейки для текста под иконкой
               ),
               itemCount: achievements.length,
               itemBuilder: (context, index) {
@@ -122,7 +120,8 @@ class _AchievementIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     // Определяем, относится ли ачивка к питейным (включая отрицательные milestone, кроме специальной)
     final isDrinking = achievement.type == AchievementType.drinkingStreak ||
-        (achievement.type == AchievementType.milestone && achievement.id.contains('negative'));
+        (achievement.type == AchievementType.milestone &&
+            achievement.id.contains('negative'));
     final isMarianaTrench = achievement.id == 'milestone_11022_negative';
     Color? fillColor;
     Color? strokeColor;

@@ -51,9 +51,10 @@ class Achievement {
   final String titleKey;
   final String descriptionKey;
   final AchievementType type;
-  final int requiredValue;       // для soberStreak/drinkingStreak – дни, для sportCount – количество
-  final SportPeriod? period;      // для sportCount
-  final UniqueEvent? event;       // для uniqueEvent
+  final int
+      requiredValue; // для soberStreak/drinkingStreak – дни, для sportCount – количество
+  final SportPeriod? period; // для sportCount
+  final UniqueEvent? event; // для uniqueEvent
   bool isUnlocked;
   DateTime? unlockDate;
 
@@ -71,32 +72,38 @@ class Achievement {
 
   // Сериализация
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'titleKey': titleKey,
-    'descriptionKey': descriptionKey,
-    'type': type.name,
-    'requiredValue': requiredValue,
-    'period': period?.toJson(),
-    'event': event?.toJson(),
-    'isUnlocked': isUnlocked,
-    'unlockDate': unlockDate?.toIso8601String(),
-  };
+        'id': id,
+        'titleKey': titleKey,
+        'descriptionKey': descriptionKey,
+        'type': type.name,
+        'requiredValue': requiredValue,
+        'period': period?.toJson(),
+        'event': event?.toJson(),
+        'isUnlocked': isUnlocked,
+        'unlockDate': unlockDate?.toIso8601String(),
+      };
 
   factory Achievement.fromJson(Map<String, dynamic> json) => Achievement(
-    id: json['id'],
-    titleKey: json['titleKey'],
-    descriptionKey: json['descriptionKey'],
-    type: AchievementType.values.firstWhere((e) => e.name == json['type']),
-    requiredValue: json['requiredValue'],
-    period: json['period'] != null ? SportPeriod.fromJson(json['period']) : null,
-    event: json['event'] != null ? UniqueEvent.fromJson(json['event']) : null,
-    isUnlocked: json['isUnlocked'] ?? false,
-    unlockDate: json['unlockDate'] != null ? DateTime.parse(json['unlockDate']) : null,
-  );
+        id: json['id'],
+        titleKey: json['titleKey'],
+        descriptionKey: json['descriptionKey'],
+        type: AchievementType.values.firstWhere((e) => e.name == json['type']),
+        requiredValue: json['requiredValue'],
+        period: json['period'] != null
+            ? SportPeriod.fromJson(json['period'])
+            : null,
+        event:
+            json['event'] != null ? UniqueEvent.fromJson(json['event']) : null,
+        isUnlocked: json['isUnlocked'] ?? false,
+        unlockDate: json['unlockDate'] != null
+            ? DateTime.parse(json['unlockDate'])
+            : null,
+      );
 
   // Вспомогательное название и описание (будут использоваться с AppLocalizations)
   String getLocalizedTitle(AppLocalizations loc) => loc.translate(titleKey);
-  String getLocalizedDescription(AppLocalizations loc) => loc.translate(descriptionKey);
+  String getLocalizedDescription(AppLocalizations loc) =>
+      loc.translate(descriptionKey);
 
   // Имя изображения (ассет) – можно вычислить по id или хранить отдельно
   String get imageAsset => 'assets/achievements/$id.png';

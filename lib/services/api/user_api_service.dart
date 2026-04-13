@@ -125,12 +125,12 @@ class UserAPIService {
 
   // Обновление профиля
   Future<MeResponse> updateMyProfile({
-
     required String token,
     String? username,
     required bool participateInRating,
   }) async {
-    print('📤 [API] updateMyProfile: username=$username, participate=$participateInRating');
+    print(
+        '📤 [API] updateMyProfile: username=$username, participate=$participateInRating');
 
     final url = Uri.parse('$_baseUrl/me/profile');
     final body = {
@@ -154,7 +154,8 @@ class UserAPIService {
   }
 
   // Отправка счёта
-  Future<ScoreResponse> updateMyScore({required String token, required int score}) async {
+  Future<ScoreResponse> updateMyScore(
+      {required String token, required int score}) async {
     final url = Uri.parse('$_baseUrl/me/score');
     final body = {'score': score};
     final headers = _buildHeaders({
@@ -206,12 +207,15 @@ class UserAPIService {
   }
 
   // Аутентификация через Google
-  Future<AnonymousAuthResponse> authWithGoogle(String idToken, {String? guestAccessToken}) async {
+  Future<AnonymousAuthResponse> authWithGoogle(String idToken,
+      {String? guestAccessToken}) async {
     final url = Uri.parse('$_baseUrl/auth/google');
     final body = {'idToken': idToken};
     // Формируем заголовки: если передан guestAccessToken, добавляем Authorization
     final headers = _buildHeaders(
-      guestAccessToken != null ? {'Authorization': 'Bearer $guestAccessToken'} : null,
+      guestAccessToken != null
+          ? {'Authorization': 'Bearer $guestAccessToken'}
+          : null,
     );
     final response = await http.post(
       url,
@@ -270,7 +274,8 @@ class UserAPIService {
   }
 
   // Привязка Google к текущему аккаунту
-  Future<LinkedIdentityListResponse> linkGoogle(String token, String idToken) async {
+  Future<LinkedIdentityListResponse> linkGoogle(
+      String token, String idToken) async {
     final url = Uri.parse('$_baseUrl/auth/providers/google/link');
     final headers = _buildHeaders({'Authorization': 'Bearer $token'});
     final response = await http.post(
@@ -286,7 +291,8 @@ class UserAPIService {
   }
 
   // Отвязка provider
-  Future<LinkedIdentityListResponse> unlinkProvider(String token, String provider) async {
+  Future<LinkedIdentityListResponse> unlinkProvider(
+      String token, String provider) async {
     final url = Uri.parse('$_baseUrl/auth/providers/$provider');
     final headers = _buildHeaders({'Authorization': 'Bearer $token'});
     final response = await http.delete(url, headers: headers);
@@ -308,7 +314,8 @@ class UserAPIService {
   }
 
   Future<UserAPIError> _handleError(http.Response response) async {
-    print('📥 _handleError: статус ${response.statusCode}, тело: ${response.body}');
+    print(
+        '📥 _handleError: статус ${response.statusCode}, тело: ${response.body}');
     // Пытаемся распарсить тело ответа
     try {
       final body = json.decode(response.body);

@@ -244,7 +244,8 @@ class AchievementManager {
     if (jsonString != null) {
       try {
         final List<dynamic> jsonList = jsonDecode(jsonString);
-        _currentAchievements = jsonList.map((e) => Achievement.fromJson(e)).toList();
+        _currentAchievements =
+            jsonList.map((e) => Achievement.fromJson(e)).toList();
       } catch (e) {
         print('Error loading achievements: $e');
         _currentAchievements = [];
@@ -252,7 +253,8 @@ class AchievementManager {
     } else {
       _currentAchievements = [];
     }
-    print('📊 Загружено ачивок: ${_currentAchievements.length}, из них разблокировано: ${_currentAchievements.where((a) => a.isUnlocked).length}');
+    print(
+        '📊 Загружено ачивок: ${_currentAchievements.length}, из них разблокировано: ${_currentAchievements.where((a) => a.isUnlocked).length}');
     // Обновляем список _allAchievements, сохраняя unlocked статус из загруженных
     _mergeWithSaved();
   }
@@ -260,7 +262,7 @@ class AchievementManager {
   void _mergeWithSaved() {
     for (var i = 0; i < _allAchievements.length; i++) {
       final saved = _currentAchievements.firstWhere(
-            (a) => a.id == _allAchievements[i].id,
+        (a) => a.id == _allAchievements[i].id,
         orElse: () => _allAchievements[i],
       );
       _allAchievements[i].isUnlocked = saved.isUnlocked;
@@ -271,12 +273,14 @@ class AchievementManager {
 
   Future<void> _saveAchievements() async {
     final prefs = await SharedPreferences.getInstance();
-    final jsonString = jsonEncode(_currentAchievements.map((a) => a.toJson()).toList());
+    final jsonString =
+        jsonEncode(_currentAchievements.map((a) => a.toJson()).toList());
     await prefs.setString(_storageKey, jsonString);
   }
 
   // Проверить все ачивки на основе данных
-  Future<List<Achievement>> checkAllAchievements(Map<String, DayRecord> daysData) async {
+  Future<List<Achievement>> checkAllAchievements(
+      Map<String, DayRecord> daysData) async {
     print('🔍 checkAllAchievements: начало проверки');
     bool changed = false;
 
@@ -303,7 +307,8 @@ class AchievementManager {
   }
 
   // Проверка одной ачивки
-  Future<bool> _checkAchievement(Achievement ach, Map<String, DayRecord> daysData) async {
+  Future<bool> _checkAchievement(
+      Achievement ach, Map<String, DayRecord> daysData) async {
     switch (ach.type) {
       case AchievementType.drinkingStreak:
         return _checkDrinkingStreak(ach.requiredValue, daysData);
@@ -312,10 +317,10 @@ class AchievementManager {
       case AchievementType.sportCount:
         return _checkSportAchievement(ach.period!, ach.requiredValue, daysData);
       case AchievementType.uniqueEvent:
-      // TODO: реализовать позже
+        // TODO: реализовать позже
         return false;
       case AchievementType.milestone:
-      // Milestone ачивки проверяются отдельно через checkMilestones
+        // Milestone ачивки проверяются отдельно через checkMilestones
         return false;
     }
   }
@@ -331,7 +336,8 @@ class AchievementManager {
     }
   }
 
-  Future<List<Achievement>> updateAchievements(int progressDays, Map<String, DayRecord> daysData) async {
+  Future<List<Achievement>> updateAchievements(
+      int progressDays, Map<String, DayRecord> daysData) async {
     print('🔄 updateAchievements: проверка всех ачивок');
     bool changed = false;
     for (int i = 0; i < _currentAchievements.length; i++) {
@@ -401,7 +407,8 @@ class AchievementManager {
     return changed;
   }
 
-  Future<List<Achievement>> resetAndCheckAllAchievements(int progressDays, Map<String, DayRecord> daysData) async {
+  Future<List<Achievement>> resetAndCheckAllAchievements(
+      int progressDays, Map<String, DayRecord> daysData) async {
     print('🔄 Сброс всех ачивок и повторная проверка');
     for (var i = 0; i < _currentAchievements.length; i++) {
       _currentAchievements[i].isUnlocked = false;
@@ -413,12 +420,14 @@ class AchievementManager {
   }
 
   //Проверка спортивных ачивок
-  bool _checkSportAchievement(SportPeriod period, int requiredCount, Map<String, DayRecord> daysData) {
+  bool _checkSportAchievement(
+      SportPeriod period, int requiredCount, Map<String, DayRecord> daysData) {
     final maxCount = _findMaxSportDaysInAnyPeriod(period, daysData);
     return maxCount >= requiredCount;
   }
 
-  int _findMaxSportDaysInAnyPeriod(SportPeriod period, Map<String, DayRecord> daysData) {
+  int _findMaxSportDaysInAnyPeriod(
+      SportPeriod period, Map<String, DayRecord> daysData) {
     final sportDays = _getSportDays(daysData);
     if (sportDays.isEmpty) return 0;
 
@@ -443,7 +452,8 @@ class AchievementManager {
     return result;
   }
 
-  int _countSportDaysInRange(DateTime start, DateTime end, Map<String, DayRecord> daysData) {
+  int _countSportDaysInRange(
+      DateTime start, DateTime end, Map<String, DayRecord> daysData) {
     int count = 0;
     DateTime current = start;
     while (!current.isAfter(end)) {
@@ -458,13 +468,15 @@ class AchievementManager {
   // Расчет максимального алкогольного стрика за всю историю
   bool _checkDrinkingStreak(int requiredDays, Map<String, DayRecord> daysData) {
     final maxStreak = _calculateMaxDrinkingStreak(daysData);
-    print('📊 Максимальный алкогольный стрик: $maxStreak, требуется: $requiredDays');
+    print(
+        '📊 Максимальный алкогольный стрик: $maxStreak, требуется: $requiredDays');
     return maxStreak >= requiredDays;
   }
 
   bool _checkSoberStreak(int requiredDays, Map<String, DayRecord> daysData) {
     final maxStreak = _calculateMaxSoberStreak(daysData);
-    print('📊 Максимальный трезвый стрик: $maxStreak, требуется: $requiredDays');
+    print(
+        '📊 Максимальный трезвый стрик: $maxStreak, требуется: $requiredDays');
     return maxStreak >= requiredDays;
   }
 
@@ -498,7 +510,11 @@ class AchievementManager {
   }
 
   int _calculateMaxSoberStreak(Map<String, DayRecord> daysData) {
-    final dates = daysData.keys.map(_parseDate).where((d) => d != null).cast<DateTime>().toList();
+    final dates = daysData.keys
+        .map(_parseDate)
+        .where((d) => d != null)
+        .cast<DateTime>()
+        .toList();
     if (dates.isEmpty) return 0;
     dates.sort();
     final firstDate = dates.first;
@@ -522,7 +538,11 @@ class AchievementManager {
   }
 
   int _calculateMaxDrinkingStreak(Map<String, DayRecord> daysData) {
-    final dates = daysData.keys.map(_parseDate).where((d) => d != null).cast<DateTime>().toList();
+    final dates = daysData.keys
+        .map(_parseDate)
+        .where((d) => d != null)
+        .cast<DateTime>()
+        .toList();
     if (dates.isEmpty) return 0;
     dates.sort();
     final firstDate = dates.first;
@@ -559,7 +579,8 @@ class AchievementManager {
     if (parts.length != 3) return null;
     try {
       // Месяц в ключе уже 1-based, поэтому просто передаём его как есть
-      return DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+      return DateTime(
+          int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
     } catch (_) {
       return null;
     }
@@ -574,5 +595,6 @@ class AchievementManager {
   int get totalAchievementsCount => _allAchievements.length;
 
   /// Количество разблокированных достижений
-  int get unlockedAchievementsCount => _currentAchievements.where((a) => a.isUnlocked).length;
+  int get unlockedAchievementsCount =>
+      _currentAchievements.where((a) => a.isUnlocked).length;
 }

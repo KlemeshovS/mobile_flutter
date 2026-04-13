@@ -9,9 +9,9 @@ import 'package:wobbly/models/drink_level.dart';
 
 class ExportManager {
   static Future<void> exportData(
-      BuildContext context,
-      Map<String, DayRecord> daysData,
-      ) async {
+    BuildContext context,
+    Map<String, DayRecord> daysData,
+  ) async {
     print('ExportManager: Starting export process...');
 
     try {
@@ -86,7 +86,8 @@ class ExportManager {
       print('ExportManager: Test 3 - File share');
       try {
         final directory = await getTemporaryDirectory();
-        final timestamp = DateTime.now().toString()
+        final timestamp = DateTime.now()
+            .toString()
             .replaceAll(' ', '_')
             .replaceAll(':', '-')
             .split('.')[0];
@@ -114,7 +115,6 @@ class ExportManager {
         print('ExportManager: File share failed: $e');
         rethrow;
       }
-
     } catch (e, stackTrace) {
       print('ExportManager: Error occurred: $e');
       print('ExportManager: Stack trace: $stackTrace');

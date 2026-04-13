@@ -6,7 +6,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:wobbly/models/day_record.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // добавить этот импорт
 
-typedef OnAnimationComplete = void Function(Map<String, DayRecord>? data, bool isFirstLaunch);
+typedef OnAnimationComplete = void Function(
+    Map<String, DayRecord>? data, bool isFirstLaunch);
 
 class SplashScreen extends StatefulWidget {
   final OnAnimationComplete onAnimationComplete;
@@ -45,7 +46,8 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
-    print('🕐 SplashScreen initState: ${DateTime.now().millisecondsSinceEpoch}');
+    print(
+        '🕐 SplashScreen initState: ${DateTime.now().millisecondsSinceEpoch}');
 
     _rotationController = AnimationController(
       vsync: this,
@@ -211,7 +213,8 @@ class _SplashScreenState extends State<SplashScreen>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   AnimatedBuilder(
-                    animation: Listenable.merge([_scaleAnimation, _glowController]),
+                    animation:
+                        Listenable.merge([_scaleAnimation, _glowController]),
                     builder: (context, child) {
                       final glowValue = _glowController.value;
                       return Transform.scale(
@@ -226,7 +229,8 @@ class _SplashScreenState extends State<SplashScreen>
                                 shape: BoxShape.circle,
                                 gradient: RadialGradient(
                                   colors: [
-                                    const Color(0xFF8B5CF6).withOpacity(0.3 + glowValue * 0.3),
+                                    const Color(0xFF8B5CF6)
+                                        .withOpacity(0.3 + glowValue * 0.3),
                                     const Color(0xFF4B3A91).withOpacity(0.2),
                                     Colors.transparent,
                                   ],
@@ -242,12 +246,14 @@ class _SplashScreenState extends State<SplashScreen>
                                 color: Colors.white.withOpacity(0.2),
                                 border: Border.all(
                                   width: 4,
-                                  color: const Color(0xFF8B5CF6).withOpacity(0.8 + glowValue * 0.2),
+                                  color: const Color(0xFF8B5CF6)
+                                      .withOpacity(0.8 + glowValue * 0.2),
                                 ),
                               ),
                               child: ClipOval(
                                 child: BackdropFilter(
-                                  filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                                  filter:
+                                      ImageFilter.blur(sigmaX: 8, sigmaY: 8),
                                   child: Container(color: Colors.transparent),
                                 ),
                               ),

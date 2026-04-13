@@ -4,7 +4,6 @@ import 'package:wobbly/models/achievement.dart';
 import 'package:wobbly/utils/localization.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-
 class AllAchievementsSheet extends StatelessWidget {
   final List<Achievement> achievements;
   final Function(Achievement) onAchievementTap;
@@ -94,8 +93,10 @@ class _AchievementGridItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isDrinking = achievement.type == AchievementType.drinkingStreak ||
-        (achievement.type == AchievementType.milestone && achievement.id.contains('negative'));
+    final bool isDrinking =
+        achievement.type == AchievementType.drinkingStreak ||
+            (achievement.type == AchievementType.milestone &&
+                achievement.id.contains('negative'));
     final bool isMarianaTrench = achievement.id == 'milestone_11022_negative';
     final isUnlocked = achievement.isUnlocked;
 

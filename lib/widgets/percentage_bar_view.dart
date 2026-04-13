@@ -84,10 +84,12 @@ class _PercentageBarViewState extends State<PercentageBarView>
                   // Алкогольная часть
                   if (widget.drinkingPercentage > 0)
                     Expanded(
-                      flex: (widget.drinkingPercentage * _animation.value).round(),
+                      flex: (widget.drinkingPercentage * _animation.value)
+                          .round(),
                       child: Container(
                         decoration: BoxDecoration(
-                          borderRadius: _getDrinkingBorderRadius(isDrinkingFull, hasBoth),
+                          borderRadius:
+                              _getDrinkingBorderRadius(isDrinkingFull, hasBoth),
                           gradient: LinearGradient(
                             colors: [
                               Color(0xFFEA0505), // Красный
@@ -106,7 +108,8 @@ class _PercentageBarViewState extends State<PercentageBarView>
                       flex: (widget.sportPercentage * _animation.value).round(),
                       child: Container(
                         decoration: BoxDecoration(
-                          borderRadius: _getSportBorderRadius(isSportFull, hasBoth),
+                          borderRadius:
+                              _getSportBorderRadius(isSportFull, hasBoth),
                           gradient: LinearGradient(
                             colors: [
                               Color(0xFFC7FF00), // Ярко-зеленый
@@ -183,7 +186,8 @@ class _PercentageBarViewState extends State<PercentageBarView>
   }
 
   // Метод для определения скругления алкогольной части
-  BorderRadiusGeometry _getDrinkingBorderRadius(bool isDrinkingFull, bool hasBoth) {
+  BorderRadiusGeometry _getDrinkingBorderRadius(
+      bool isDrinkingFull, bool hasBoth) {
     if (isDrinkingFull) {
       // Если алкоголь 100% - скругляем все углы
       return BorderRadius.circular(8);

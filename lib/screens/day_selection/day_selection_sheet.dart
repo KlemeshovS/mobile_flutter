@@ -188,7 +188,7 @@ class _DaySelectionSheetState extends State<DaySelectionSheet> {
                   localizations.okButton,
                   style: TextStyle(
                     fontFamily: 'Inter',
-                  fontSize: 16,
+                    fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -239,9 +239,9 @@ class _DaySelectionSheetState extends State<DaySelectionSheet> {
                   color: Colors.transparent,
                   border: isSelected
                       ? Border.all(
-                    color: Color(0xFF8B5CF6),
-                    width: 3,
-                  )
+                          color: Color(0xFF8B5CF6),
+                          width: 3,
+                        )
                       : null,
                 ),
                 child: Image.asset(
@@ -285,13 +285,13 @@ class _DaySelectionSheetState extends State<DaySelectionSheet> {
                   color: Color(0xFFC7FF00).withOpacity(_hasSport ? 0.3 : 0.1),
                   border: _hasSport
                       ? Border.all(
-                    color: Color(0xFFC7FF00),
-                    width: 3,
-                  )
+                          color: Color(0xFFC7FF00),
+                          width: 3,
+                        )
                       : Border.all(
-                    color: Colors.white.withOpacity(0.3),
-                    width: 1,
-                  ),
+                          color: Colors.white.withOpacity(0.3),
+                          width: 1,
+                        ),
                 ),
                 child: Icon(
                   Icons.directions_run,

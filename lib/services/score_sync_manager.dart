@@ -39,7 +39,8 @@ class ScoreSyncManager {
     }
 
     final installDate = await InstallDateManager.getInstallDate();
-    final score = SobrietyProgressCalculator.calculateProgressDays(daysData, installDate);
+    final score =
+        SobrietyProgressCalculator.calculateProgressDays(daysData, installDate);
 
     try {
       final response = await _api.updateMyScore(token: token, score: score);

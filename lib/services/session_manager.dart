@@ -25,7 +25,9 @@ class SessionManager {
     _refreshToken = prefs.getString(_refreshTokenKey);
     _userId = prefs.getInt(_userIdKey);
     final typeStr = prefs.getString(_sessionTypeKey);
-    _sessionType = typeStr == 'authenticated' ? SessionType.authenticated : SessionType.guest;
+    _sessionType = typeStr == 'authenticated'
+        ? SessionType.authenticated
+        : SessionType.guest;
     _isInitialized = true;
   }
 
@@ -85,7 +87,8 @@ class SessionManager {
   }
 
   // Новый метод
-  Future<void> updateTokens({required String accessToken, required String refreshToken}) async {
+  Future<void> updateTokens(
+      {required String accessToken, required String refreshToken}) async {
     _accessToken = accessToken;
     _refreshToken = refreshToken;
     final prefs = await SharedPreferences.getInstance();

@@ -33,19 +33,22 @@ class ReviewPromptView extends StatefulWidget {
                 context: context,
                 message: AppLocalizations.of(context).reviewLaterMessage,
                 onButtonPressed: () {
-                  ReviewManager().didShowPrompt(); // выполняем логику напоминания позже
+                  ReviewManager()
+                      .didShowPrompt(); // выполняем логику напоминания позже
                 },
               );
             },
             onRate: () async {
               Navigator.of(context).pop();
               await ReviewManager().didRate();
-              const packageName = 'com.tritan.wobbly_flutter'; // Ссылка на приложение в google play
+              const packageName =
+                  'com.tritan.wobbly_flutter'; // Ссылка на приложение в google play
               final url = 'market://details?id=$packageName';
               if (await canLaunch(url)) {
                 await launch(url);
               } else {
-                final webUrl = 'https://play.google.com/store/apps/details?id=$packageName';
+                final webUrl =
+                    'https://play.google.com/store/apps/details?id=$packageName';
                 if (await canLaunch(webUrl)) {
                   await launch(webUrl);
                 }
@@ -61,7 +64,8 @@ class ReviewPromptView extends StatefulWidget {
   State<ReviewPromptView> createState() => _ReviewPromptViewState();
 }
 
-class _ReviewPromptViewState extends State<ReviewPromptView> with SingleTickerProviderStateMixin {
+class _ReviewPromptViewState extends State<ReviewPromptView>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<Offset> _offsetAnimation;
   late Animation<double> _opacityAnimation;
@@ -69,8 +73,10 @@ class _ReviewPromptViewState extends State<ReviewPromptView> with SingleTickerPr
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
-    _offsetAnimation = Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+    _controller = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 300));
+    _offsetAnimation = Tween<Offset>(
+            begin: const Offset(0, 1), end: Offset.zero)
         .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
     _opacityAnimation = Tween<double>(begin: 0, end: 1).animate(_controller);
     _controller.forward();
@@ -114,7 +120,9 @@ class _ReviewPromptViewState extends State<ReviewPromptView> with SingleTickerPr
                 localizations.reviewTitle,
                 style: TextStyle(
                     fontFamily: 'Inter',
-                    fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 20),
@@ -122,7 +130,8 @@ class _ReviewPromptViewState extends State<ReviewPromptView> with SingleTickerPr
                 localizations.reviewMessage,
                 style: TextStyle(
                     fontFamily: 'Inter',
-                    fontSize: 14, color: Colors.white.withOpacity(0.9)),
+                    fontSize: 14,
+                    color: Colors.white.withOpacity(0.9)),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 20),
@@ -134,7 +143,8 @@ class _ReviewPromptViewState extends State<ReviewPromptView> with SingleTickerPr
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
                     padding: EdgeInsets.zero,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                   ),
                   child: Ink(
                     decoration: BoxDecoration(
@@ -152,7 +162,9 @@ class _ReviewPromptViewState extends State<ReviewPromptView> with SingleTickerPr
                         localizations.reviewRateButton,
                         style: TextStyle(
                             fontFamily: 'Inter',
-                            fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white),
                       ),
                     ),
                   ),
@@ -165,7 +177,8 @@ class _ReviewPromptViewState extends State<ReviewPromptView> with SingleTickerPr
                   localizations.reviewLaterButton,
                   style: TextStyle(
                       fontFamily: 'Inter',
-                      fontSize: 14, color: Colors.white.withOpacity(0.7)),
+                      fontSize: 14,
+                      color: Colors.white.withOpacity(0.7)),
                 ),
               ),
             ],

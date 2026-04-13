@@ -17,12 +17,19 @@ class SobrietyProgressCalculator {
   static const int maxNegativeDays = 500;
   static const List<int> postYearMilestones = [1234, 4810, 5642, 7010, 8848];
   static const List<int> negativeMilestones = [50, 100, 202, 300, 500];
-  static const List<int> postNegativeMilestones = [1642, 3800, 6066, 10047, 11022];
+  static const List<int> postNegativeMilestones = [
+    1642,
+    3800,
+    6066,
+    10047,
+    11022
+  ];
   //1642 - байкал, 3800 - титаник, 202 - голубая дыра, 6066 - Атакамский желоб, 10047 - Жёлоб Кермадек
 
   /// Основной метод расчёта прогресса.
   /// Возвращает количество "очков трезвости" с учётом штрафов за употребление и бонусов за непрерывные недели.
-  static int calculateProgressDays(Map<String, DayRecord> daysData, DateTime installDate) {
+  static int calculateProgressDays(
+      Map<String, DayRecord> daysData, DateTime installDate) {
     print("🧮 calculateProgressDays: daysData count = ${daysData.length}");
 
     final now = DateTime.now();
@@ -44,7 +51,8 @@ class SobrietyProgressCalculator {
 
     var progressDays = 0;
     var consecutiveDrinkDays = 0;
-    var consecutiveSoberDays = 0;      // количество трезвых дней подряд до текущего дня
+    var consecutiveSoberDays =
+        0; // количество трезвых дней подряд до текущего дня
     var currentDate = startDate;
 
     while (currentDate.isBefore(today) || currentDate.isAtSameMomentAs(today)) {
@@ -73,18 +81,19 @@ class SobrietyProgressCalculator {
           int sportBonus;
           if (record.drinkLevel == DrinkLevel.little) {
             basePenalty = 5;
-            sportBonus = 20;    // бонус 20 для little+sport
+            sportBonus = 20; // бонус 20 для little+sport
           } else if (record.drinkLevel == DrinkLevel.medium) {
             basePenalty = 20;
-            sportBonus = 5;     // бонус 5 для medium+sport
+            sportBonus = 5; // бонус 5 для medium+sport
           } else if (record.drinkLevel == DrinkLevel.heavy) {
             basePenalty = 35;
-            sportBonus = 0;     // бонус 0 для heavy+sport
+            sportBonus = 0; // бонус 0 для heavy+sport
           } else {
             basePenalty = 5;
             sportBonus = 20;
           }
-          final penalty = _calculatePenalty(base: basePenalty, consecutiveDays: consecutiveDrinkDays);
+          final penalty = _calculatePenalty(
+              base: basePenalty, consecutiveDays: consecutiveDrinkDays);
           progressDays = progressDays - penalty + sportBonus;
           consecutiveSoberDays = 0;
         } else {
@@ -110,28 +119,32 @@ class SobrietyProgressCalculator {
             case DrinkLevel.little:
               consecutiveDrinkDays += 1;
               consecutiveSoberDays = 0;
-              final penalty = _calculatePenalty(base: 5, consecutiveDays: consecutiveDrinkDays);
+              final penalty = _calculatePenalty(
+                  base: 5, consecutiveDays: consecutiveDrinkDays);
               progressDays -= penalty;
               break;
 
             case DrinkLevel.medium:
               consecutiveDrinkDays += 1;
               consecutiveSoberDays = 0;
-              final penalty = _calculatePenalty(base: 20, consecutiveDays: consecutiveDrinkDays);
+              final penalty = _calculatePenalty(
+                  base: 20, consecutiveDays: consecutiveDrinkDays);
               progressDays -= penalty;
               break;
 
             case DrinkLevel.heavy:
               consecutiveDrinkDays += 1;
               consecutiveSoberDays = 0;
-              final penalty = _calculatePenalty(base: 35, consecutiveDays: consecutiveDrinkDays);
+              final penalty = _calculatePenalty(
+                  base: 35, consecutiveDays: consecutiveDrinkDays);
               progressDays -= penalty;
               break;
 
             case DrinkLevel.little_sport:
               consecutiveDrinkDays += 1;
               consecutiveSoberDays = 0;
-              final penalty = _calculatePenalty(base: 5, consecutiveDays: consecutiveDrinkDays);
+              final penalty = _calculatePenalty(
+                  base: 5, consecutiveDays: consecutiveDrinkDays);
               progressDays = progressDays - penalty + 20;
               break;
 
@@ -156,20 +169,21 @@ class SobrietyProgressCalculator {
   static double _bonusCoefficient(int weeks) {
     switch (weeks) {
       case 0:
-        return 1.0;   // дни 1–7
+        return 1.0; // дни 1–7
       case 1:
-        return 1.2;   // дни 8–14
+        return 1.2; // дни 8–14
       case 2:
-        return 1.5;   // дни 15–21
+        return 1.5; // дни 15–21
       case 3:
-        return 1.75;  // дни 22–28
+        return 1.75; // дни 22–28
       default:
-        return 2.0;   // дни 29+
+        return 2.0; // дни 29+
     }
   }
 
   // Штрафной коэффициент в зависимости от количества дней подряд с выпивкой
-  static int _calculatePenalty({required int base, required int consecutiveDays}) {
+  static int _calculatePenalty(
+      {required int base, required int consecutiveDays}) {
     final coefficient = switch (consecutiveDays) {
       1 => 1.0,
       2 => 1.5,

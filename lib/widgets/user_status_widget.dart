@@ -4,7 +4,6 @@ import 'package:wobbly/models/user_status.dart';
 import 'package:wobbly/utils/localization.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-
 class UserStatusWidget extends StatelessWidget {
   final UserStatus status;
   final VoidCallback onTap;
@@ -46,7 +45,7 @@ class UserStatusWidget extends StatelessWidget {
                   width: 46,
                   height: 46,
                   errorBuilder: (context, error, stackTrace) =>
-                  const Icon(Icons.error, color: Colors.white),
+                      const Icon(Icons.error, color: Colors.white),
                 ),
               ),
             ),

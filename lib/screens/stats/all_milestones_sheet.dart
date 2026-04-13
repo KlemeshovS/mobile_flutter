@@ -3,7 +3,6 @@ import 'package:wobbly/models/milestone.dart';
 import 'package:wobbly/utils/milestone_data.dart';
 import 'package:wobbly/utils/localization.dart';
 
-
 class AllMilestonesSheet extends StatelessWidget {
   final int soberDays;
 
@@ -92,21 +91,21 @@ class _MilestoneCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: isCompleted
             ? const LinearGradient(
-          colors: [
-            Color(0xFF2D2B55),
-            Color(0xFF3E3B6B),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        )
+                colors: [
+                  Color(0xFF2D2B55),
+                  Color(0xFF3E3B6B),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
             : LinearGradient(
-          colors: [
-            Colors.white.withOpacity(0.05),
-            Colors.white.withOpacity(0.03),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+                colors: [
+                  Colors.white.withOpacity(0.05),
+                  Colors.white.withOpacity(0.03),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isCompleted
@@ -123,8 +122,7 @@ class _MilestoneCard extends StatelessWidget {
             children: [
               Text(
                 milestone.icon,
-                style: TextStyle(
-                    fontFamily: 'Inter',fontSize: 20),
+                style: TextStyle(fontFamily: 'Inter', fontSize: 20),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -134,7 +132,9 @@ class _MilestoneCard extends StatelessWidget {
                     fontFamily: 'Inter',
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
-                    color: isCompleted ? Colors.white : Colors.white.withOpacity(0.6),
+                    color: isCompleted
+                        ? Colors.white
+                        : Colors.white.withOpacity(0.6),
                   ),
                 ),
               ),
@@ -161,39 +161,40 @@ class _MilestoneCard extends StatelessWidget {
           const SizedBox(height: 12),
           // Факты (6 штук)
           ...facts.map((fact) => Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Контейнер для точечки с фиксированным размером
-                SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: Center(
-                    child: Icon(
-                      Icons.circle,
-                      size: 6,
-                      color: isCompleted
-                          ? const Color(0xFF4ECDC4)
-                          : Colors.white.withOpacity(0.5),
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Контейнер для точечки с фиксированным размером
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: Center(
+                        child: Icon(
+                          Icons.circle,
+                          size: 6,
+                          color: isCompleted
+                              ? const Color(0xFF4ECDC4)
+                              : Colors.white.withOpacity(0.5),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    fact,
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 12,
-                      color: isCompleted
-                          ? Colors.white.withOpacity(0.9)
-                          : Colors.white.withOpacity(0.6),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        fact,
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 12,
+                          color: isCompleted
+                              ? Colors.white.withOpacity(0.9)
+                              : Colors.white.withOpacity(0.6),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],            ),
-          )),
+              )),
         ],
       ),
     );

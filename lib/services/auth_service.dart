@@ -5,7 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
   //WEB CLIENT ID
-  static const String _webClientId = "293241377764-4ipsi5achpqcsku9o6ug7vrh0shv60v8.apps.googleusercontent.com";
+  static const String _webClientId =
+      "293241377764-4ipsi5achpqcsku9o6ug7vrh0shv60v8.apps.googleusercontent.com";
 
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     serverClientId: _webClientId,
@@ -17,16 +18,19 @@ class AuthService {
     try {
       // Инициализируем SessionManager, чтобы получить текущий токен (возможно guest)
       await _session.init();
-      final currentToken = _session.accessToken; // может быть null, если нет сессии
+      final currentToken =
+          _session.accessToken; // может быть null, если нет сессии
 
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) return false;
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final idToken = googleAuth.idToken;
       if (idToken == null) throw Exception('No idToken from Google');
 
       // Передаём текущий токен как guestAccessToken (если есть)
-      final authResponse = await _api.authWithGoogle(idToken, guestAccessToken: currentToken);
+      final authResponse =
+          await _api.authWithGoogle(idToken, guestAccessToken: currentToken);
       await _session.setAuthenticatedSession(
         accessToken: authResponse.accessToken,
         refreshToken: authResponse.refreshToken,
@@ -41,7 +45,8 @@ class AuthService {
       } else {
         await prefs.remove('userName');
       }
-      await prefs.setBool('userParticipateInRating', session.participateInRating);
+      await prefs.setBool(
+          'userParticipateInRating', session.participateInRating);
 
       // Если пользователь участвует в рейтингах, нужно отправить его текущий счёт
       if (session.participateInRating) {

@@ -76,20 +76,20 @@ class AppTheme {
   }
 
   static LinearGradient get mainGradient => LinearGradient(
-    colors: [
-      Color(0xFF000000),
-      Color(0xFF4B3A91),
-    ],
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-  );
+        colors: [
+          Color(0xFF000000),
+          Color(0xFF4B3A91),
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      );
 
   static LinearGradient get cardGradient => LinearGradient(
-    colors: [
-      Color(0xFF2D2B55).withOpacity(0.9),
-      Color(0xFF3E3B6B).withOpacity(0.7),
-    ],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
+        colors: [
+          Color(0xFF2D2B55).withOpacity(0.9),
+          Color(0xFF3E3B6B).withOpacity(0.7),
+        ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
 }

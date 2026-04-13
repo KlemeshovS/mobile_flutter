@@ -4,8 +4,8 @@ import 'package:wobbly/models/drink_level.dart';
 class ExportData {
   final String version;
   final DateTime exportDate;
-  final Map<String, String> daysData;          // старый формат
-  final Map<String, DayRecord>? dayRecords;    // новый формат (опционально)
+  final Map<String, String> daysData; // старый формат
+  final Map<String, DayRecord>? dayRecords; // новый формат (опционально)
 
   ExportData({
     required this.version,
@@ -49,7 +49,7 @@ class ExportData {
 
           // Преобразуем строку в DrinkLevel
           final drinkLevel = DrinkLevel.values.firstWhere(
-                (e) => e.toString().split('.').last == drinkLevelStr,
+            (e) => e.toString().split('.').last == drinkLevelStr,
             orElse: () => DrinkLevel.none,
           );
 

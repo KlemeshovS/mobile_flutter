@@ -50,10 +50,10 @@ class DayRecord {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is DayRecord &&
-              runtimeType == other.runtimeType &&
-              drinkLevel == other.drinkLevel &&
-              hasSport == other.hasSport;
+      other is DayRecord &&
+          runtimeType == other.runtimeType &&
+          drinkLevel == other.drinkLevel &&
+          hasSport == other.hasSport;
 
   @override
   int get hashCode => drinkLevel.hashCode ^ hasSport.hashCode;

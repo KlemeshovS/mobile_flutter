@@ -17,7 +17,8 @@ class ReviewManager {
   final int _minMarkedDaysBeforePrompt = 5;
 
   bool _testModeOverride = false;
-  bool get _effectiveTestMode => _testModeOverride || (kDebugMode && false); // по умолчанию выключен
+  bool get _effectiveTestMode =>
+      _testModeOverride || (kDebugMode && false); // по умолчанию выключен
 
   void enableTestMode() => _testModeOverride = true;
   void disableTestMode() => _testModeOverride = false;
@@ -52,7 +53,8 @@ class ReviewManager {
   Future<DateTime?> getLastPromptDate() async {
     final prefs = await SharedPreferences.getInstance();
     final timestamp = prefs.getInt(_lastPromptDateKey);
-    if (timestamp != null) return DateTime.fromMillisecondsSinceEpoch(timestamp);
+    if (timestamp != null)
+      return DateTime.fromMillisecondsSinceEpoch(timestamp);
     return null;
   }
 
@@ -69,7 +71,8 @@ class ReviewManager {
   Future<bool> shouldShowPrompt(Map<String, DayRecord> daysData) async {
     if (_effectiveTestMode) return true;
     if (await hasRated()) return false;
-    if (countUserMarkedDays(daysData) < _minMarkedDaysBeforePrompt) return false;
+    if (countUserMarkedDays(daysData) < _minMarkedDaysBeforePrompt)
+      return false;
     if (await getStatsOpenCount() < _minOpensBeforePrompt) return false;
 
     final lastDate = await getLastPromptDate();

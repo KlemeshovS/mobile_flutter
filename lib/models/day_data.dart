@@ -26,11 +26,11 @@ class DayData {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is DayData &&
-              runtimeType == other.runtimeType &&
-              day == other.day &&
-              month == other.month &&
-              year == other.year;
+      other is DayData &&
+          runtimeType == other.runtimeType &&
+          day == other.day &&
+          month == other.month &&
+          year == other.year;
 
   @override
   int get hashCode => day.hashCode ^ month.hashCode ^ year.hashCode;
