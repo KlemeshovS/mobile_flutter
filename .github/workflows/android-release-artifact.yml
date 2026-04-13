@@ -39,13 +39,18 @@ jobs:
       - name: Run tests
         run: flutter test
 
+      - name: Ensure release signing secrets exist
+        run: |
+          test -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}"
+          test -n "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}"
+          test -n "${{ secrets.ANDROID_KEY_PASSWORD }}"
+          test -n "${{ secrets.ANDROID_KEY_ALIAS }}"
+
       - name: Decode Android keystore
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/release-keystore.jks
 
       - name: Create key.properties
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
         run: |
           cat <<EOF > android/key.properties
           storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -54,11 +59,35 @@ jobs:
           storeFile=release-keystore.jks
           EOF
 
+      - name: Resolve production version
+        id: version
+        run: |
+          VERSION_NAME=$(grep '^version:' pubspec.yaml | cut -d' ' -f2 | cut -d'+' -f1)
+          echo "name=${VERSION_NAME}" >> "$GITHUB_OUTPUT"
+          echo "number=${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+
       - name: Build release appbundle
-        run: flutter build appbundle --release
+        run: |
+          flutter build appbundle \
+            --release \
+            --build-name "${{ steps.version.outputs.name }}" \
+            --build-number "${{ steps.version.outputs.number }}"
+
+      - name: Build release APK
+        run: |
+          flutter build apk \
+            --release \
+            --build-name "${{ steps.version.outputs.name }}" \
+            --build-number "${{ steps.version.outputs.number }}"
 
       - name: Upload release bundle artifact
         uses: actions/upload-artifact@v4
         with:
           name: wobbly-release-aab
           path: build/app/outputs/bundle/release/app-release.aab
+
+      - name: Upload release APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wobbly-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk

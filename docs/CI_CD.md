@@ -24,21 +24,36 @@
 - `flutter analyze --no-fatal-infos --no-fatal-warnings`
 - `flutter test`
 
-На push в `develop` дополнительно собирается debug APK:
+На push в `develop` дополнительно собирается полноценная тестовая release APK:
 
-- `build/app/outputs/flutter-apk/app-debug.apk`
+- `build/app/outputs/flutter-apk/app-release.apk`
 
-Это удобно для быстрых smoke-проверок, не превращая каждый merge в релиз.
+Особенности этой сборки:
+
+- это не debug, а release-сборка
+- если в GitHub Secrets есть keystore, сборка будет подписана release-ключом
+- в `build-name` автоматически добавляется суффикс вида `-dev.<run_number>`
+- такую сборку удобно отдавать тестировщикам или ставить вручную на устройство
+
+То есть `develop` теперь дает не просто smoke-артефакт, а нормальную тестовую Android-сборку.
 
 ### `main`
 
 На push в `main`:
 
 - повторяются те же проверки
-- выполняется `flutter build appbundle --release`
-- готовый `app-release.aab` сохраняется как GitHub Actions artifact
+- собирается `flutter build appbundle --release`
+- собирается `flutter build apk --release`
+- сохраняются оба артефакта:
+  - `app-release.aab`
+  - `app-release.apk`
 
-Так `main` остается релизной веткой, но без автоматической публикации в Google Play.
+Это уже продуктовая ветка:
+
+- `AAB` можно использовать для Google Play
+- `APK` удобно оставить для быстрой ручной проверки
+- автоматической публикации в Google Play по-прежнему нет
+- release signing secrets для `main` обязательны; если они не настроены, workflow упадет намеренно
 
 ## Secrets для подписанных release-сборок
 
@@ -101,6 +116,7 @@
 ## Рекомендуемая политика выката
 
 - `develop` = общая интеграция команды
-- `main` = релиз-кандидат
+- `develop` build = тестовая release-сборка
+- `main` = релиз-кандидат / продуктовая сборка
 - Google Play `Internal testing` = первый внешний этап тестирования
 - Production = только после ручного подтверждения
