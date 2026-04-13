@@ -51,6 +51,13 @@
 
 Если их нет, CI все равно соберет release-артефакт, но Gradle использует debug signing как fallback.
 
+Дополнительно:
+
+- `google-services.json` не обязателен для CI artifact-сборок
+- если файл отсутствует, Google Services plugin в Android Gradle не подключается
+- это позволяет собирать debug/release артефакты в CI без Firebase-конфига
+- локально и в реальных Android-сборках plugin включится автоматически, если `android/app/google-services.json` присутствует
+
 ## Почему пока без автоматической выкладки в Google Play
 
 Для этого проекта более безопасный первый этап такой:
