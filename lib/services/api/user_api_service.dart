@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:wobbly/models/api_models.dart';
 import 'package:wobbly/services/session_manager.dart';
@@ -47,6 +48,7 @@ class UserAPIService {
   Map<String, String> _buildHeaders(Map<String, String>? extra) {
     final headers = <String, String>{
       'Content-Type': 'application/json',
+      'X-Client-Platform': Platform.isIOS ? 'ios' : 'android',
       if (_isStaging) 'X-Staging-Key': '39rDOkCgTc5TfeyTsRebbSzvWycSRluR',
     };
     if (extra != null) headers.addAll(extra);
