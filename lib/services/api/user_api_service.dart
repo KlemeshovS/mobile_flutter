@@ -47,6 +47,7 @@ class UserAPIService {
   Map<String, String> _buildHeaders(Map<String, String>? extra) {
     final headers = <String, String>{
       'Content-Type': 'application/json',
+      'X-Client-Platform': 'android',
       if (_isStaging) 'X-Staging-Key': '39rDOkCgTc5TfeyTsRebbSzvWycSRluR',
     };
     if (extra != null) headers.addAll(extra);
