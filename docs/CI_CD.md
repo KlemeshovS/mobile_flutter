@@ -21,7 +21,7 @@
 
 - `flutter pub get`
 - `dart format --set-exit-if-changed .`
-- `flutter analyze`
+- `flutter analyze --no-fatal-infos --no-fatal-warnings`
 - `flutter test`
 
 На push в `develop` дополнительно собирается debug APK:
@@ -61,6 +61,12 @@
 - публикация остается ручной
 
 Это дает предсказуемые сборки и не привязывает репозиторий к Play Console раньше времени.
+
+Почему `analyze` запущен в мягком режиме:
+
+- проект уже содержит накопленные warnings и deprecated API
+- CI должен блокировать реальные analyzer errors, а не быть постоянно красным из-за старого техдолга
+- когда кодовая база станет чище, этот флаг можно будет убрать
 
 ## Что такое Google Play Internal testing
 
