@@ -57,21 +57,30 @@
 
 ## Secrets для подписанных release-сборок
 
-Если нужны подписанные release bundle в CI, добавьте в GitHub Secrets:
+Используются такие GitHub Secrets:
 
 - `ANDROID_KEYSTORE_BASE64`
 - `ANDROID_KEYSTORE_PASSWORD`
 - `ANDROID_KEY_PASSWORD`
 - `ANDROID_KEY_ALIAS`
+- `ANDROID_GOOGLE_SERVICES_JSON_BASE64`
 
-Если их нет, CI все равно соберет release-артефакт, но Gradle использует debug signing как fallback.
+Правила такие:
+
+- для `develop` secrets опциональны
+- если на `develop` их нет, тестовая release APK все равно соберется с fallback signing
+- `ANDROID_GOOGLE_SERVICES_JSON_BASE64` на `develop` тоже опционален
+- если он есть, тестовая сборка использует настоящий `google-services.json`
+- если его нет, CI собирает artifact без подключения Google Services plugin
+- для `main` secrets обязательны
+- если на `main` их нет, workflow падает намеренно, чтобы не получить псевдо-продовую сборку
 
 Дополнительно:
 
-- `google-services.json` не обязателен для CI artifact-сборок
-- если файл отсутствует, Google Services plugin в Android Gradle не подключается
-- это позволяет собирать debug/release артефакты в CI без Firebase-конфига
-- локально и в реальных Android-сборках plugin включится автоматически, если `android/app/google-services.json` присутствует
+- для продуктовой сборки `main` `google-services.json` обязателен
+- в CI он восстанавливается из `ANDROID_GOOGLE_SERVICES_JSON_BASE64`
+- на `develop` он опционален, чтобы тестовый контур не блокировался инфраструктурой
+- локально Google Services plugin включится автоматически, если `android/app/google-services.json` присутствует
 
 ## Почему пока без автоматической выкладки в Google Play
 

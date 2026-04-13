@@ -45,10 +45,15 @@ jobs:
           test -n "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}"
           test -n "${{ secrets.ANDROID_KEY_PASSWORD }}"
           test -n "${{ secrets.ANDROID_KEY_ALIAS }}"
+          test -n "${{ secrets.ANDROID_GOOGLE_SERVICES_JSON_BASE64 }}"
 
       - name: Decode Android keystore
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/release-keystore.jks
+
+      - name: Decode google-services.json
+        run: |
+          echo "${{ secrets.ANDROID_GOOGLE_SERVICES_JSON_BASE64 }}" | base64 --decode > android/app/google-services.json
 
       - name: Create key.properties
         run: |

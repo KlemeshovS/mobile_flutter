@@ -21,8 +21,8 @@
 - проверки форматирования
 - статического анализа
 - тестов
-- сборки debug-артефакта на `develop`
-- сборки release `.aab` на `main`
+- сборки тестовой release APK на `develop`
+- сборки продуктовых release APK и `.aab` на `main`
 
 Подробное описание:
 - [docs/CI_CD.md](docs/CI_CD.md)
@@ -38,9 +38,17 @@ flutter test
 
 ## Подпись Android release-сборок
 
-CI сможет собирать подписанные release bundle, если в GitHub Secrets добавлены:
+Для продуктовой сборки в `main` в GitHub Secrets должны быть добавлены:
 
 - `ANDROID_KEYSTORE_BASE64`
 - `ANDROID_KEYSTORE_PASSWORD`
 - `ANDROID_KEY_PASSWORD`
 - `ANDROID_KEY_ALIAS`
+- `ANDROID_GOOGLE_SERVICES_JSON_BASE64`
+
+Для `develop` эти secrets опциональны:
+
+- если они есть, тестовая release APK будет подписана release-ключом
+- если `ANDROID_GOOGLE_SERVICES_JSON_BASE64` есть, тестовая сборка будет собрана с реальным Google/Firebase-конфигом
+- если его нет, тестовая сборка все равно может собраться без Google Services plugin
+- если keystore нет, тестовая сборка будет собрана с fallback signing и останется пригодной для ручного тестирования
