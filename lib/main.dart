@@ -333,6 +333,8 @@ class MainAppState extends State<MainApp> {
     });
 
     if (index == 1) {
+      // Отправляем текущий счёт на сервер при открытии статистики
+      await ScoreSyncManager().sendScore(_daysData);
       // статистика
       await ReviewManager().incrementStatsOpenCount();
       final shouldShow = await ReviewManager().shouldShowPrompt(_daysData);
