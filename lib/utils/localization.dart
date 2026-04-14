@@ -142,7 +142,7 @@ class AppLocalizations {
       'exportShareSubject': 'Wobbly Data Export',
       'exportShareText': 'Here is my Wobbly data export file.',
       'exportError': 'Export failed',
-
+//драаасте
       // Новые ключи для статусов
       'status_sporty_title': 'Friendly Athlete',
       'status_sporty_description': 'You prefer sneakers to wine glasses, but sometimes allow yourself a \'sports\' beer after a workout!',
