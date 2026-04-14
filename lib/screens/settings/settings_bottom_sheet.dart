@@ -915,12 +915,6 @@ class _AboutAppViewState extends State<AboutAppView> with SingleTickerProviderSt
                     ),
                     const SizedBox(height: 8),
                     _buildStatRow(
-                      icon: Icons.emoji_events,
-                      title: localizations.menuAchievementsTitle,
-                      value: '${widget.unlockedAchievementsCount}/${widget.totalAchievementsCount}',
-                    ),
-                    const SizedBox(height: 8),
-                    _buildStatRow(
                       icon: Icons.info,
                       title: localizations.menuVersionTitle,
                       value: widget.appVersion,
@@ -1031,7 +1025,7 @@ class _AboutAppViewState extends State<AboutAppView> with SingleTickerProviderSt
                     ),
                     const SizedBox(height: 12),
                     _buildFeatureRow(
-                      icon: Icons.lock,
+                      icon: Icons.star,
                       title: localizations.featurePrivacyTitle,
                       description: localizations.featurePrivacyDesc,
                     ),

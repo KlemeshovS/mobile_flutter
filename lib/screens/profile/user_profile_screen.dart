@@ -4,6 +4,7 @@ import 'package:wobbly/services/session_manager.dart';
 import 'package:wobbly/services/auth_service.dart';
 import 'package:wobbly/utils/localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wobbly/utils/achievement_manager.dart';
 
 class UserProfileScreen extends StatefulWidget {
   final VoidCallback? onClose;
@@ -26,6 +27,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   bool _isLoading = true;
   String? _errorMessage;
 
+  int _unlockedAchievements = 0;
+  int _totalAchievements = 0;
+
   SessionType _sessionType = SessionType.guest;
   String? _currentUsername;
   // Для редактирования имени (если нет имени)
@@ -36,6 +40,16 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   void initState() {
     super.initState();
     _loadSessionAndUserData();
+    _loadAchievementsCount();
+  }
+
+  Future<void> _loadAchievementsCount() async {
+    final manager = AchievementManager();
+    await manager.loadAchievements();
+    setState(() {
+      _unlockedAchievements = manager.unlockedAchievementsCount;
+      _totalAchievements = manager.totalAchievementsCount;
+    });
   }
 
   Future<void> _loadSessionAndUserData() async {
@@ -520,6 +534,38 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           onChanged: _toggleParticipate,
                           activeColor: const Color(0xFF8B5CF6),
                           contentPadding: EdgeInsets.zero,
+                        ),
+                        const SizedBox(height: 16),
+                        // Плашка достижений
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.emoji_events, color: Color(0xFFC7FF00), size: 22),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  loc.translate('menu_achievements_title'),
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                '$_unlockedAchievements/$_totalAchievements',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         const SizedBox(height: 24),
                       ],
