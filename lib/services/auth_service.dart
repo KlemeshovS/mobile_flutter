@@ -73,7 +73,27 @@ class AuthService {
     }
   }
 
+// auth_service.dart
   Future<void> signOut() async {
+    // 1. Если пользователь авторизован и участвует в рейтингах,
+    // сначала отключаем участие на сервере
+    if (_session.sessionType == SessionType.authenticated) {
+      final prefs = await SharedPreferences.getInstance();
+      final participate = prefs.getBool('userParticipateInRating') ?? false;
+      if (participate) {
+        try {
+          await _api.updateMyRating(
+            token: _session.accessToken!,
+            participateInRating: false,
+          );
+          print('✅ Участие в рейтингах отключено перед выходом');
+        } catch (e) {
+          print('⚠️ Не удалось отключить рейтинг перед выходом: $e');
+        }
+      }
+    }
+
+    // 2. Стандартный логаут на сервере
     final token = _session.accessToken;
     if (token != null) {
       try {
@@ -82,10 +102,11 @@ class AuthService {
         print('Logout API error: $e');
       }
     }
+
+    // 3. Локальный выход
     await _googleSignIn.signOut();
     await _session.setGuestSession();
 
-    // Дополнительно: очищаем данные пользователя в SharedPreferences
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('userName');
     await prefs.setBool('userParticipateInRating', false);
