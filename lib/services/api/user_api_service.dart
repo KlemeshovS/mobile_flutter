@@ -52,7 +52,7 @@ class UserAPIService {
   static final UserAPIService _instance = UserAPIService._internal();
   factory UserAPIService() => _instance;
   UserAPIService._internal();
-//привет
+
   final SessionManager _session = SessionManager();
 
   Map<String, String> _buildHeaders(Map<String, String>? extra) {
