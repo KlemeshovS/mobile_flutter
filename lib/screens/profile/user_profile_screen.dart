@@ -346,17 +346,39 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 32),
+// Кнопка Google (белая)
                           SizedBox(
                             width: double.infinity,
                             height: 56,
-                            child: ElevatedButton.icon(
+                            child: ElevatedButton(
                               onPressed: _signInWithGoogle,
-                              icon: const Icon(Icons.login, color: Colors.white),
-                              label: Text(loc.translate('google_sign_in_button'), style: const TextStyle(fontSize: 16)),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF8B5CF6),
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                backgroundColor: Colors.white,
+                                foregroundColor: Colors.black87,
+                                elevation: 2,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  side: BorderSide(color: Colors.grey.shade300),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    'assets/icons/google_logo.png',
+                                    height: 24,
+                                    width: 24,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    loc.translate('google_sign_in_button'),
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
@@ -474,6 +496,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                   onPressed: _saveNewNameFromField,
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xFF8B5CF6),
+                                    foregroundColor: Colors.white,
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                   ),
                                   child: Text(loc.translate('save_button')),
