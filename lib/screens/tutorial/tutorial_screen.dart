@@ -194,6 +194,18 @@ class _TutorialProfilePageState extends State<TutorialProfilePage>
     setState(() => _isSaving = false);
   }
 
+  Future<void> _signInWithYandex() async {
+    setState(() => _isSaving = true);
+    final success = await AuthService().signInWithYandex();
+    if (success && mounted) {
+      await _loadSessionAndUserData();
+      if (_currentUsername != null && _currentUsername!.isNotEmpty) {
+        widget.onComplete();
+      }
+    }
+    setState(() => _isSaving = false);
+  }
+
   Future<void> _save() async {
     final loc = AppLocalizations.of(context);
     final trimmed = _nameController.text.trim();
@@ -428,6 +440,48 @@ class _TutorialProfilePageState extends State<TutorialProfilePage>
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
                                 color: Colors.black87,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Кнопка Яндекс
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: _signInWithYandex,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black,
+                          foregroundColor: Colors.white,
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(color: Colors.grey.shade700),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset(
+                              'assets/icons/yandex_logo.png',
+                              height: 24,
+                              width: 24,
+                              errorBuilder: (context, error, stackTrace) => const Icon(
+                                Icons.login,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              loc.translate('sign_in_with_yandex'),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white,
                               ),
                             ),
                           ],
