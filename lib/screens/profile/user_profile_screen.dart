@@ -431,48 +431,29 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                   side: BorderSide(color: Colors.grey.shade700),
                                 ),
                               ),
-                              child: LayoutBuilder(
-                                builder: (context, constraints) {
-                                  final loc = AppLocalizations.of(context);
-                                  // Используем короткий вариант, если кнопка узкая
-                                  final text = constraints.maxWidth < 250
-                                      ? loc.translate('sign_in_with_yandex_short')
-                                      : loc.translate('sign_in_with_yandex');
-                                  return FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Image.asset(
-                                          'assets/icons/yandex_logo.png',
-                                          height: 24,
-                                          width: 24,
-                                          errorBuilder: (context, error, stackTrace) {
-                                            // Если иконка не загрузилась, показываем заглушку
-                                            return Container(
-                                              width: 24,
-                                              height: 24,
-                                              decoration: BoxDecoration(
-                                                color: Colors.white.withOpacity(0.2),
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: const Icon(Icons.login, color: Colors.white, size: 16),
-                                            );
-                                          },
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Text(
-                                          text,
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w500,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ],
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    'assets/icons/yandex_logo.png',
+                                    height: 24,
+                                    width: 24,
+                                    errorBuilder: (context, error, stackTrace) => const Icon(
+                                      Icons.login,
+                                      color: Colors.white,
+                                      size: 20,
                                     ),
-                                  );
-                                },
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    AppLocalizations.of(context).translate('sign_in_with_yandex'),
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),                        ],
