@@ -12,4 +12,12 @@ class YandexNativeAuth {
       return null;
     }
   }
+
+  static Future<void> signOut() async {
+    try {
+      await _channel.invokeMethod('signOut');
+    } on PlatformException catch (e) {
+      print('Yandex signOut error: ${e.message}');
+    }
+  }
 }

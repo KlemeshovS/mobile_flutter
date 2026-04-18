@@ -29,6 +29,10 @@ class MainActivity : FlutterActivity() {
                         val loginIntent = yandexAuthSdk.createLoginIntent(YandexAuthLoginOptions())
                         startActivityForResult(loginIntent, yandexAuthRequestCode)
                     }
+                    "signOut" -> {
+                        yandexAuthSdk.tokenStorage.removeToken()
+                        result.success(null)
+                    }
                     else -> result.notImplemented()
                 }
             }
@@ -49,5 +53,11 @@ class MainActivity : FlutterActivity() {
                     pendingResult = null
                 }
         }
+    }
+
+    override fun onDestroy() {
+        pendingResult?.error("ACTIVITY_DESTROYED", "Activity was destroyed", null)
+        pendingResult = null
+        super.onDestroy()
     }
 }

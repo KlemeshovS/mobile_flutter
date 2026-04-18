@@ -140,6 +140,7 @@ class AuthService {
 
     // 3. Локальный выход
     await _googleSignIn.signOut();
+    await YandexNativeAuth.signOut();
     await _session.setGuestSession();
 
     final prefs = await SharedPreferences.getInstance();
