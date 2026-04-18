@@ -1,58 +1,57 @@
 package com.tritan.wobbly_flutter
 
-import android.content.Intent
+import android.os.Bundle
+import androidx.activity.result.ActivityResultLauncher
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import com.yandex.authsdk.YandexAuthLoginOptions
 import com.yandex.authsdk.YandexAuthOptions
+import com.yandex.authsdk.YandexAuthResult
 import com.yandex.authsdk.YandexAuthSdk
 
 class MainActivity : FlutterActivity() {
 
     private val channel = "com.tritan.wobbly_flutter/yandex_auth"
-    private val yandexAuthRequestCode = 1001
-
-    private lateinit var yandexAuthSdk: YandexAuthSdk
     private var pendingResult: MethodChannel.Result? = null
+    private lateinit var yandexAuthSdk: YandexAuthSdk
+    private lateinit var yandexAuthLauncher: ActivityResultLauncher<YandexAuthLoginOptions>
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        yandexAuthSdk = YandexAuthSdk.create(YandexAuthOptions(this))
+        yandexAuthLauncher = registerForActivityResult(yandexAuthSdk.contract) { result ->
+            when (result) {
+                is YandexAuthResult.Success -> {
+                    pendingResult?.success(result.token.value)
+                    pendingResult = null
+                }
+                is YandexAuthResult.Failure -> {
+                    pendingResult?.error("YANDEX_AUTH_FAILED", result.exception.message, null)
+                    pendingResult = null
+                }
+                YandexAuthResult.Cancelled -> {
+                    pendingResult?.error("YANDEX_AUTH_CANCELLED", "Cancelled by user", null)
+                    pendingResult = null
+                }
+            }
+        }
+    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-
-        yandexAuthSdk = YandexAuthSdk.create(YandexAuthOptions(this))
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channel)
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "signIn" -> {
                         pendingResult = result
-                        val loginIntent = yandexAuthSdk.createLoginIntent(YandexAuthLoginOptions())
-                        startActivityForResult(loginIntent, yandexAuthRequestCode)
+                        yandexAuthLauncher.launch(YandexAuthLoginOptions())
                     }
-                    "signOut" -> {
-                        yandexAuthSdk.tokenStorage.removeToken()
-                        result.success(null)
-                    }
+                    "signOut" -> result.success(null)
                     else -> result.notImplemented()
                 }
             }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        if (requestCode == yandexAuthRequestCode) {
-            val authResult = yandexAuthSdk.getResultFromIntent(data)
-            authResult
-                .onSuccess { token ->
-                    pendingResult?.success(token.value)
-                    pendingResult = null
-                }
-                .onFailure { exception ->
-                    pendingResult?.error("YANDEX_AUTH_FAILED", exception.message, null)
-                    pendingResult = null
-                }
-        }
     }
 
     override fun onDestroy() {
