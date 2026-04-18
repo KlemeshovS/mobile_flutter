@@ -2,7 +2,7 @@ package com.tritan.wobbly_flutter
 
 import android.os.Bundle
 import androidx.activity.result.ActivityResultLauncher
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import com.yandex.authsdk.YandexAuthLoginOptions
@@ -10,7 +10,7 @@ import com.yandex.authsdk.YandexAuthOptions
 import com.yandex.authsdk.YandexAuthResult
 import com.yandex.authsdk.YandexAuthSdk
 
-class MainActivity : FlutterActivity() {
+class MainActivity : FlutterFragmentActivity() {
 
     private val channel = "com.tritan.wobbly_flutter/yandex_auth"
     private var pendingResult: MethodChannel.Result? = null
@@ -20,7 +20,7 @@ class MainActivity : FlutterActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         yandexAuthSdk = YandexAuthSdk.create(YandexAuthOptions(this))
-        yandexAuthLauncher = registerForActivityResult(yandexAuthSdk.contract) { result ->
+        yandexAuthLauncher = registerForActivityResult(yandexAuthSdk.contract) { result: YandexAuthResult ->
             when (result) {
                 is YandexAuthResult.Success -> {
                     pendingResult?.success(result.token.value)
