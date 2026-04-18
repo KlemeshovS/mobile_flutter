@@ -3,6 +3,9 @@ import 'package:wobbly/services/api/user_api_service.dart';
 import 'package:wobbly/services/session_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:wobbly/services/yandex_native_auth.dart';
+
+
 class AuthService {
   //WEB CLIENT ID
   static const String _webClientId = "293241377764-4ipsi5achpqcsku9o6ug7vrh0shv60v8.apps.googleusercontent.com";
@@ -29,7 +32,7 @@ class AuthService {
       final authResponse = await _api.authWithGoogle(idToken, guestAccessToken: currentToken);
       await _session.setAuthenticatedSession(
         accessToken: authResponse.accessToken,
-        refreshToken: authResponse.refreshToken,
+        refreshToken: authResponse.refreshToken!,
         userId: authResponse.userId,
       );
 
@@ -55,6 +58,38 @@ class AuthService {
     }
   }
 
+  Future<bool> signInWithYandex() async {
+    try {
+      await _session.init();
+      final currentToken = _session.accessToken;
+
+      final yandexToken = await YandexNativeAuth.signIn();
+      if (yandexToken == null) return false;
+
+      final authResponse = await _api.authWithYandex(yandexToken, guestAccessToken: currentToken);
+
+      await _session.setAuthenticatedSession(
+        accessToken: authResponse.accessToken,
+        refreshToken: authResponse.refreshToken!,
+        userId: authResponse.userId,
+      );
+
+      final session = await _api.getSession(authResponse.accessToken);
+      final prefs = await SharedPreferences.getInstance();
+      if (session.username != null && session.username!.isNotEmpty) {
+        await prefs.setString('userName', session.username!);
+      } else {
+        await prefs.remove('userName');
+      }
+      await prefs.setBool('userParticipateInRating', session.participateInRating);
+
+      return true;
+    } catch (e) {
+      print('signInWithYandex error: $e');
+      return false;
+    }
+  }
+
   Future<bool> refreshSession() async {
     final refreshToken = _session.refreshToken;
     if (refreshToken == null) return false;
@@ -63,7 +98,7 @@ class AuthService {
       // Обновляем оба токена
       await _session.updateTokens(
         accessToken: newTokens.accessToken,
-        refreshToken: newTokens.refreshToken,
+        refreshToken: newTokens.refreshToken!,
       );
       return true;
     } catch (e) {

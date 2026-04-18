@@ -43,7 +43,7 @@ enum UserAPIError {
 
 class UserAPIService {
   // Флаг переключения окружения: true = staging, false = production
-  static const bool _isStaging = false;
+  static const bool _isStaging = true;
 
   static String get _baseUrl => _isStaging
       ? 'https://staging-api.wobbly.site/api/v1'
@@ -210,6 +210,25 @@ class UserAPIService {
     final url = Uri.parse('$_baseUrl/auth/google');
     final body = {'idToken': idToken};
     // Формируем заголовки: если передан guestAccessToken, добавляем Authorization
+    final headers = _buildHeaders(
+      guestAccessToken != null ? {'Authorization': 'Bearer $guestAccessToken'} : null,
+    );
+    final response = await http.post(
+      url,
+      headers: headers,
+      body: json.encode(body),
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return AnonymousAuthResponse.fromJson(json.decode(response.body));
+    } else {
+      throw await _handleError(response);
+    }
+  }
+
+  // Аутентификация через Yandex
+  Future<AnonymousAuthResponse> authWithYandex(String accessToken, {String? guestAccessToken}) async {
+    final url = Uri.parse('$_baseUrl/auth/yandex');
+    final body = {'accessToken': accessToken};
     final headers = _buildHeaders(
       guestAccessToken != null ? {'Authorization': 'Bearer $guestAccessToken'} : null,
     );

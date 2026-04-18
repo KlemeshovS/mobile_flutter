@@ -1,21 +1,21 @@
-// Анонимная авторизация
+// Ответ авторизации (anonymous, Google, Yandex, refresh)
 class AnonymousAuthResponse {
   final int userId;
   final String accessToken;
-  final String refreshToken;
+  final String? refreshToken; // null для anonymous-сессий
   final String tokenType;
 
   AnonymousAuthResponse({
     required this.userId,
     required this.accessToken,
-    required this.refreshToken,
+    this.refreshToken,
     required this.tokenType,
   });
 
   factory AnonymousAuthResponse.fromJson(Map<String, dynamic> json) => AnonymousAuthResponse(
     userId: json['userId'],
     accessToken: json['accessToken'],
-    refreshToken: json['refreshToken'] ?? '',  // если бэкенд пока не отдаёт – пустая строка
+    refreshToken: json['refreshToken'] as String?,
     tokenType: json['tokenType'],
   );
 }
@@ -25,13 +25,15 @@ class MeResponse {
   final int id;
   final String? username;
   final bool participateInRating;
+  final String? avatarUrl;
 
-  MeResponse({required this.id, this.username, required this.participateInRating});
+  MeResponse({required this.id, this.username, required this.participateInRating, this.avatarUrl});
 
   factory MeResponse.fromJson(Map<String, dynamic> json) => MeResponse(
     id: json['id'],
     username: json['username'],
     participateInRating: json['participateInRating'],
+    avatarUrl: json['avatarUrl'] as String?,
   );
 }
 
@@ -41,7 +43,8 @@ class SessionResponse {
   final String? username;
   final bool participateInRating;
   final String sessionType;   // "guest" или "authenticated"
-  final String? provider;     // например "google", "apple", "yandex" или null
+  final String? provider;     // например "google", "yandex" или null
+  final String? avatarUrl;
 
   SessionResponse({
     required this.userId,
@@ -49,6 +52,7 @@ class SessionResponse {
     required this.participateInRating,
     required this.sessionType,
     this.provider,
+    this.avatarUrl,
   });
 
   factory SessionResponse.fromJson(Map<String, dynamic> json) => SessionResponse(
@@ -57,6 +61,7 @@ class SessionResponse {
     participateInRating: json['participateInRating'] ?? false,
     sessionType: json['sessionType'] ?? 'guest',
     provider: json['provider'],
+    avatarUrl: json['avatarUrl'] as String?,
   );
 }
 

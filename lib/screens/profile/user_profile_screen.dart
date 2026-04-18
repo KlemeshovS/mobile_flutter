@@ -358,7 +358,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 32),
-// Кнопка Google (белая)
+                          // Кнопка Google (белая)
                           SizedBox(
                             width: double.infinity,
                             height: 56,
@@ -367,6 +367,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,
                                 foregroundColor: Colors.black87,
+                                surfaceTintColor: Colors.transparent,
                                 elevation: 2,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
@@ -394,7 +395,87 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                               ),
                             ),
                           ),
-                        ],
+                          const SizedBox(height: 24),
+                          // Кнопка Яндекса
+                          SizedBox(
+                            width: double.infinity,
+                            height: 56,
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                setState(() => _isLoading = true);
+                                final success = await AuthService().signInWithYandex();
+                                if (success && mounted) {
+                                  await _loadSessionAndUserData();
+                                  widget.onRegisterSuccess?.call(
+                                    _currentUsername ?? '',
+                                    SessionManager().userId ?? 0,
+                                    _participate,
+                                  );
+                                } else {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(AppLocalizations.of(context).translate('yandex_sign_in_error')),
+                                      ),
+                                    );
+                                  }
+                                }
+                                setState(() => _isLoading = false);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.black,
+                                foregroundColor: Colors.white,
+                                elevation: 2,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  side: BorderSide(color: Colors.grey.shade700),
+                                ),
+                              ),
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final loc = AppLocalizations.of(context);
+                                  // Используем короткий вариант, если кнопка узкая
+                                  final text = constraints.maxWidth < 250
+                                      ? loc.translate('sign_in_with_yandex_short')
+                                      : loc.translate('sign_in_with_yandex');
+                                  return FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Image.asset(
+                                          'assets/icons/yandex_logo.png',
+                                          height: 24,
+                                          width: 24,
+                                          errorBuilder: (context, error, stackTrace) {
+                                            // Если иконка не загрузилась, показываем заглушку
+                                            return Container(
+                                              width: 24,
+                                              height: 24,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withOpacity(0.2),
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: const Icon(Icons.login, color: Colors.white, size: 16),
+                                            );
+                                          },
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Text(
+                                          text,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),                        ],
                       ),
                     ),
                   ),

@@ -28,6 +28,7 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
   bool _isModalOpen = false;
   bool _isRefreshing = false;
   bool _participate = true;
+  bool _hasShownNotParticipatingPopup = false;
   String? _myUsername;
   SessionType _sessionType = SessionType.guest;
 
@@ -56,6 +57,7 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
   }
 
   Future<void> refreshData() async {
+    print('🔄 [RatingsScreen] refreshData started');
     if (_isRefreshing) return;
     _isRefreshing = true;
     try {
@@ -68,6 +70,20 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
         _myUsername = prefs.getString('userName');
       });
       if (mounted) await _loadData(context);
+
+      if (mounted && (_sessionType == SessionType.guest || !_participate)) {
+        if (!_hasShownNotParticipatingPopup) {
+          _hasShownNotParticipatingPopup = true;
+          // Показываем с небольшой задержкой, чтобы успел отрисоваться основной экран
+          Future.delayed(const Duration(milliseconds: 300), () {
+            if (mounted) _showNotParticipatingPopup();
+          });
+        }
+      } else {
+        // Если пользователь участвует, сбрасываем флаг для будущих открытий
+        _hasShownNotParticipatingPopup = false;
+      }
+
     } finally {
       _isRefreshing = false;
       if (mounted) {
@@ -79,6 +95,7 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
   }
 
   Future<void> _ensureToken() async {
+    print('🔑 [RatingsScreen] _ensureToken called');
     await SessionManager().init();
     if (SessionManager().accessToken == null && !_isEnsuringToken) {
       _isEnsuringToken = true;
@@ -116,6 +133,7 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
   }
 
   Future<void> _loadData(BuildContext ctx) async {
+    print('📊 [RatingsScreen] _loadData started, tabIndex=${_tabController.index}');
     if (!mounted) return;
     setState(() {
       _isLoading = true;
@@ -124,11 +142,15 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
 
     try {
       if (_tabController.index == 0) {
+        print('🌐 [RatingsScreen] fetchTop100...');
         _topItems = await UserAPIService().fetchTop100();
+        print('✅ [RatingsScreen] fetchTop100 done, count=${_topItems.length}');
       } else {
         _bottomItems = await UserAPIService().fetchBottom100();
+        print('✅ [RatingsScreen] fetchBottom100 done, count=${_bottomItems.length}');
       }
     } catch (e) {
+      print('❌ [RatingsScreen] _loadData error: $e');
       String userMessage;
       if (e is SocketException) {
         userMessage = AppLocalizations.of(ctx).translate('no_internet');
@@ -476,6 +498,80 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
               child: Text(loc.translate('retry')),
             ),
           ],
+        ),
+      ),
+    );
+  }
+  void _showNotParticipatingPopup() {
+    final loc = AppLocalizations.of(context);
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 0.0),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF2D2B55), Color(0xFF3E3B6B)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Полоска для свайпа (как в других bottom sheets)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Text(
+                  loc.translate('rating_not_participating'),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);          // закрываем всплывашку
+                      _showProfileModal();         // открываем профиль
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF8B5CF6),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      loc.translate('rating_participate_button'),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

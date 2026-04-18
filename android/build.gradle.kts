@@ -1,3 +1,16 @@
+buildscript {
+    val kotlinVersion = "1.9.22"   // ← переменная объявлена внутри buildscript
+
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.android.tools.build:gradle:8.1.0")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+        classpath("com.google.gms:google-services:4.4.4")
+    }
+}
 
 plugins {
     id("com.google.gms.google-services") version "4.4.4" apply false

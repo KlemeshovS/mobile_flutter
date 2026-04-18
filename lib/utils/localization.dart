@@ -549,6 +549,8 @@ class AppLocalizations {
       'edit_username_title': 'Edit username',
       'cancel': 'Cancel',
       'google_sign_in_button': 'Sign in with Google',
+      'sign_in_with_yandex': 'Sign in with Yandex ID',
+      'yandex_sign_in_error': 'Failed to sign in with Yandex',
       'skip_button': 'Skip',
       'welcome_back': 'Welcome back',
 
@@ -1097,6 +1099,8 @@ class AppLocalizations {
       'edit_username_title': 'Изменить имя',
       'cancel': 'Отмена',
       'google_sign_in_button': 'Войти через Google',
+      'sign_in_with_yandex': 'Войти с Яндекс ID',
+      'yandex_sign_in_error': 'Не удалось войти через Яндекс',
       'skip_button': 'Пропустить',
       'welcome_back': 'С возвращением',
 

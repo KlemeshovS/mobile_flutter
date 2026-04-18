@@ -13,8 +13,6 @@ val keystorePropertiesFile = rootProject.file("key.properties")
 val keystoreProperties = Properties()
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
-} else {
-    throw GradleException("key.properties not found in android/ folder!")
 }
 
 android {
@@ -37,31 +35,34 @@ kotlinOptions {
         targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-    resValue("string", "google_web_client_id", "293241377764-4ipsi5achpqcsku9o6ug7vrh0shv60v8.apps.googleusercontent.com")
+    	resValue("string", "google_web_client_id", "293241377764-4ipsi5achpqcsku9o6ug7vrh0shv60v8.apps.googleusercontent.com")
+    	manifestPlaceholders["YANDEX_CLIENT_ID"] = "475c2604676240ec981f6a1b3752fde4"
     }
 
     signingConfigs {
-        create("release") {
-            val alias = keystoreProperties["keyAlias"]?.toString()
-            val pwdKey = keystoreProperties["keyPassword"]?.toString()
-            val pwdStore = keystoreProperties["storePassword"]?.toString()
-            val filePath = keystoreProperties["storeFile"]?.toString()
+        if (keystorePropertiesFile.exists()) {
+            create("release") {
+                val alias = keystoreProperties["keyAlias"]?.toString()
+                val pwdKey = keystoreProperties["keyPassword"]?.toString()
+                val pwdStore = keystoreProperties["storePassword"]?.toString()
+                val filePath = keystoreProperties["storeFile"]?.toString()
 
-            if (alias.isNullOrBlank()) throw GradleException("keyAlias missing or empty in key.properties")
-            if (pwdKey.isNullOrBlank()) throw GradleException("keyPassword missing or empty in key.properties")
-            if (pwdStore.isNullOrBlank()) throw GradleException("storePassword missing or empty in key.properties")
-            if (filePath.isNullOrBlank()) throw GradleException("storeFile missing or empty in key.properties")
+                if (alias.isNullOrBlank()) throw GradleException("keyAlias missing or empty in key.properties")
+                if (pwdKey.isNullOrBlank()) throw GradleException("keyPassword missing or empty in key.properties")
+                if (pwdStore.isNullOrBlank()) throw GradleException("storePassword missing or empty in key.properties")
+                if (filePath.isNullOrBlank()) throw GradleException("storeFile missing or empty in key.properties")
 
-            keyAlias = alias
-            keyPassword = pwdKey
-            storePassword = pwdStore
-            storeFile = file(filePath)
+                keyAlias = alias
+                keyPassword = pwdKey
+                storePassword = pwdStore
+                storeFile = file(filePath)
+            }
         }
     }
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = if (keystorePropertiesFile.exists()) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
             isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android.txt"),
@@ -78,6 +79,7 @@ flutter {
 dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.22")
     	implementation("com.google.android.gms:play-services-auth:20.7.0")
-    implementation(platform("com.google.firebase:firebase-bom:34.11.0"))
-    implementation("com.google.firebase:firebase-analytics")
+ 	implementation(platform("com.google.firebase:firebase-bom:34.11.0"))
+   	implementation("com.google.firebase:firebase-analytics")
+	implementation("com.yandex.android:authsdk:3.1.0")
 }

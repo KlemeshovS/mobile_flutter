@@ -85,7 +85,11 @@ class _MyAppState extends State<MyApp> {
     _languageManager = LanguageManager();
   }
 
-  void _onSplashComplete(Map<String, DayRecord>? data, bool isFirstLaunch) {
+  void _onSplashComplete(Map<String, DayRecord>? data, bool isFirstLaunch) async {
+    if (!mounted) return;
+
+    await _restoreSession();
+
     if (!mounted) return;
 
     double? offset;
