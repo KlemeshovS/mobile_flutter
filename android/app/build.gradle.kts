@@ -36,7 +36,7 @@ kotlinOptions {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     	resValue("string", "google_web_client_id", "293241377764-4ipsi5achpqcsku9o6ug7vrh0shv60v8.apps.googleusercontent.com")
-    	manifestPlaceholders["YANDEX_CLIENT_ID"] = "475c2604676240ec981f6a1b3752fde4"
+    	manifestPlaceholders["YANDEX_CLIENT_ID"] = "09e2a2750f4b4dd6af874c3adeaf1354"
     }
 
     signingConfigs {

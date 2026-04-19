@@ -13,7 +13,7 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity : FlutterFragmentActivity() {
 
     private val channel = "com.tritan.wobbly_flutter/yandex_auth"
-    private val clientId = "475c2604676240ec981f6a1b3752fde4"
+    private val clientId = "09e2a2750f4b4dd6af874c3adeaf1354"
     private var pendingResult: MethodChannel.Result? = null
     private lateinit var yandexAuthLauncher: ActivityResultLauncher<Intent>
 

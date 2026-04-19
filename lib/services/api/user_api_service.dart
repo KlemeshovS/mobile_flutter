@@ -43,7 +43,7 @@ enum UserAPIError {
 
 class UserAPIService {
   // Флаг переключения окружения: true = staging, false = production
-  static const bool _isStaging = true;
+  static const bool _isStaging = false;
 
   static String get _baseUrl => _isStaging
       ? 'https://staging-api.wobbly.site/api/v1'
