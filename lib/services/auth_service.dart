@@ -8,7 +8,7 @@ import 'package:wobbly/services/yandex_native_auth.dart';
 
 class AuthService {
   //WEB CLIENT ID
-  static const String _webClientId = "293241377764-4ipsi5achpqcsku9o6ug7vrh0shv60v8.apps.googleusercontent.com";
+  static const String _webClientId = "154745294904-i74bcvf0vgq0rr3nvpc1edjr2495t210.apps.googleusercontent.com";
 
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     serverClientId: _webClientId,

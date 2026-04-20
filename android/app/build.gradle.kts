@@ -35,7 +35,7 @@ kotlinOptions {
         targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-    	resValue("string", "google_web_client_id", "293241377764-4ipsi5achpqcsku9o6ug7vrh0shv60v8.apps.googleusercontent.com")
+    	resValue("string", "google_web_client_id", "154745294904-i74bcvf0vgq0rr3nvpc1edjr2495t210.apps.googleusercontent.com")
     	manifestPlaceholders["YANDEX_CLIENT_ID"] = "09e2a2750f4b4dd6af874c3adeaf1354"
     }
 
