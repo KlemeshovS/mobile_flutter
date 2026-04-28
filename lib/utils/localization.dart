@@ -518,6 +518,7 @@ class AppLocalizations {
       'retry': 'Retry',
       'no_leaderboard_data': 'No data available',
       'rating_not_participating': 'You are not participating in the ratings',
+      'error_auth_required_for_rating': 'Sign in to participate in ratings',
       'rating_participate_button': 'Participate',
       'tutorialStartSufferingButton': 'Let the game begin',
 
@@ -1069,6 +1070,7 @@ class AppLocalizations {
       'retry': 'Повторить',
       'no_leaderboard_data': 'Нет данных',
       'rating_not_participating': 'Вы не участвуете в рейтингах',
+      'error_auth_required_for_rating': 'Войдите в аккаунт, чтобы участвовать в рейтингах',
       'rating_participate_button': 'Участвовать',
       'tutorialStartSufferingButton': 'Пусть игра начнется!',
 

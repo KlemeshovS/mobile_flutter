@@ -276,9 +276,18 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('userParticipateInRating', value);
       widget.onRegisterSuccess?.call(_currentUsername ?? '', SessionManager().userId ?? 0, value);
+    } on UserAPIError catch (e) {
+      if (e == UserAPIError.authRequiredForRating || e == UserAPIError.guestCannotEnableRating) {
+        setState(() => _participate = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(AppLocalizations.of(context).translate('error_auth_required_for_rating')),
+          ));
+        }
+      } else {
+        setState(() => _participate = !value);
+      }
     } catch (e) {
-      print('Ошибка сохранения участия: $e');
-      // Откатываем обратно
       setState(() => _participate = !value);
     }
   }
