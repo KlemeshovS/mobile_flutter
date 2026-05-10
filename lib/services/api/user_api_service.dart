@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:wobbly/models/api_models.dart';
 import 'package:wobbly/services/session_manager.dart';
+import 'package:http_parser/http_parser.dart';
 
 enum UserAPIError {
   usernameAlreadyExists,
@@ -39,6 +40,8 @@ enum UserAPIError {
   providerNotLinked,
   lastIdentityRequired,
   authRequiredForProviderManagement,
+  avatarTooLarge,
+  avatarInvalidImage,
 }
 
 class UserAPIService {
@@ -179,10 +182,89 @@ class UserAPIService {
     }
   }
 
+  // Загрузка аватара (multipart)
+  Future<MeResponse> uploadAvatar({
+    required String token,
+    required File imageFile,
+  }) async {
+    final url = Uri.parse('$_baseUrl/me/avatar');
+    final request = http.MultipartRequest('POST', url)
+      ..headers['Authorization'] = 'Bearer $token'
+      ..headers['X-Client-Platform'] = Platform.isIOS ? 'ios' : 'android';
+
+    if (_isStaging) {
+      request.headers['X-Staging-Key'] = '39rDOkCgTc5TfeyTsRebbSzvWycSRluR';
+    }
+
+    request.files.add(await http.MultipartFile.fromPath(
+      'file',
+      imageFile.path,
+      contentType: MediaType('image', _mimeTypeFromPath(imageFile.path)),
+    ));
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return MeResponse.fromJson(json.decode(response.body));
+    } else if (response.statusCode == 401) {
+      throw UserAPIError.invalidToken;
+    } else {
+      throw await _handleError(response);
+    }
+  }
+
+  // Удаление аватара
+  Future<MeResponse> deleteAvatar(String token) async {
+    final url = Uri.parse('$_baseUrl/me/avatar');
+    final headers = _buildHeaders({'Authorization': 'Bearer $token'});
+    final response = await http.delete(url, headers: headers);
+
+    if (response.statusCode == 200) {
+      return MeResponse.fromJson(json.decode(response.body));
+    } else if (response.statusCode == 401) {
+      throw UserAPIError.invalidToken;
+    } else {
+      throw await _handleError(response);
+    }
+  }
+
+  // Вспомогательный метод для MIME‑типа
+  String _mimeTypeFromPath(String path) {
+    final ext = path.split('.').last.toLowerCase();
+    switch (ext) {
+      case 'jpg':
+      case 'jpeg':
+        return 'jpeg';
+      case 'png':
+        return 'png';
+      case 'webp':
+        return 'webp';
+      default:
+        return 'jpeg';
+    }
+  }
+
+  /// Преобразует относительный путь аватарки в полный URL.
+  /// Если path уже содержит http:// или https://, возвращает его без изменений.
+  static String? fullAvatarUrl(String? path) {
+    if (path == null) return null;
+    if (path.isEmpty) return null;
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+    // База без /api/v1, чтобы получить https://api.wobbly.site
+    final base = _isStaging
+        ? 'https://staging-api.wobbly.site'
+        : 'https://api.wobbly.site';
+    return '$base$path';
+  }
+
   // Топ-100
   Future<List<LeaderboardItem>> fetchTop100() async {
     final url = Uri.parse('$_baseUrl/leaderboard/top?limit=100');
     final response = await http.get(url, headers: _buildHeaders(null));
+    print('🔍 fetchTop100 response: ${response.body.substring(0, 200)}');
 
     if (response.statusCode == 200) {
       final data = LeaderboardResponse.fromJson(json.decode(response.body));
@@ -383,6 +465,10 @@ class UserAPIService {
             return UserAPIError.lastIdentityRequired;
           case 'AUTH_REQUIRED_FOR_PROVIDER_MANAGEMENT':
             return UserAPIError.authRequiredForProviderManagement;
+          case 'AVATAR_TOO_LARGE':
+            return UserAPIError.avatarTooLarge;
+          case 'AVATAR_INVALID_IMAGE':
+            return UserAPIError.avatarInvalidImage;
           default:
             return UserAPIError.serverError;
         }

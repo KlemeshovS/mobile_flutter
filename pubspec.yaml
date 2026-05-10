@@ -1,7 +1,7 @@
 name: wobbly
 description: A flutter version of Wobbly alcohol tracker
 publish_to: 'none'
-version: 1.0.2+8
+version: 1.0.4+10
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -24,6 +24,10 @@ dependencies:
   http: ^1.1.0
   vibration: ^2.0.0
   google_sign_in: ^6.2.1
+  image_picker: ^1.0.4        # Для выбора фото из галереи
+  image_cropper: ^12.2.1       # Для обрезки (круглая маска)
+  cached_network_image: ^3.3.0 # Для кэширования аватарок из сети
+  http_parser: ^4.0.2         # Уже используется для multipart
 
 dev_dependencies:
   flutter_test:

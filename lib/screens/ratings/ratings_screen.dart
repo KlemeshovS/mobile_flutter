@@ -8,6 +8,7 @@ import 'package:wobbly/utils/localization.dart';
 import 'package:wobbly/models/day_record.dart';
 import 'package:wobbly/services/score_sync_manager.dart';
 import 'package:wobbly/screens/profile/user_profile_screen.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class RatingsScreen extends StatefulWidget {
   final Map<String, DayRecord> daysData;
@@ -145,6 +146,9 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
         print('🌐 [RatingsScreen] fetchTop100...');
         _topItems = await UserAPIService().fetchTop100();
         print('✅ [RatingsScreen] fetchTop100 done, count=${_topItems.length}');
+        for (var item in _topItems.take(3)) {
+          print('👤 ${item.username} avatarUrl: ${item.avatarUrl}');
+        }
       } else {
         _bottomItems = await UserAPIService().fetchBottom100();
         print('✅ [RatingsScreen] fetchBottom100 done, count=${_bottomItems.length}');
@@ -163,7 +167,7 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
     }
   }
 
-  void _showTopThreePopup(int place, bool isTop) {
+  void _showTopThreePopup(int place, bool isTop, String? avatarUrl) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -171,7 +175,7 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
       builder: (ctx) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.only(bottom: 0.0),
-          child: _TopThreePopup(place: place, isTop: isTop),
+          child: _TopThreePopup(place: place, isTop: isTop, avatarUrl: avatarUrl),
         ),
       ),
     );
@@ -364,8 +368,13 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
 
           return Expanded(
             child: GestureDetector(
-              onTap: () => _showTopThreePopup(place, isTop),
-              child: Container(
+              onTap: () {
+                if (item.username == _myUsername) {
+                  _showProfileModal();                       // открываем профиль
+                } else {
+                  _showTopThreePopup(place, isTop, item.avatarUrl);  // попап для других
+                }
+              },              child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 4),
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -376,12 +385,8 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _GlowingImage(
-                      imagePath: _cupAsset(place, isTop: isTop),
-                      place: place,
-                      isTop: isTop,
-                      height: 40,
-                    ),
+                    // Заменяем _GlowingImage на аватар/кубок
+                    _buildTopThreeAvatar(item, place, isTop),
                     const SizedBox(height: 8),
                     Text(
                       item.username,
@@ -401,6 +406,38 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
         }),
       ),
     );
+  }
+
+  Widget _buildTopThreeAvatar(LeaderboardItem item, int place, bool isTop) {
+    final fullUrl = UserAPIService.fullAvatarUrl(item.avatarUrl);
+    if (fullUrl != null) {
+      return CachedNetworkImage(
+        imageUrl: fullUrl,
+        imageBuilder: (context, imageProvider) => CircleAvatar(
+          radius: 25,
+          backgroundImage: imageProvider,
+        ),
+        placeholder: (context, url) => _GlowingImage(
+          imagePath: _cupAsset(place, isTop: isTop),
+          place: place,
+          isTop: isTop,
+          height: 40,
+        ),
+        errorWidget: (context, url, error) => _GlowingImage(
+          imagePath: _cupAsset(place, isTop: isTop),
+          place: place,
+          isTop: isTop,
+          height: 40,
+        ),
+      );
+    } else {
+      return _GlowingImage(
+        imagePath: _cupAsset(place, isTop: isTop),
+        place: place,
+        isTop: isTop,
+        height: 40,
+      );
+    }
   }
 
   String _cupAsset(int place, {required bool isTop}) {
@@ -435,46 +472,89 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
       highlightBgColor = Colors.white.withOpacity(0.1);
     }
 
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: isCurrentUser ? highlightBgColor : Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: isCurrentUser ? Border.all(color: highlightColor, width: 1.5) : null,
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 35,
-            child: Text(
-              '$position.',
+    return GestureDetector(
+      onTap: isCurrentUser ? _showProfileModal : null,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: isCurrentUser ? highlightBgColor : Colors.white.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: isCurrentUser ? Border.all(color: highlightColor, width: 1.5) : null,
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 35,
+              child: Text(
+                '$position.',
+                style: TextStyle(
+                  color: isCurrentUser ? highlightColor : Colors.white70,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: CircleAvatar(
+                radius: 15,
+                backgroundColor: Colors.grey.withOpacity(0.2),
+                child: item.avatarUrl != null
+                    ? ClipOval(
+                  child: CachedNetworkImage(
+                    imageUrl: UserAPIService.fullAvatarUrl(item.avatarUrl) ?? '',
+                    imageBuilder: (context, imageProvider) => Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        image: DecorationImage(
+                          image: imageProvider,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    placeholder: (context, url) => const Icon(
+                      Icons.person,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                    errorWidget: (context, url, error) {
+                      print('❌ Аватар не загружен: $url ошибка: $error');
+                      return const Icon(
+                        Icons.person,
+                        size: 18,
+                        color: Colors.white,
+                      );
+                    },
+                  ),
+                )
+                    : const Icon(
+                  Icons.person,
+                  size: 18,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            Expanded(
+              child: Text(
+                item.username,
+                style: TextStyle(
+                  color: isCurrentUser ? highlightColor : Colors.white,
+                  fontWeight: isCurrentUser ? FontWeight.bold : FontWeight.normal,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Text(
+              '${item.score.abs()}',
               style: TextStyle(
-                color: isCurrentUser ? highlightColor : Colors.white70,
+                color: item.score >= 0 ? Colors.greenAccent : Colors.pinkAccent,
                 fontWeight: FontWeight.bold,
               ),
             ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              item.username,
-              style: TextStyle(
-                color: isCurrentUser ? highlightColor : Colors.white,
-                fontWeight: isCurrentUser ? FontWeight.bold : FontWeight.normal,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          Text(
-            '${item.score.abs()}',
-            style: TextStyle(
-              color: item.score >= 0 ? Colors.greenAccent : Colors.pinkAccent,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -656,14 +736,20 @@ class _GlowingText extends StatelessWidget {
 class _TopThreePopup extends StatelessWidget {
   final int place;
   final bool isTop;
+  final String? avatarUrl;
 
-  const _TopThreePopup({required this.place, required this.isTop});
+  const _TopThreePopup({
+    required this.place,
+    required this.isTop,
+    this.avatarUrl,
+  });
 
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context);
     final titleKey = isTop ? 'top_${place}_place_title' : 'bottom_${place}_place_title';
     final descKey = isTop ? 'top_${place}_place_description' : 'bottom_${place}_place_description';
+    final fullUrl = UserAPIService.fullAvatarUrl(avatarUrl);
 
     return Container(
       width: double.infinity,
@@ -675,6 +761,24 @@ class _TopThreePopup extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (fullUrl != null)
+            CachedNetworkImage(
+              imageUrl: fullUrl,
+              imageBuilder: (context, imageProvider) => CircleAvatar(
+                radius: 35,
+                backgroundImage: imageProvider,
+              ),
+              placeholder: (context, url) => const CircleAvatar(
+                radius: 35,
+                backgroundColor: Colors.grey,
+                child: Icon(Icons.person, size: 35, color: Colors.white70),
+              ),
+              errorWidget: (context, url, error) {
+                print('❌ Аватар не загружен: $url ошибка: $error');
+                return const Icon(Icons.person, size: 18, color: Colors.white54);
+              },
+            ),
+          const SizedBox(height: 12),
           Text(
             loc.translate(titleKey),
             style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),

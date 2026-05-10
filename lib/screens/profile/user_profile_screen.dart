@@ -5,6 +5,10 @@ import 'package:wobbly/services/auth_service.dart';
 import 'package:wobbly/utils/localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wobbly/utils/achievement_manager.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class UserProfileScreen extends StatefulWidget {
   final VoidCallback? onClose;
@@ -26,6 +30,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   bool _participate = true;
   bool _isLoading = true;
   String? _errorMessage;
+
+  File? _avatarFile;          // локальный файл, если выбрали/обрезали
+  String? _avatarUrl;         // URL с сервера
+  bool _isUploadingAvatar = false;
 
   int _unlockedAchievements = 0;
   int _totalAchievements = 0;
@@ -62,6 +70,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
     if (_sessionType == SessionType.authenticated) {
       await _loadUserDataFromServer();
+    } else {
+      // Сбрасываем аватар только если не авторизованы
+      setState(() {
+        _avatarUrl = null;
+      });
     }
     setState(() => _isLoading = false);
   }
@@ -91,6 +104,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         // Не перезаписываем _participate, оставляем текущее значение (true)
         await prefs.setBool('userParticipateInRating', _participate);
       }
+      setState(() {
+        _avatarUrl = UserAPIService.fullAvatarUrl(session.avatarUrl);
+      });
+
     } catch (e) {
       print('Ошибка загрузки профиля с сервера: $e');
     }
@@ -261,6 +278,99 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) setState(() => _errorMessage = null);
     });
+  }
+
+  Future<void> _pickAndCropAvatar() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile == null) return;
+    print('Выбрано изображение: ${pickedFile.path}');
+
+    final croppedFile = await ImageCropper().cropImage(
+      sourcePath: pickedFile.path,
+      uiSettings: [
+        AndroidUiSettings(
+          toolbarTitle: 'Обрезка',
+          toolbarColor: const Color(0xFF2D2B55),
+          backgroundColor: Colors.black,
+          initAspectRatio: CropAspectRatioPreset.square,
+          lockAspectRatio: true,
+          cropStyle: CropStyle.circle,
+        ),
+        IOSUiSettings(
+          title: 'Обрезка',
+          cropStyle: CropStyle.circle,
+        ),
+      ],
+    );
+
+    if (croppedFile != null) {
+      print('Изображение обрезано: ${croppedFile.path}');
+      setState(() {
+        _avatarFile = File(croppedFile.path);
+      });
+      await _uploadAvatar();
+    } else {
+      print('Кроп отменён или не удался');
+    }
+  }
+
+  Future<void> _uploadAvatar() async {
+    if (_avatarFile == null) return;
+    final token = SessionManager().accessToken;
+    print('Токен для загрузки аватара: ${token != null ? "есть" : "отсутствует"}');
+    if (token == null) return;
+
+    setState(() => _isUploadingAvatar = true);
+    try {
+      const maxSizeBytes = 2 * 1024 * 1024;
+      final fileSize = await _avatarFile!.length();
+      print('Размер файла: $fileSize байт');
+      if (fileSize > maxSizeBytes) {
+        _showError('Файл слишком большой. Максимум 2 МБ.');
+        return;
+      }
+
+      print('Начинаем загрузку аватара на сервер...');
+      final profile = await UserAPIService().uploadAvatar(
+        token: token,
+        imageFile: _avatarFile!,
+      );
+      print('Ответ от сервера: avatarUrl = ${profile.avatarUrl}');
+      setState(() {
+        _avatarUrl = UserAPIService.fullAvatarUrl(profile.avatarUrl);
+        _avatarFile = null;
+      });
+    } catch (e) {
+      print('Ошибка загрузки аватара: $e');
+      String msg = 'Не удалось загрузить аватар';
+      if (e is UserAPIError) {
+        if (e == UserAPIError.avatarTooLarge) msg = 'Аватар слишком большой';
+        else if (e == UserAPIError.avatarInvalidImage) msg = 'Неподдерживаемый формат изображения';
+        else if (e == UserAPIError.invalidToken) msg = 'Сессия устарела, войдите заново';
+      }
+      _showError(msg);
+    } finally {
+      setState(() => _isUploadingAvatar = false);
+    }
+  }
+
+  Future<void> _deleteAvatar() async {
+    final token = SessionManager().accessToken;
+    if (token == null) return;
+
+    setState(() => _isUploadingAvatar = true);
+    try {
+      final profile = await UserAPIService().deleteAvatar(token);
+      setState(() {
+        _avatarUrl = UserAPIService.fullAvatarUrl(profile.avatarUrl);
+        _avatarFile = null;
+      });
+    } catch (e) {
+      _showError('Не удалось удалить аватар');
+    } finally {
+      setState(() => _isUploadingAvatar = false);
+    }
   }
 
   // Сохранение переключателя участия
@@ -497,13 +607,66 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
-                        CircleAvatar(
-                          radius: 50,
-                          backgroundColor: const Color(0xFF8B5CF6).withOpacity(0.3),
-                          child: const Icon(Icons.person, size: 50, color: Colors.white),
+                        // ===== АВАТАР (показывается всегда) =====
+                        GestureDetector(
+                          onTap: _pickAndCropAvatar,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              _avatarFile != null
+                                  ? CircleAvatar(
+                                radius: 50,
+                                backgroundImage: FileImage(_avatarFile!),
+                              )
+                                  : CachedNetworkImage(
+                                imageUrl: _avatarUrl ?? '',
+                                imageBuilder: (context, imageProvider) => CircleAvatar(
+                                  radius: 50,
+                                  backgroundImage: imageProvider,
+                                ),
+                                placeholder: (context, url) => CircleAvatar(
+                                  radius: 50,
+                                  backgroundColor: const Color(0xFF8B5CF6).withOpacity(0.3),
+                                  child: const Icon(Icons.person, size: 50, color: Colors.white),
+                                ),
+                                errorWidget: (context, url, error) => CircleAvatar(
+                                  radius: 50,
+                                  backgroundColor: const Color(0xFF8B5CF6).withOpacity(0.3),
+                                  child: const Icon(Icons.person, size: 50, color: Colors.white),
+                                ),
+                              ),
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: GestureDetector(
+                                  onTap: (_avatarFile != null || _avatarUrl != null)
+                                      ? _deleteAvatar
+                                      : null,
+                                  child: CircleAvatar(
+                                    radius: 18,
+                                    backgroundColor: Colors.black54,
+                                    child: Icon(
+                                      (_avatarFile != null || _avatarUrl != null)
+                                          ? Icons.delete
+                                          : Icons.camera_alt,
+                                      size: 18,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
+                        if (_isUploadingAvatar)
+                          const Padding(
+                            padding: EdgeInsets.only(top: 8),
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+
                         const SizedBox(height: 16),
-                        // Заголовок: username или "Профиль"
+
+                        // ===== ЗАГОЛОВОК (имя или "Профиль") =====
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -539,7 +702,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         ),
                         const SizedBox(height: 32),
 
-                        // Если нет имени – показываем поле для ввода
+                        // ===== ПОЛЕ ВВОДА ИМЕНИ (если нет) =====
                         if (_currentUsername == null || _currentUsername!.isEmpty) ...[
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -586,7 +749,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           ),
                         ],
 
-                        // Переключатель участия
+                        // ===== ПЕРЕКЛЮЧАТЕЛЬ УЧАСТИЯ =====
                         SwitchListTile(
                           title: Text(
                             loc.translate('user_ranking_toggle'),
@@ -598,7 +761,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           contentPadding: EdgeInsets.zero,
                         ),
                         const SizedBox(height: 16),
-                        // Плашка достижений
+
+                        // ===== ПЛАШКА ДОСТИЖЕНИЙ =====
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(

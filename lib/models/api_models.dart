@@ -82,12 +82,14 @@ class ScoreResponse {
 class LeaderboardItem {
   final String username;
   final int score;
+  final String? avatarUrl;
 
-  LeaderboardItem({required this.username, required this.score});
+  LeaderboardItem({required this.username, required this.score, this.avatarUrl});
 
   factory LeaderboardItem.fromJson(Map<String, dynamic> json) => LeaderboardItem(
     username: json['username'],
     score: json['score'],
+    avatarUrl: json['avatarUrl'] as String?,
   );
 }
 
