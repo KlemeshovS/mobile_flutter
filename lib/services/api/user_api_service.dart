@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:wobbly/models/api_models.dart';
 import 'package:wobbly/services/session_manager.dart';
 import 'package:http_parser/http_parser.dart';
+import 'package:wobbly/models/follow_models.dart';
 
 enum UserAPIError {
   usernameAlreadyExists,
@@ -42,6 +43,11 @@ enum UserAPIError {
   authRequiredForProviderManagement,
   avatarTooLarge,
   avatarInvalidImage,
+  alreadyFollowing,
+  cannotFollowSelf,
+  followsLimitReached,
+  notFollowing,
+  calendarError,
 }
 
 class UserAPIService {
@@ -51,6 +57,10 @@ class UserAPIService {
   static String get _baseUrl => _isStaging
       ? 'https://staging-api.wobbly.site/api/v1'
       : 'https://api.wobbly.site/api/v1';
+
+  static Map<String, String> get stagingHeaders => _isStaging
+      ? {'X-Staging-Key': '39rDOkCgTc5TfeyTsRebbSzvWycSRluR'}
+      : {};
 
   static final UserAPIService _instance = UserAPIService._internal();
   factory UserAPIService() => _instance;
@@ -495,4 +505,80 @@ class UserAPIService {
         return UserAPIError.serverError;
     }
   }
+
+  // MARK: - Follows
+  Future<FollowModel> follow(String token, String username) async {
+    final url = Uri.parse('$_baseUrl/follows');
+    final headers = _buildHeaders({'Authorization': 'Bearer $token'});
+    final response = await http.post(
+      url,
+      headers: headers,
+      body: json.encode({'username': username}),
+    );
+    if (response.statusCode == 201) {
+      return FollowModel.fromJson(json.decode(response.body));
+    } else {
+      throw await _handleError(response);
+    }
+  }
+
+  Future<void> unfollow(String token, int userId) async {
+    final url = Uri.parse('$_baseUrl/follows/$userId');
+    final headers = _buildHeaders({'Authorization': 'Bearer $token'});
+    final response = await http.delete(url, headers: headers);
+    if (response.statusCode != 204) {
+      throw await _handleError(response);
+    }
+  }
+
+  Future<FollowListResponse> getMyFollows(String token) async {
+    final url = Uri.parse('$_baseUrl/follows');
+    final headers = _buildHeaders({'Authorization': 'Bearer $token'});
+    final response = await http.get(url, headers: headers);
+    if (response.statusCode == 200) {
+      return FollowListResponse.fromJson(json.decode(response.body));
+    } else {
+      throw await _handleError(response);
+    }
+  }
+
+  Future<FollowListResponse> getMyFollowers(String token) async {
+    final url = Uri.parse('$_baseUrl/follows/followers');
+    final headers = _buildHeaders({'Authorization': 'Bearer $token'});
+    final response = await http.get(url, headers: headers);
+    if (response.statusCode == 200) {
+      return FollowListResponse.fromJson(json.decode(response.body));
+    } else {
+      throw await _handleError(response);
+    }
+  }
+
+  // MARK: - Calendar backup
+
+  Future<CalendarResponse> getCalendar(String token) async {
+    final url = Uri.parse('$_baseUrl/me/calendar');
+    final headers = _buildHeaders({'Authorization': 'Bearer $token'});
+    final response = await http.get(url, headers: headers);
+    print('📥 CalendarSync GET status: ${response.statusCode}');
+    if (response.statusCode == 200) {
+      return CalendarResponse.fromJson(json.decode(response.body));
+    } else {
+      throw await _handleError(response);
+    }
+  }
+
+  Future<CalendarResponse> putCalendar(String token, Map<String, int> days) async {
+    final url = Uri.parse('$_baseUrl/me/calendar');
+    final headers = _buildHeaders({'Authorization': 'Bearer $token'});
+    final body = json.encode({'days': days});
+    print('📤 CalendarSync PUT body: $body');
+    final response = await http.put(url, headers: headers, body: body);
+    print('📥 CalendarSync PUT status: ${response.statusCode}');
+    if (response.statusCode == 200) {
+      return CalendarResponse.fromJson(json.decode(response.body));
+    } else {
+      throw await _handleError(response);
+    }
+  }
+
 }

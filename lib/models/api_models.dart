@@ -80,13 +80,15 @@ class ScoreResponse {
 
 // Элемент лидерборда
 class LeaderboardItem {
+  final int userId;
   final String username;
   final int score;
   final String? avatarUrl;
 
-  LeaderboardItem({required this.username, required this.score, this.avatarUrl});
+  LeaderboardItem({required this.userId, required this.username, required this.score, this.avatarUrl});
 
   factory LeaderboardItem.fromJson(Map<String, dynamic> json) => LeaderboardItem(
+    userId: json['userId'] ?? 0,
     username: json['username'],
     score: json['score'],
     avatarUrl: json['avatarUrl'] as String?,
@@ -132,5 +134,21 @@ class LeaderboardResponse {
   factory LeaderboardResponse.fromJson(Map<String, dynamic> json) => LeaderboardResponse(
     items: (json['items'] as List).map((e) => LeaderboardItem.fromJson(e)).toList(),
     total: json['total'],
+  );
+}
+
+class CalendarResponse {
+  final Map<String, int> days;
+  final String? updatedAt;
+
+  CalendarResponse({required this.days, this.updatedAt});
+
+  factory CalendarResponse.fromJson(Map<String, dynamic> json) => CalendarResponse(
+    days: Map<String, int>.from(
+      (json['days'] as Map<String, dynamic>).map(
+            (k, v) => MapEntry(k, (v as num).toInt()),
+      ),
+    ),
+    updatedAt: json['updatedAt'] as String?,
   );
 }

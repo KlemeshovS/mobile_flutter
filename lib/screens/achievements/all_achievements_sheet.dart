@@ -59,8 +59,8 @@ class AllAchievementsSheet extends StatelessWidget {
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
                 crossAxisSpacing: 16,
-                mainAxisSpacing: 0,
-                childAspectRatio: 1.0,
+                mainAxisSpacing: 12,
+                childAspectRatio: 0.9,
               ),
               itemCount: achievements.length,
               itemBuilder: (context, index) {

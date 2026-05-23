@@ -619,7 +619,7 @@ class MainMenuContent extends StatelessWidget {
               },
             ),
 
-            const SizedBox(height: 16),
+            SizedBox(height: 16 + MediaQuery.of(context).padding.bottom),
           ],
         ),
       ),
