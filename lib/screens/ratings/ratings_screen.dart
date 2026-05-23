@@ -82,6 +82,10 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
   List<LeaderboardItem> _filteredItems(List<LeaderboardItem> items) {
     if (!_showFriendsOnly) return items;
     if (_myFollowUsernames.isEmpty) return [];
+
+    print('👥 _myFollowUsernames: $_myFollowUsernames');
+    print('📋 Всего в списке: ${items.length}');
+
     return items
         .where((i) => _myFollowUsernames.contains(i.username) || i.username == _myUsername)
         .toList();
@@ -689,7 +693,10 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
         score: item.score,
         onClose: () => Navigator.pop(ctx),
       ),
-    );
+    ).then((_) {
+      // Перезагружаем подписки после закрытия профиля
+      _loadMyFollows();
+    });
   }
 
   void _showNotParticipatingPopup() {
