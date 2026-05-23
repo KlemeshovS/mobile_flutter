@@ -9,6 +9,7 @@ import 'package:wobbly/models/day_record.dart';
 import 'package:wobbly/services/score_sync_manager.dart';
 import 'package:wobbly/screens/profile/user_profile_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:wobbly/screens/profile/public_user_profile_screen.dart';
 
 class RatingsScreen extends StatefulWidget {
   final Map<String, DayRecord> daysData;
@@ -31,6 +32,9 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
   bool _participate = true;
   bool _hasShownNotParticipatingPopup = false;
   String? _myUsername;
+  bool _showFriendsOnly = false;
+  Set<String> _myFollowUsernames = {};
+  bool _isLoadingFollows = false;
   SessionType _sessionType = SessionType.guest;
 
   @override
@@ -42,6 +46,7 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
       _loadData(context);
     });
     _loadSessionType();
+    _loadFriendsOnlyPref();
   }
 
   Future<void> _loadSessionType() async {
@@ -49,6 +54,37 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
     setState(() {
       _sessionType = SessionManager().sessionType;
     });
+  }
+
+  Future<void> _loadFriendsOnlyPref() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _showFriendsOnly = prefs.getBool('ratingsShowFriendsOnly') ?? false;
+    });
+  }
+
+  Future<void> _loadMyFollows() async {
+    final token = SessionManager().accessToken;
+    if (token == null) return;
+    setState(() => _isLoadingFollows = true);
+    try {
+      final response = await UserAPIService().getMyFollows(token);
+      setState(() {
+        _myFollowUsernames = response.items.map((f) => f.username).toSet();
+      });
+    } catch (e) {
+      print('❌ loadMyFollows error: $e');
+    } finally {
+      setState(() => _isLoadingFollows = false);
+    }
+  }
+
+  List<LeaderboardItem> _filteredItems(List<LeaderboardItem> items) {
+    if (!_showFriendsOnly) return items;
+    if (_myFollowUsernames.isEmpty) return [];
+    return items
+        .where((i) => _myFollowUsernames.contains(i.username) || i.username == _myUsername)
+        .toList();
   }
 
   @override
@@ -92,6 +128,9 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
           if (mounted) setState(() {});
         });
       }
+    }
+    if (mounted && _sessionType == SessionType.authenticated) {
+      await _loadMyFollows();
     }
   }
 
@@ -184,7 +223,8 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context);
-    final items = _tabController.index == 0 ? _topItems : _bottomItems;
+    final rawItems = _tabController.index == 0 ? _topItems : _bottomItems;
+    final items = _filteredItems(rawItems);
 
     return Scaffold(
       body: Container(
@@ -202,6 +242,8 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
               // Баннер-приглашение, если гость или не участвует
               if (_sessionType == SessionType.guest || !_participate)
                 _buildParticipationBanner(loc),
+              if (_sessionType == SessionType.authenticated)
+                _buildFriendsOnlyToggle(loc),
               if (_isLoading)
                 const Expanded(child: Center(child: CircularProgressIndicator(color: Colors.white)))
               else if (_error != null)
@@ -209,9 +251,19 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
               else if (items.isEmpty)
                   Expanded(
                     child: Center(
-                      child: Text(
-                        loc.translate('no_leaderboard_data'),
-                        style: const TextStyle(color: Colors.white70),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.people_outline, color: Colors.white30, size: 48),
+                          const SizedBox(height: 12),
+                          Text(
+                            _showFriendsOnly
+                                ? loc.translate('ratings_friends_empty')
+                                : loc.translate('no_leaderboard_data'),
+                            style: const TextStyle(color: Colors.white70),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ),
                     ),
                   )
@@ -237,6 +289,43 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildFriendsOnlyToggle(AppLocalizations loc) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+      child: Row(
+        children: [
+          Text(
+            loc.translate('ratings_friends_only_toggle'),
+            style: const TextStyle(color: Colors.white, fontSize: 14),
+          ),
+          const Spacer(),
+          if (_isLoadingFollows)
+            const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            )
+          else
+            Switch(
+              value: _showFriendsOnly,
+              onChanged: (value) async {
+                setState(() => _showFriendsOnly = value);
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setBool('ratingsShowFriendsOnly', value);
+                if (value && _myFollowUsernames.isEmpty) {
+                  await _loadMyFollows();
+                }
+              },
+              activeColor: const Color(0xFF8B5CF6),
+            ),
+        ],
       ),
     );
   }
@@ -370,11 +459,12 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
             child: GestureDetector(
               onTap: () {
                 if (item.username == _myUsername) {
-                  _showProfileModal();                       // открываем профиль
+                  _showProfileModal();
                 } else {
-                  _showTopThreePopup(place, isTop, item.avatarUrl);  // попап для других
+                  _showPublicProfile(item);
                 }
-              },              child: Container(
+              },
+              child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 4),
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -413,6 +503,7 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
     if (fullUrl != null) {
       return CachedNetworkImage(
         imageUrl: fullUrl,
+        httpHeaders: UserAPIService.stagingHeaders,
         imageBuilder: (context, imageProvider) => CircleAvatar(
           radius: 25,
           backgroundImage: imageProvider,
@@ -473,7 +564,9 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
     }
 
     return GestureDetector(
-      onTap: isCurrentUser ? _showProfileModal : null,
+      onTap: isCurrentUser
+          ? _showProfileModal
+          : () => _showPublicProfile(item),
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 4),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -504,6 +597,7 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
                     ? ClipOval(
                   child: CachedNetworkImage(
                     imageUrl: UserAPIService.fullAvatarUrl(item.avatarUrl) ?? '',
+                    httpHeaders: UserAPIService.stagingHeaders,
                     imageBuilder: (context, imageProvider) => Container(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
@@ -582,6 +676,22 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
       ),
     );
   }
+
+  void _showPublicProfile(LeaderboardItem item) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => PublicUserProfileScreen(
+        userId: item.userId,
+        username: item.username,
+        avatarUrl: item.avatarUrl,
+        score: item.score,
+        onClose: () => Navigator.pop(ctx),
+      ),
+    );
+  }
+
   void _showNotParticipatingPopup() {
     final loc = AppLocalizations.of(context);
     showModalBottomSheet(
@@ -764,6 +874,7 @@ class _TopThreePopup extends StatelessWidget {
           if (fullUrl != null)
             CachedNetworkImage(
               imageUrl: fullUrl,
+              httpHeaders: UserAPIService.stagingHeaders,
               imageBuilder: (context, imageProvider) => CircleAvatar(
                 radius: 35,
                 backgroundImage: imageProvider,

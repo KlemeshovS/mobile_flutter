@@ -9,6 +9,7 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:wobbly/models/follow_models.dart';
 
 class UserProfileScreen extends StatefulWidget {
   final VoidCallback? onClose;
@@ -35,6 +36,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   String? _avatarUrl;         // URL с сервера
   bool _isUploadingAvatar = false;
 
+  List<FollowModel> _myFollows = [];
+  List<FollowModel> _myFollowers = [];
+  bool _isLoadingFollows = false;
+
   int _unlockedAchievements = 0;
   int _totalAchievements = 0;
 
@@ -49,6 +54,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     super.initState();
     _loadSessionAndUserData();
     _loadAchievementsCount();
+    if (SessionManager().sessionType == SessionType.authenticated) {
+      _loadFollowData();
+    }
   }
 
   Future<void> _loadAchievementsCount() async {
@@ -402,6 +410,273 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     }
   }
 
+  Future<void> _loadFollowData() async {
+    final token = SessionManager().accessToken;
+    if (token == null) return;
+    setState(() => _isLoadingFollows = true);
+    try {
+      final follows = await UserAPIService().getMyFollows(token);
+      final followers = await UserAPIService().getMyFollowers(token);
+      setState(() {
+        _myFollows = follows.items;
+        _myFollowers = followers.items;
+      });
+    } catch (e) {
+      print('❌ Ошибка загрузки подписок: $e');
+    } finally {
+      setState(() => _isLoadingFollows = false);
+    }
+  }
+
+  List<FollowModel> get _pendingFollowers => _myFollowers
+      .where((f) => !_myFollows.any((m) => m.userId == f.userId))
+      .toList();
+
+  Future<void> _unfollowUser(int userId) async {
+    final token = SessionManager().accessToken;
+    if (token == null) return;
+    try {
+      await UserAPIService().unfollow(token, userId);
+      await _loadFollowData();
+    } catch (e) {
+      _showError('Ошибка при отписке');
+    }
+  }
+
+  Future<void> _followBack(String username) async {
+    final token = SessionManager().accessToken;
+    if (token == null) return;
+    try {
+      await UserAPIService().follow(token, username);
+      await _loadFollowData();
+    } catch (e) {
+      _showError('Ошибка при подписке');
+    }
+  }
+
+  Widget _buildFollowsSection(AppLocalizations loc) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Заголовок
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Text(
+                  loc.translate('your_friends_title'),
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const Spacer(),
+                if (_myFollows.isNotEmpty)
+                  Text(
+                    '${_myFollows.length}',
+                    style: TextStyle(color: Colors.white.withOpacity(0.5)),
+                  ),
+              ],
+            ),
+          ),
+          const Divider(color: Colors.white10, height: 1),
+          if (_isLoadingFollows)
+            const Padding(
+              padding: EdgeInsets.all(20),
+              child: Center(child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
+            )
+          else if (_myFollows.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Center(
+                child: Text(
+                  loc.translate('friends_empty_title'),
+                  style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _myFollows.length,
+              separatorBuilder: (_, __) => const Divider(color: Colors.white10, height: 1, indent: 64),
+              itemBuilder: (context, index) {
+                final follow = _myFollows[index];
+                return ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  leading: _buildAvatar(follow.avatarUrl, 36),
+                  title: Text(
+                    follow.username,
+                    style: const TextStyle(color: Colors.white, fontSize: 15),
+                  ),
+                  subtitle: follow.isMutual
+                      ? Text(
+                    loc.translate('user_is_friend'),
+                    style: const TextStyle(color: Color(0xFFC7FF00), fontSize: 11),
+                  )
+                      : null,
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (follow.isMutual)
+                        const Icon(Icons.people, color: Color(0xFFC7FF00), size: 16),
+                      const SizedBox(width: 8),
+                      PopupMenuButton<String>(
+                        color: const Color(0xFF1E1C3A),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          side: BorderSide(color: Colors.white.withOpacity(0.1)),
+                        ),
+                        elevation: 8,
+                        icon: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.more_horiz, color: Colors.white70, size: 18),
+                        ),
+                        onSelected: (value) {
+                          if (value == 'unfollow') _unfollowUser(follow.userId);
+                        },
+                        itemBuilder: (_) => [
+                          PopupMenuItem(
+                            value: 'unfollow',
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.withOpacity(0.15),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(Icons.person_remove, color: Colors.redAccent, size: 16),
+                                ),
+                                const SizedBox(width: 10),
+                                Text(
+                                  loc.translate('remove_friend_button'),
+                                  style: const TextStyle(
+                                    color: Colors.redAccent,
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFollowersSection(AppLocalizations loc) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Text(
+                  loc.translate('followers_pending_title'),
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${_pendingFollowers.length}',
+                  style: TextStyle(color: Colors.white.withOpacity(0.5)),
+                ),
+              ],
+            ),
+          ),
+          const Divider(color: Colors.white10, height: 1),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _pendingFollowers.length,
+            separatorBuilder: (_, __) => const Divider(color: Colors.white10, height: 1, indent: 64),
+            itemBuilder: (context, index) {
+              final follower = _pendingFollowers[index];
+              return ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                leading: _buildAvatar(follower.avatarUrl, 36),
+                title: Text(
+                  follower.username,
+                  style: const TextStyle(color: Colors.white, fontSize: 15),
+                ),
+                trailing: TextButton(
+                  onPressed: () => _followBack(follower.username),
+                  style: TextButton.styleFrom(
+                    backgroundColor: const Color(0xFF8B5CF6),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    minimumSize: Size.zero,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  child: Text(
+                    loc.translate('follow_button'),
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAvatar(String? avatarUrl, double size) {
+    final fullUrl = UserAPIService.fullAvatarUrl(avatarUrl);
+    if (fullUrl != null) {
+      return CachedNetworkImage(
+        imageUrl: fullUrl,
+        httpHeaders: UserAPIService.stagingHeaders,
+        imageBuilder: (context, imageProvider) => CircleAvatar(
+          radius: size / 2,
+          backgroundImage: imageProvider,
+        ),
+        placeholder: (_, __) => _defaultAvatar(size),
+        errorWidget: (_, __, ___) => _defaultAvatar(size),
+      );
+    }
+    return _defaultAvatar(size);
+  }
+
+  Widget _defaultAvatar(double size) {
+    return CircleAvatar(
+      radius: size / 2,
+      backgroundColor: Colors.white.withOpacity(0.15),
+      child: Icon(Icons.person, color: Colors.white60, size: size * 0.5),
+    );
+  }
+
   @override
   void dispose() {
     _tempNameController.dispose();
@@ -629,6 +904,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                               )
                                   : CachedNetworkImage(
                                 imageUrl: _avatarUrl ?? '',
+                                httpHeaders: UserAPIService.stagingHeaders,
                                 imageBuilder: (context, imageProvider) => CircleAvatar(
                                   radius: 50,
                                   backgroundImage: imageProvider,
@@ -785,10 +1061,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                               Expanded(
                                 child: Text(
                                   loc.translate('menu_achievements_title'),
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.white70,
-                                  ),
+                                  style: const TextStyle(fontSize: 14, color: Colors.white70),
                                 ),
                               ),
                               Text(
@@ -803,15 +1076,25 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           ),
                         ),
                         const SizedBox(height: 24),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+
+                        // ===== МОИ ПОДПИСКИ =====
+                        _buildFollowsSection(loc),
+                        const SizedBox(height: 16),
+
+                        // ===== ПОДПИСЧИКИ =====
+                        if (_pendingFollowers.isNotEmpty)
+                          _buildFollowersSection(loc),
+                        const SizedBox(height: 24),
+
+                      ],   // закрытие children внутреннего Column
+                    ),     // закрытие Column
+                  ),       // закрытие SingleChildScrollView
+                ),         // закрытие Expanded
+              ],           // закрытие children внешнего Column
+            ),             // закрытие Column
+          ),               // закрытие Padding
+        ),                 // закрытие SafeArea
+      ),                   // закрытие Container
+    );                     // закрытие Scaffold
   }
 }

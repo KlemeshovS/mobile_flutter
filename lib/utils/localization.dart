@@ -555,6 +555,22 @@ class AppLocalizations {
       'skip_button': 'Skip',
       'welcome_back': 'Welcome back',
 
+// Подписки
+      'your_friends_title': 'My follows',
+      'followers_pending_title': 'Following you',
+      'friends_empty_title': 'No follows yet',
+      'follow_button': 'Follow',
+      'remove_friend_button': 'Remove',
+      'user_is_friend': 'Mutual follow',
+      'ratings_friends_only_toggle': 'Show friends only',
+      'ratings_friends_empty': 'None of your friends are in the rating yet',
+
+      'notification_achievement_title': 'Achievement unlocked!',
+      'notification_new_follower_title': 'New follower',
+      'notification_new_follower_subtitle': 'Followed you',
+      'follow_status_following': 'You follow them',
+      'follow_status_mutual': 'You follow each other',
+      'unfollow_button': 'Unfollow',
 
 
     },
@@ -1106,6 +1122,22 @@ class AppLocalizations {
       'skip_button': 'Пропустить',
       'welcome_back': 'С возвращением',
 
+      // Подписки
+      'your_friends_title': 'Мои подписки',
+      'followers_pending_title': 'Подписаны на меня',
+      'friends_empty_title': 'Вы еще ни на кого не подписались',
+      'follow_button': 'Подписаться',
+      'remove_friend_button': 'Отписаться',
+      'user_is_friend': 'Ваш взаимный друг',
+      'ratings_friends_only_toggle': 'Показать только моих друзьей',
+      'ratings_friends_empty': 'Никого из ваших друзей нет в рейтинге',
+
+      'notification_achievement_title': 'О! Новая ачивка!',
+      'notification_new_follower_title': 'На тебя подписались!',
+      'notification_new_follower_subtitle': 'Пользователь',
+      'follow_status_following': 'Вы подписаны',
+      'follow_status_mutual': 'Вы подписаны друг на друга',
+      'unfollow_button': 'Отписаться',
 
     },
   };

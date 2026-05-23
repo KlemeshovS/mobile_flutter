@@ -2,7 +2,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:wobbly/services/api/user_api_service.dart';
 import 'package:wobbly/services/session_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:wobbly/services/calendar_sync_manager.dart';
 import 'package:wobbly/services/yandex_native_auth.dart';
 
 
@@ -45,7 +45,11 @@ class AuthService {
         await prefs.remove('userName');
       }
       await prefs.setBool('userParticipateInRating', session.participateInRating);
-
+      try {
+        await CalendarSyncManager().sync();
+      } catch (e) {
+        print('CalendarSync после входа: $e');
+      }
       // Если пользователь участвует в рейтингах, нужно отправить его текущий счёт
       if (session.participateInRating) {
         print('User participates in ratings, score will be sent later');
@@ -82,6 +86,7 @@ class AuthService {
         await prefs.remove('userName');
       }
       await prefs.setBool('userParticipateInRating', session.participateInRating);
+      await CalendarSyncManager().sync();
 
       return true;
     } catch (e) {

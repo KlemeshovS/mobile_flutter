@@ -233,6 +233,7 @@ class AchievementManager {
       requiredValue: 11022,
     ),
   ];
+  List<Achievement> get achievements => _currentAchievements;
 
   // Текущее состояние (загружается из SharedPreferences)
   List<Achievement> _currentAchievements = [];

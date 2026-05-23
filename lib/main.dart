@@ -30,6 +30,10 @@ import 'package:wobbly/models/drink_level.dart';
 import 'package:wobbly/services/session_manager.dart';
 import 'package:wobbly/services/api/user_api_service.dart';
 import 'package:wobbly/services/auth_service.dart';
+import 'package:wobbly/services/calendar_sync_manager.dart';
+import 'package:wobbly/services/app_notification_manager.dart';
+import 'package:wobbly/widgets/app_notification_view.dart';
+import 'package:wobbly/screens/profile/public_user_profile_screen.dart';
 
 void main() {
   final start = DateTime.now().millisecondsSinceEpoch;
@@ -89,6 +93,15 @@ class _MyAppState extends State<MyApp> {
     if (!mounted) return;
 
     await _restoreSession();
+    await CalendarSyncManager().sync();
+    await AppNotificationManager.shared.checkNewFollowers();
+    await AppNotificationManager.shared.checkNewAchievements();
+
+    // Перезагружаем данные после синхронизации
+    final freshData = await DataManager().loadData();
+    if (freshData.isNotEmpty) {
+      _loadedData = freshData;
+    }
 
     if (!mounted) return;
 
@@ -106,7 +119,9 @@ class _MyAppState extends State<MyApp> {
 
     setState(() {
       _showSplash = false;
-      _loadedData = data ?? {};
+      _loadedData = (_loadedData != null && _loadedData!.isNotEmpty)
+          ? _loadedData
+          : (data ?? {});
       _initialScrollOffset = offset;
       _isFirstLaunch = isFirstLaunch;
     });
@@ -246,7 +261,8 @@ class MainAppState extends State<MainApp> {
                   width: 24,
                   height: 24,
                   fit: BoxFit.contain,
-                  errorBuilder: (context, error, stack) => const Icon(Icons.error, color: Colors.red),
+                  errorBuilder: (context, error, stack) =>
+                  const Icon(Icons.error, color: Colors.red),
                 ),
               ),
             ),
@@ -312,7 +328,8 @@ class MainAppState extends State<MainApp> {
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      AchievementManager().updateAchievements(_progressDays, _daysData).then((_) {
+      AchievementManager().updateAchievements(_progressDays, _daysData).then((
+          _) {
         _statsKey.currentState?.refreshAchievements();
       });
     });
@@ -381,7 +398,10 @@ class MainAppState extends State<MainApp> {
             value = 'sport';
           }
         } else {
-          value = record.drinkLevel.toString().split('.').last;
+          value = record.drinkLevel
+              .toString()
+              .split('.')
+              .last;
         }
 
         daysDataMap[key] = value;
@@ -437,7 +457,8 @@ class MainAppState extends State<MainApp> {
   }
 
   Future<void> _updateDayRecord(DayData dayData, DayRecord record) async {
-    print("🔄 _updateDayRecord: day=${dayData.key}, record: drinkLevel=${record.drinkLevel}, hasSport=${record.hasSport}");
+    print("🔄 _updateDayRecord: day=${dayData.key}, record: drinkLevel=${record
+        .drinkLevel}, hasSport=${record.hasSport}");
     setState(() {
       if (record.drinkLevel == DrinkLevel.unknown) {
         _daysData.remove(dayData.key);
@@ -457,6 +478,13 @@ class MainAppState extends State<MainApp> {
 
     _updateProgress();
     ScoreSyncManager().sendScore(_daysData);
+    CalendarSyncManager().markLocalUpdated();
+    CalendarSyncManager().pushToServer();
+
+    // Проверяем новые ачивки
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AppNotificationManager.shared.checkNewAchievements();
+    });
   }
 
   @override
@@ -466,77 +494,106 @@ class MainAppState extends State<MainApp> {
     const horizontalPadding = 16.0;
     const verticalPadding = 8.0;
 
-    return GradientBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: IndexedStack(
-          index: _selectedTab,
+    return ListenableBuilder(
+      listenable: AppNotificationManager.shared,
+      builder: (context, _) {
+        final notification = AppNotificationManager.shared.currentNotification;
+        return Stack(
           children: [
-            CalendarScreen(
-              key: _calendarKey,
-              daysData: _daysData,
-              onDayRecordUpdated: _updateDayRecord,
-              initialScrollOffset: widget.initialScrollOffset,
-            ),
-            StatsScreen(
-              key: _statsKey,
-        //      key: ValueKey(_daysData.length),
-              daysData: _daysData,
-              progressDays: _progressDays,
-              onExport: _exportData,
-              onDataChanged: _reloadData,
-              onAchievementsReset: _resetAchievements,
-              ratingsKey: _ratingsKey,
-            ),
-            RatingsScreen(
-              key: _ratingsKey,
-              daysData: _daysData,
-            ),
-          ],
-        ),
-          bottomNavigationBar: SafeArea(
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
+            GradientBackground(
+              child: Scaffold(
+                backgroundColor: Colors.transparent,
+                body: IndexedStack(
+                  index: _selectedTab,
+                  children: [
+                    CalendarScreen(
+                      key: _calendarKey,
+                      daysData: _daysData,
+                      onDayRecordUpdated: _updateDayRecord,
+                      initialScrollOffset: widget.initialScrollOffset,
+                    ),
+                    StatsScreen(
+                      key: _statsKey,
+                      daysData: _daysData,
+                      progressDays: _progressDays,
+                      onExport: _exportData,
+                      onDataChanged: _reloadData,
+                      onAchievementsReset: _resetAchievements,
+                      ratingsKey: _ratingsKey,
+                    ),
+                    RatingsScreen(
+                      key: _ratingsKey,
+                      daysData: _daysData,
+                    ),
+                  ],
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 8,
-                    offset: const Offset(0, -2),
+                bottomNavigationBar: SafeArea(
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: horizontalPadding,
+                      vertical: verticalPadding,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(20),
+                        topRight: Radius.circular(20),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 8,
+                          offset: const Offset(0, -2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildNavItem(
+                          index: 0,
+                          iconPath: 'assets/icons/calendar.png',
+                          activeIconPath: 'assets/icons/calendar_selected.png',
+                          label: localizations.calendarTabTitle,
+                        ),
+                        _buildNavItem(
+                          index: 1,
+                          iconPath: 'assets/icons/statistics.png',
+                          activeIconPath: 'assets/icons/statistics_selected.png',
+                          label: localizations.statTabTitle,
+                        ),
+                        _buildNavItem(
+                          index: 2,
+                          iconPath: 'assets/icons/ratings.png',
+                          activeIconPath: 'assets/icons/ratings_selected.png',
+                          label: localizations.ratingsTabTitle,
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildNavItem(
-                    index: 0,
-                    iconPath: 'assets/icons/calendar.png',
-                    activeIconPath: 'assets/icons/calendar_selected.png',
-                    label: localizations.calendarTabTitle,
-                  ),
-                  _buildNavItem(
-                    index: 1,
-                    iconPath: 'assets/icons/statistics.png',
-                    activeIconPath: 'assets/icons/statistics_selected.png',
-                    label: localizations.statTabTitle,
-                  ),
-                  _buildNavItem(
-                    index: 2,
-                    iconPath: 'assets/icons/ratings.png',
-                    activeIconPath: 'assets/icons/ratings_selected.png',
-                    label: localizations.ratingsTabTitle,
-                  ),
-                ],
+                ),
               ),
             ),
-          )
-      ),
+            // Уведомление поверх всего
+            if (notification != null)
+              AppNotificationView(
+                item: notification,
+                onDismiss: AppNotificationManager.shared.dismiss,
+                onFollowerTap: (userId, username, avatarUrl) {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      fullscreenDialog: true,
+                      builder: (_) => PublicUserProfileScreen(
+                        userId: userId,
+                        username: username,
+                        avatarUrl: avatarUrl,
+                      ),
+                    ),
+                  );
+                },              ),
+          ],
+        );
+      },
     );
   }
 }
