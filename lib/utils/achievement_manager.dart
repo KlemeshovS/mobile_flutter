@@ -163,11 +163,46 @@ class AchievementManager {
       requiredValue: 1234,
     ),
     Achievement(
+      id: 'milestone_1917',
+      titleKey: 'ach_milestone_1917_title',
+      descriptionKey: 'ach_milestone_1917_desc',
+      type: AchievementType.milestone,
+      requiredValue: 1917,
+    ),
+    Achievement(
+      id: 'milestone_3491',
+      titleKey: 'ach_milestone_3491_title',
+      descriptionKey: 'ach_milestone_3491_desc',
+      type: AchievementType.milestone,
+      requiredValue: 3491,
+    ),
+    Achievement(
+      id: 'milestone_4478',
+      titleKey: 'ach_milestone_4478_title',
+      descriptionKey: 'ach_milestone_4478_desc',
+      type: AchievementType.milestone,
+      requiredValue: 4478,
+    ),
+    Achievement(
       id: 'milestone_4810',
       titleKey: 'ach_milestone_4810_title',
       descriptionKey: 'ach_milestone_4810_desc',
       type: AchievementType.milestone,
       requiredValue: 4810,
+    ),
+    Achievement(
+      id: 'milestone_4506',
+      titleKey: 'ach_milestone_4506_title',
+      descriptionKey: 'ach_milestone_4506_desc',
+      type: AchievementType.milestone,
+      requiredValue: 4506,
+    ),
+    Achievement(
+      id: 'milestone_5054',
+      titleKey: 'ach_milestone_5054_title',
+      descriptionKey: 'ach_milestone_5054_desc',
+      type: AchievementType.milestone,
+      requiredValue: 5054,
     ),
     Achievement(
       id: 'milestone_5642',
@@ -232,6 +267,64 @@ class AchievementManager {
       type: AchievementType.milestone,
       requiredValue: 11022,
     ),
+    // Трезвые дни в году
+    Achievement(
+      id: 'sober_days_year_100',
+      titleKey: 'ach_sober_year_100_title',
+      descriptionKey: 'ach_sober_year_100_desc',
+      type: AchievementType.soberDaysInYear,
+      requiredValue: 100,
+    ),
+    Achievement(
+      id: 'sober_days_year_200',
+      titleKey: 'ach_sober_year_200_title',
+      descriptionKey: 'ach_sober_year_200_desc',
+      type: AchievementType.soberDaysInYear,
+      requiredValue: 200,
+    ),
+    Achievement(
+      id: 'sober_days_year_300',
+      titleKey: 'ach_sober_year_300_title',
+      descriptionKey: 'ach_sober_year_300_desc',
+      type: AchievementType.soberDaysInYear,
+      requiredValue: 300,
+    ),
+    // Алкогольные дни в году
+    Achievement(
+      id: 'drink_days_year_100',
+      titleKey: 'ach_drink_year_100_title',
+      descriptionKey: 'ach_drink_year_100_desc',
+      type: AchievementType.drinkingDaysInYear,
+      requiredValue: 100,
+    ),
+    Achievement(
+      id: 'drink_days_year_200',
+      titleKey: 'ach_drink_year_200_title',
+      descriptionKey: 'ach_drink_year_200_desc',
+      type: AchievementType.drinkingDaysInYear,
+      requiredValue: 200,
+    ),
+    Achievement(
+      id: 'drink_days_year_300',
+      titleKey: 'ach_drink_year_300_title',
+      descriptionKey: 'ach_drink_year_300_desc',
+      type: AchievementType.drinkingDaysInYear,
+      requiredValue: 300,
+    ),
+
+    // Трезвые месяцы
+    Achievement(id: 'sober_month_1', titleKey: 'ach_sober_month_1_title', descriptionKey: 'ach_sober_month_1_desc', type: AchievementType.soberMonth, requiredValue: 1),
+    Achievement(id: 'sober_month_2', titleKey: 'ach_sober_month_2_title', descriptionKey: 'ach_sober_month_2_desc', type: AchievementType.soberMonth, requiredValue: 2),
+    Achievement(id: 'sober_month_3', titleKey: 'ach_sober_month_3_title', descriptionKey: 'ach_sober_month_3_desc', type: AchievementType.soberMonth, requiredValue: 3),
+    Achievement(id: 'sober_month_4', titleKey: 'ach_sober_month_4_title', descriptionKey: 'ach_sober_month_4_desc', type: AchievementType.soberMonth, requiredValue: 4),
+    Achievement(id: 'sober_month_5', titleKey: 'ach_sober_month_5_title', descriptionKey: 'ach_sober_month_5_desc', type: AchievementType.soberMonth, requiredValue: 5),
+    Achievement(id: 'sober_month_6', titleKey: 'ach_sober_month_6_title', descriptionKey: 'ach_sober_month_6_desc', type: AchievementType.soberMonth, requiredValue: 6),
+    Achievement(id: 'sober_month_7', titleKey: 'ach_sober_month_7_title', descriptionKey: 'ach_sober_month_7_desc', type: AchievementType.soberMonth, requiredValue: 7),
+    Achievement(id: 'sober_month_8', titleKey: 'ach_sober_month_8_title', descriptionKey: 'ach_sober_month_8_desc', type: AchievementType.soberMonth, requiredValue: 8),
+    Achievement(id: 'sober_month_9', titleKey: 'ach_sober_month_9_title', descriptionKey: 'ach_sober_month_9_desc', type: AchievementType.soberMonth, requiredValue: 9),
+    Achievement(id: 'sober_month_10', titleKey: 'ach_sober_month_10_title', descriptionKey: 'ach_sober_month_10_desc', type: AchievementType.soberMonth, requiredValue: 10),
+    Achievement(id: 'sober_month_11', titleKey: 'ach_sober_month_11_title', descriptionKey: 'ach_sober_month_11_desc', type: AchievementType.soberMonth, requiredValue: 11),
+    Achievement(id: 'sober_month_12', titleKey: 'ach_sober_month_12_title', descriptionKey: 'ach_sober_month_12_desc', type: AchievementType.soberMonth, requiredValue: 12),
   ];
   List<Achievement> get achievements => _currentAchievements;
 
@@ -313,11 +406,15 @@ class AchievementManager {
       case AchievementType.sportCount:
         return _checkSportAchievement(ach.period!, ach.requiredValue, daysData);
       case AchievementType.uniqueEvent:
-      // TODO: реализовать позже
         return false;
       case AchievementType.milestone:
-      // Milestone ачивки проверяются отдельно через checkMilestones
         return false;
+      case AchievementType.soberDaysInYear:
+        return _countSoberDaysInYear(daysData) >= ach.requiredValue;
+      case AchievementType.drinkingDaysInYear:
+        return _countDrinkingDaysInYear(daysData) >= ach.requiredValue;
+      case AchievementType.soberMonth:
+        return _checkSoberMonth(ach.requiredValue, daysData);
     }
   }
 
@@ -475,8 +572,11 @@ class AchievementManager {
       AchievementType.soberStreak: 1,
       AchievementType.drinkingStreak: 2,
       AchievementType.sportCount: 3,
-      AchievementType.uniqueEvent: 4,
-      AchievementType.milestone: 5,
+      AchievementType.soberDaysInYear: 4,
+      AchievementType.drinkingDaysInYear: 5,
+      AchievementType.soberMonth: 6,
+      AchievementType.uniqueEvent: 7,
+      AchievementType.milestone: 8,
     };
 
     final typeCompare = order[a.type]!.compareTo(order[b.type]!);
@@ -546,6 +646,30 @@ class AchievementManager {
     return maxStreak;
   }
 
+  int _countSoberDaysInYear(Map<String, DayRecord> daysData) {
+    final year = DateTime.now().year;
+    int count = 0;
+    daysData.forEach((key, record) {
+      final date = _parseDate(key);
+      if (date != null && date.year == year && !_isDrinkingDay(record)) {
+        count++;
+      }
+    });
+    return count;
+  }
+
+  int _countDrinkingDaysInYear(Map<String, DayRecord> daysData) {
+    final year = DateTime.now().year;
+    int count = 0;
+    daysData.forEach((key, record) {
+      final date = _parseDate(key);
+      if (date != null && date.year == year && _isDrinkingDay(record)) {
+        count++;
+      }
+    });
+    return count;
+  }
+
   bool _isDrinkingDay(DayRecord record) {
     return record.drinkLevel == DrinkLevel.little ||
         record.drinkLevel == DrinkLevel.medium ||
@@ -553,6 +677,39 @@ class AchievementManager {
         record.drinkLevel == DrinkLevel.little_sport ||
         record.drinkLevel == DrinkLevel.medium_sport ||
         record.drinkLevel == DrinkLevel.heavy_sport;
+  }
+
+  bool _checkSoberMonth(int month, Map<String, DayRecord> daysData) {
+    // Проверяем все годы — если хоть в одном году этот месяц был полностью трезвым
+    final years = <int>{};
+    daysData.keys.forEach((key) {
+      final date = _parseDate(key);
+      if (date != null) years.add(date.year);
+    });
+    // Также добавляем текущий год
+    years.add(DateTime.now().year);
+
+    for (final year in years) {
+      final daysInMonth = DateTime(year, month + 1, 0).day;
+      final now = DateTime.now();
+      // Не проверяем текущий незавершённый месяц
+      if (year == now.year && month == now.month) continue;
+      // Не проверяем будущие месяцы
+      if (year > now.year) continue;
+      if (year == now.year && month > now.month) continue;
+
+      bool allSober = true;
+      for (int day = 1; day <= daysInMonth; day++) {
+        final key = '$year-$month-$day';
+        final record = daysData[key] ?? DayRecord();
+        if (_isDrinkingDay(record)) {
+          allSober = false;
+          break;
+        }
+      }
+      if (allSober) return true;
+    }
+    return false;
   }
 
   DateTime? _parseDate(String key) {

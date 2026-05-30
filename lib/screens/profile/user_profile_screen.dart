@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:wobbly/models/follow_models.dart';
+import 'package:wobbly/screens/profile/public_user_profile_screen.dart';
 
 class UserProfileScreen extends StatefulWidget {
   final VoidCallback? onClose;
@@ -508,11 +509,24 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _myFollows.length,
-              separatorBuilder: (_, __) => const Divider(color: Colors.white10, height: 1, indent: 64),
+              separatorBuilder: (_, __) => const Divider(color: Colors.white10, height: 1),
               itemBuilder: (context, index) {
                 final follow = _myFollows[index];
                 return ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (_) => PublicUserProfileScreen(
+                        userId: follow.userId,
+                        username: follow.username,
+                        avatarUrl: follow.avatarUrl,
+                        onClose: () => Navigator.pop(context),
+                      ),
+                    ).then((_) => _loadFollowData());
+                  },
                   leading: _buildAvatar(follow.avatarUrl, 36),
                   title: Text(
                     follow.username,
@@ -620,7 +634,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _pendingFollowers.length,
-            separatorBuilder: (_, __) => const Divider(color: Colors.white10, height: 1, indent: 64),
+            separatorBuilder: (_, __) => const Divider(color: Colors.white10, height: 1),
             itemBuilder: (context, index) {
               final follower = _pendingFollowers[index];
               return ListTile(

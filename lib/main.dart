@@ -94,6 +94,7 @@ class _MyAppState extends State<MyApp> {
 
     await _restoreSession();
     await CalendarSyncManager().sync();
+    await CalendarSyncManager().pushToServer(); // принудительно отправляем после старта
     await AppNotificationManager.shared.checkNewFollowers();
     await AppNotificationManager.shared.checkNewAchievements();
 
