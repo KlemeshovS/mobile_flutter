@@ -103,13 +103,29 @@ class CalendarSyncManager {
     final dataManager = DataManager();
     final localData = await dataManager.loadData();
 
+    print('📤 CalendarSync pushToServer: локальных записей = ${localData.length}');
+    print('📤 CalendarSync pushToServer: ключи = ${localData.keys.take(5).toList()}');
+
     final serverDays = <String, int>{};
     localData.forEach((key, record) {
       final intValue = _drinkLevelToInt(record);
       if (intValue != 0) {
-        serverDays[key] = intValue;
+        // Конвертируем из Flutter 1-based в server 0-based
+        final parts = key.split('-');
+        if (parts.length == 3) {
+          final month = int.tryParse(parts[1]);
+          if (month != null) {
+            final serverKey = '${parts[0]}-${month - 1}-${parts[2]}';
+            serverDays[serverKey] = intValue;
+          }
+        } else {
+          serverDays[key] = intValue;
+        }
       }
     });
+
+    print('📤 CalendarSync: отправляем ${serverDays.length} записей, примеры: ${serverDays.entries.take(3).map((e) => "${e.key}=${e.value}").toList()}');
+
 
     try {
       final response = await UserAPIService().putCalendar(token, serverDays);
@@ -130,7 +146,17 @@ class CalendarSyncManager {
     days.forEach((key, value) {
       final record = _intToDayRecord(value);
       if (record.drinkLevel != DrinkLevel.none || record.hasSport) {
-        newData[key] = record;
+        // Конвертируем из server 0-based в Flutter 1-based
+        final parts = key.split('-');
+        if (parts.length == 3) {
+          final month = int.tryParse(parts[1]);
+          if (month != null) {
+            final localKey = '${parts[0]}-${month + 1}-${parts[2]}';
+            newData[localKey] = record;
+          }
+        } else {
+          newData[key] = record;
+        }
       }
     });
 

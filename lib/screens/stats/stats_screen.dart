@@ -429,6 +429,15 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
         } else {
           return localizations.translate('condition_milestone_positive', [achievement.requiredValue]);
         }
+      case AchievementType.soberDaysInYear:
+        return '${achievement.requiredValue} трезвых дней в году';
+      case AchievementType.drinkingDaysInYear:
+        return '${achievement.requiredValue} алкогольных дней в году';
+      case AchievementType.soberMonth:
+        const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+          'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+        final monthName = months[achievement.requiredValue - 1];
+        return 'Трезвый $monthName';
     }
   }
 

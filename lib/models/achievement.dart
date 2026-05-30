@@ -43,7 +43,10 @@ enum AchievementType {
   drinkingStreak,
   sportCount,
   uniqueEvent,
-  milestone;
+  milestone,
+  soberDaysInYear,
+  drinkingDaysInYear,
+  soberMonth,
 }
 
 class Achievement {

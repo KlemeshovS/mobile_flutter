@@ -5,6 +5,7 @@ import 'package:wobbly/models/api_models.dart';
 import 'package:wobbly/services/session_manager.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:wobbly/models/follow_models.dart';
+import 'package:wobbly/models/friend_calendar_model.dart';
 
 enum UserAPIError {
   usernameAlreadyExists,
@@ -48,6 +49,7 @@ enum UserAPIError {
   followsLimitReached,
   notFollowing,
   calendarError,
+  notFriends,
 }
 
 class UserAPIService {
@@ -580,5 +582,18 @@ class UserAPIService {
       throw await _handleError(response);
     }
   }
-
+  Future<FriendCalendarResponse> getFriendCalendar(String token, int userId) async {
+    final url = Uri.parse('$_baseUrl/users/$userId/calendar');
+    final headers = _buildHeaders({'Authorization': 'Bearer $token'});
+    final response = await http.get(url, headers: headers);
+    if (response.statusCode == 200) {
+      return FriendCalendarResponse.fromJson(json.decode(response.body));
+    } else if (response.statusCode == 403) {
+      throw UserAPIError.notFriends;
+    } else if (response.statusCode == 404) {
+      throw UserAPIError.userNotFound;
+    } else {
+      throw await _handleError(response);
+    }
+  }
 }

@@ -4,6 +4,10 @@ import 'package:wobbly/models/follow_models.dart';
 import 'package:wobbly/services/api/user_api_service.dart';
 import 'package:wobbly/services/session_manager.dart';
 import 'package:wobbly/utils/localization.dart';
+import 'package:wobbly/models/friend_calendar_model.dart';
+import 'package:wobbly/widgets/friend_calendar_grid.dart';
+import 'package:intl/intl.dart';
+import 'package:wobbly/models/api_models.dart';
 
 class PublicUserProfileScreen extends StatefulWidget {
   final int userId;
@@ -36,13 +40,47 @@ class PublicUserProfileScreen extends StatefulWidget {
 enum _FollowStatus { loading, notFollowing, following, mutual }
 
 class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
+
+  int? _loadedScore;
+
   _FollowStatus _status = _FollowStatus.loading;
   bool _isActionLoading = false;
+
+  FriendCalendarResponse? _friendCalendar;
+  bool _isLoadingCalendar = false;
+  bool _calendarNotFriends = false;
+
+  Future<void> _loadActualScore() async {
+    try {
+      final top = await UserAPIService().fetchTop100();
+      final found = top.firstWhere(
+            (i) => i.userId == widget.userId,
+        orElse: () => LeaderboardItem(userId: -1, username: '', score: 0, avatarUrl: null),
+      );
+      if (found.userId != -1) {
+        if (mounted) setState(() => _loadedScore = found.score);
+        return;
+      }
+
+      final bottom = await UserAPIService().fetchBottom100();
+      final foundBottom = bottom.firstWhere(
+            (i) => i.userId == widget.userId,
+        orElse: () => LeaderboardItem(userId: -1, username: '', score: 0, avatarUrl: null),
+      );
+      if (foundBottom.userId != -1) {
+        if (mounted) setState(() => _loadedScore = foundBottom.score);
+      }
+    } catch (e) {
+      print('❌ Ошибка загрузки очков: $e');
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     _loadFollowStatus();
+    _loadFriendCalendar();
+    _loadActualScore();
   }
 
   Future<void> _loadFollowStatus() async {
@@ -72,6 +110,25 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
     }
   }
 
+  Future<void> _loadFriendCalendar() async {
+    final token = SessionManager().accessToken;
+    if (token == null) return;
+    setState(() => _isLoadingCalendar = true);
+    try {
+      final cal = await UserAPIService().getFriendCalendar(token, widget.userId);
+      setState(() {
+        _friendCalendar = cal;
+        _calendarNotFriends = false;
+      });
+    } catch (e) {
+      if (e == UserAPIError.notFriends) {
+        setState(() => _calendarNotFriends = true);
+      }
+    } finally {
+      setState(() => _isLoadingCalendar = false);
+    }
+  }
+
   Future<void> _follow() async {
     final token = SessionManager().accessToken;
     if (token == null) return;
@@ -79,6 +136,7 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
     try {
       await UserAPIService().follow(token, widget.username);
       await _loadFollowStatus();
+      await _loadFriendCalendar();
     } catch (e) {
       _showError('Ошибка при подписке');
     } finally {
@@ -93,6 +151,11 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
     try {
       await UserAPIService().unfollow(token, widget.userId);
       await _loadFollowStatus();
+      setState(() {
+        _friendCalendar = null;
+        _calendarNotFriends = true;
+      });
+      await _loadFriendCalendar();
     } catch (e) {
       _showError('Ошибка при отписке');
     } finally {
@@ -124,10 +187,11 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
       ),
       child: SafeArea(
         top: false,
-        child: Column(
-          children: [
-            // Полоска
-            Container(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Полоска
+              Container(
               width: 40,
               height: 4,
               margin: const EdgeInsets.only(top: 12),
@@ -175,18 +239,17 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
                     ),
                   ),
                   const Spacer(),
-                  if (widget.score != null)
+                  if (_loadedScore != null || widget.score != null)
                     Text(
-                      '${widget.score!.abs()}',
+                      '${(_loadedScore ?? widget.score ?? 0).abs()}',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: (widget.score ?? 0) >= 0
+                        color: (_loadedScore ?? widget.score ?? 0) >= 0
                             ? Colors.greenAccent
                             : Colors.pinkAccent,
                       ),
-                    ),
-                ],
+                    ),      ],
               ),
             ),
             const SizedBox(height: 24),
@@ -196,12 +259,82 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: _buildFollowButton(loc),
             ),
+            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _buildCalendarSection(loc),
+            ),
           ],
         ),
+      ),
       ),
     );
   }
 
+  Widget _buildCalendarSection(AppLocalizations loc) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          loc.translate('friend_calendar_title'),
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Colors.white60,
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (_isLoadingCalendar)
+          const Center(
+            child: CircularProgressIndicator(color: Colors.white54, strokeWidth: 2),
+          )
+        else if (_calendarNotFriends)
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white.withOpacity(0.08)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.lock_outline,
+                    color: Colors.white.withOpacity(0.35), size: 16),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    loc.translate('friend_calendar_mutual_only'),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.white.withOpacity(0.5),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )
+        else if (_friendCalendar != null && !_friendCalendar!.isEmpty)
+            FriendCalendarGrid(calendar: _friendCalendar!)
+          else if (_friendCalendar != null && _friendCalendar!.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    loc.translate('friend_calendar_empty'),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.white.withOpacity(0.5),
+                    ),
+                  ),
+                ),
+              ),
+      ],
+    );
+  }
 
   Widget _buildFollowButton(AppLocalizations loc) {
     if (_status == _FollowStatus.loading) {
@@ -252,7 +385,7 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
         : loc.translate('follow_status_following');
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.07),
         borderRadius: BorderRadius.circular(12),
