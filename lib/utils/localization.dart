@@ -142,7 +142,10 @@ class AppLocalizations {
       'exportShareSubject': 'Wobbly Data Export',
       'exportShareText': 'Here is my Wobbly data export file.',
       'exportError': 'Export failed',
-//драаасте
+      'your_week_title': 'How my weeks go',
+      'your_week_sport': 'Sport',
+      'your_week_drink': 'Alcohol',
+
       // Новые ключи для статусов
       'status_sporty_title': 'Friendly Athlete',
       'status_sporty_description': 'You prefer sneakers to wine glasses, but sometimes allow yourself a \'sports\' beer after a workout!',
@@ -232,7 +235,7 @@ class AppLocalizations {
       'stat_sport_days_description': 'Number of days when you chose sweat and endorphins over sweat and shakes. Wise choice!',
 
       // Статистика – факты
-      'your_progress': 'Your progress',
+      'your_progress': 'Without hangover',
       'sober_days_count': 'Sober days:',
       'evolution_of_sober_person_title': 'Evolution of a sober person',
       'all_milestones_screen_title': 'Sobriety Milestones',
@@ -767,6 +770,9 @@ class AppLocalizations {
       'exportShareSubject': 'Экспорт данных Wobbly',
       'exportShareText': 'Вот файл с экспортом моих данных из Wobbly.',
       'exportError': 'Ошибка экспорта',
+      'your_week_title': 'Как проходит неделя',
+      'your_week_sport': 'Спорт',
+      'your_week_drink': 'Алкоголь',
 
       // Новые ключи для статусов
       'status_sporty_title': 'Любитель зарядки',
@@ -858,7 +864,7 @@ class AppLocalizations {
 
 
       // Статистика – факты
-      'your_progress': 'Полностью сухой',
+      'your_progress': 'Без похмелья',
       'sober_days_count': 'Трезвых дней:',
       'evolution_of_sober_person_title': 'Эволюция трезвого человека',
       'all_milestones_screen_title': 'Рубежи трезвости',
@@ -1235,7 +1241,7 @@ class AppLocalizations {
       'follow_button': 'Подписаться',
       'remove_friend_button': 'Отписаться',
       'user_is_friend': 'Ваш взаимный друг',
-      'ratings_friends_only_toggle': 'Показать только моих друзьей',
+      'ratings_friends_only_toggle': 'Показать только моих друзей',
       'ratings_friends_empty': 'Никого из ваших друзей нет в рейтинге',
 
       'notification_achievement_title': 'О! Новая ачивка!',
