@@ -24,6 +24,7 @@ import 'package:wobbly/screens/achievements/all_achievements_sheet.dart';
 import 'package:wobbly/models/achievement.dart';
 import 'package:wobbly/services/score_sync_manager.dart';
 import 'package:wobbly/screens/ratings/ratings_screen.dart';
+import 'package:wobbly/widgets/week_stats_view.dart';
 
 
 // Класс для хранения статистики за год (оставлен как был)
@@ -87,6 +88,7 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
   DateTime? _installDate;
   UserStatus? _userStatus;
   int _achievementsVersion = 0;
+  bool _weekStatsReady = false;
 
   List<Achievement> _unlockedAchievements = [];
   final AchievementManager _achievementManager = AchievementManager();
@@ -139,6 +141,9 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
     // Добавляем вызов обновления статуса после сборки виджета
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateUserStatus();
+    });
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (mounted) setState(() => _weekStatsReady = true);
     });
   }
 
@@ -498,10 +503,62 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
                         const SizedBox(height: 12),
                         _buildDrinkingVsSportGlassCard(drinkingVsSportStats),
                         const SizedBox(height: 16),
-                        AdaptiveSobrietyFactsView(soberDays: currentSoberStreak),
+                        _weekStatsReady
+                            ? WeekStatsView(daysData: widget.daysData, selectedYear: _selectedYear)
+                            : Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.white.withOpacity(0.2)),
+                          ),
+                          child: Column(
+                            children: [
+                              Container(
+                                width: 80, height: 14,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(7),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: List.generate(7, (i) {
+                                  final heights = [60.0, 90.0, 45.0, 110.0, 70.0, 100.0, 55.0];
+                                  return Expanded(
+                                    child: Column(
+                                      children: [
+                                        const SizedBox(height: 28),
+                                        Container(
+                                          width: 28, height: heights[i],
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withOpacity(0.08),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Container(
+                                          width: 20, height: 8,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        AdaptiveSobrietyFactsView(soberDays: (_calculateSoftSoberStreak() - 1).clamp(0, 9999)),
                         const SizedBox(height: 16),
                         AchievementsSection(
-                          key: ValueKey('achievements_$_achievementsVersion'),                          achievements: _unlockedAchievements,
+                          key: ValueKey('achievements_$_achievementsVersion'),
+                          achievements: _unlockedAchievements,
                           onSeeAllTap: _showAllAchievements,
                           onAchievementTap: _showAchievementDetail,
                         ),
@@ -518,7 +575,6 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
     );
   }
 
-  // ---------- ВСЕ МЕТОДЫ СТАТИСТИКИ ВОЗВРАЩЕНЫ В ИСХОДНОЕ СОСТОЯНИЕ ----------
 
   YearStats _calculateYearStats(int year) {
     final firstActivity = _getFirstActivityDate();
@@ -735,6 +791,25 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
       if (date.year > year) break;
     }
     return maxStreak == 1 ? 0 : maxStreak;
+  }
+
+  int _calculateSoftSoberStreak() {
+    final firstActivity = _getFirstActivityDate();
+    final now = DateTime.now();
+    var streak = 0;
+    for (int dayOffset = 0; dayOffset < 2000; dayOffset++) {
+      final date = DateTime(now.year, now.month, now.day).subtract(Duration(days: dayOffset));
+      if (date.isBefore(firstActivity)) break;
+      final dayData = DayData(day: date.day, month: date.month - 1, year: date.year);
+      final record = widget.daysData[dayData.key] ?? DayRecord();
+      // Сбрасываем только на medium и heavy (с или без спорта)
+      if (record.drinkLevel == DrinkLevel.medium ||
+          record.drinkLevel == DrinkLevel.heavy) {
+        break;
+      }
+      streak++;
+    }
+    return streak;
   }
 
   _DrinkingVsSportStats _calculateDrinkingVsSportStats(YearStats yearStats) {
