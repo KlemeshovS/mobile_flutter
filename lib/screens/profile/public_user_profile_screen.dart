@@ -6,6 +6,10 @@ import 'package:wobbly/services/session_manager.dart';
 import 'package:wobbly/utils/localization.dart';
 import 'package:wobbly/models/friend_calendar_model.dart';
 import 'package:wobbly/widgets/friend_calendar_grid.dart';
+import 'package:wobbly/widgets/login_bottom_sheet.dart';
+import 'package:wobbly/widgets/friend_stats_view.dart';
+import 'package:wobbly/models/user_status.dart';
+import 'package:wobbly/models/day_record.dart';
 import 'package:intl/intl.dart';
 import 'package:wobbly/models/api_models.dart';
 
@@ -49,6 +53,7 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
   FriendCalendarResponse? _friendCalendar;
   bool _isLoadingCalendar = false;
   bool _calendarNotFriends = false;
+  UserStatus? _friendStatus;
 
   Future<void> _loadActualScore() async {
     try {
@@ -116,9 +121,18 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
     setState(() => _isLoadingCalendar = true);
     try {
       final cal = await UserAPIService().getFriendCalendar(token, widget.userId);
+      // Вычисляем статус из данных календаря
+      UserStatus? status;
+      if (!cal.isEmpty) {
+        final records = cal.days.map(
+          (key, value) => MapEntry(key, DayRecord.fromLegacy(value)),
+        );
+        status = UserStatusManager.calculateStatus(records);
+      }
       setState(() {
         _friendCalendar = cal;
         _calendarNotFriends = false;
+        _friendStatus = status;
       });
     } catch (e) {
       if (e == UserAPIError.notFriends) {
@@ -129,9 +143,26 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
     }
   }
 
+  void _showLoginSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => LoginBottomSheet(
+        onLoginSuccess: () {
+          _loadFollowStatus();
+          _loadFriendCalendar();
+        },
+      ),
+    );
+  }
+
   Future<void> _follow() async {
     final token = SessionManager().accessToken;
-    if (token == null) return;
+    if (token == null) {
+      _showLoginSheet();
+      return;
+    }
     setState(() => _isActionLoading = true);
     try {
       await UserAPIService().follow(token, widget.username);
@@ -209,17 +240,29 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            // Аватар
-            fullUrl != null
-                ? CircleAvatar(
-              radius: 48,
-              backgroundImage: NetworkImage(
-                fullUrl,
-                headers: UserAPIService.stagingHeaders,
+            // Статус над аватаркой
+            if (_friendStatus != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _buildStatusBadge(_friendStatus!, loc),
               ),
-              onBackgroundImageError: (_, __) {},
-            )
-                : _defaultAvatar(),
+            // Аватар (тап → увеличить)
+            GestureDetector(
+              onTap: fullUrl != null ? () => _showAvatarFullscreen(fullUrl) : null,
+              child: Hero(
+                tag: 'avatar_${widget.userId}',
+                child: fullUrl != null
+                    ? CircleAvatar(
+                        radius: 48,
+                        backgroundImage: NetworkImage(
+                          fullUrl,
+                          headers: UserAPIService.stagingHeaders,
+                        ),
+                        onBackgroundImageError: (_, __) {},
+                      )
+                    : _defaultAvatar(),
+              ),
+            ),
 
             const SizedBox(height: 16),
 
@@ -314,7 +357,16 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
             ),
           )
         else if (_friendCalendar != null && !_friendCalendar!.isEmpty)
-            FriendCalendarGrid(calendar: _friendCalendar!)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                FriendCalendarGrid(calendar: _friendCalendar!),
+                if (_status == _FollowStatus.mutual) ...[
+                  const SizedBox(height: 24),
+                  FriendStatsView(calendar: _friendCalendar!),
+                ],
+              ],
+            )
           else if (_friendCalendar != null && _friendCalendar!.isEmpty)
               Container(
                 padding: const EdgeInsets.all(14),
@@ -451,6 +503,94 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildStatusBadge(UserStatus status, AppLocalizations loc) {
+    final color = _hexColor(status.hexColor);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 30,
+          height: 30,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: color.withOpacity(0.2),
+            boxShadow: [
+              BoxShadow(color: color.withOpacity(0.4), blurRadius: 8),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(4),
+            child: Image.asset(
+              'assets/icons/${status.iconName}.png',
+              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          loc.getUserStatusTitle(status),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.white.withOpacity(0.85),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showAvatarFullscreen(String imageUrl) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.92),
+      builder: (ctx) => GestureDetector(
+        onTap: () => Navigator.pop(ctx),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Stack(
+            children: [
+              Center(
+                child: Hero(
+                  tag: 'avatar_${widget.userId}',
+                  child: CachedNetworkImage(
+                    imageUrl: imageUrl,
+                    httpHeaders: UserAPIService.stagingHeaders,
+                    imageBuilder: (context, imageProvider) => ClipOval(
+                      child: Image(image: imageProvider, width: 260, height: 260, fit: BoxFit.cover),
+                    ),
+                    placeholder: (_, __) => const CircularProgressIndicator(color: Colors.white),
+                    errorWidget: (_, __, ___) => const Icon(Icons.person, size: 80, color: Colors.white54),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 12,
+                right: 16,
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(ctx),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.15),
+                    ),
+                    child: const Icon(Icons.close, color: Colors.white, size: 22),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Color _hexColor(String hex) {
+    hex = hex.replaceFirst('#', '');
+    if (hex.length == 6) return Color(int.parse('0xFF$hex'));
+    return Colors.white;
   }
 
   Widget _defaultAvatar() {

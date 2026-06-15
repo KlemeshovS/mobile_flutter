@@ -12,6 +12,7 @@ class MonthView extends StatelessWidget {
   final Map<String, DayRecord> daysData;
   final Function(DayData) onDaySelected;
   final Function(DayData) onDayLongPressed;
+  final int calendarViewMode;
 
   const MonthView({
     super.key,
@@ -22,21 +23,27 @@ class MonthView extends StatelessWidget {
     required this.daysData,
     required this.onDaySelected,
     required this.onDayLongPressed,
+    this.calendarViewMode = 1,
   });
+
+  bool get _isCompact => calendarViewMode > 1;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-      padding: EdgeInsets.all(12),
+      margin: EdgeInsets.symmetric(
+        horizontal: _isCompact ? 2 : 4,
+        vertical: _isCompact ? 3 : 6,
+      ),
+      padding: EdgeInsets.all(_isCompact ? 5 : 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(_isCompact ? 10 : 16),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 6,
-            offset: Offset(0, 3),
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -44,13 +51,16 @@ class MonthView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.only(bottom: 12, left: 4),
+            padding: EdgeInsets.only(
+              bottom: _isCompact ? 3 : 12,
+              left: _isCompact ? 2 : 4,
+            ),
             child: Text(
               monthName,
               style: TextStyle(
                 fontFamily: 'Inter',
-                color: isCurrentMonth ? Color(0xFF8B5CF6) : Colors.black,
-                fontSize: 14,
+                color: isCurrentMonth ? const Color(0xFF8B5CF6) : Colors.black,
+                fontSize: calendarViewMode == 3 ? 8 : (_isCompact ? 10 : 14),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -61,6 +71,7 @@ class MonthView extends StatelessWidget {
             daysData: daysData,
             onDaySelected: onDaySelected,
             onDayLongPressed: onDayLongPressed,
+            calendarViewMode: calendarViewMode,
           ),
         ],
       ),

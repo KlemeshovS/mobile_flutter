@@ -488,18 +488,27 @@ class _SmallDayCell extends StatelessWidget {
 
   Color _alcoholColor(int lvl) {
     switch (lvl) {
-      case 1:
-      case 5:
-        return const Color(0xFFF7B0BB); // little border
-      case 2:
-      case 6:
-        return const Color(0xFFEA0505); // medium border
-      case 3:
-      case 7:
-        return const Color(0xFF9C27B0); // heavy border
-      default:
-        return Colors.transparent;
+      case 1: case 5: return const Color(0xFFFF0072);
+      case 2: case 6: return const Color(0xFF9126EF);
+      case 3: case 7: return const Color(0xFF482FED);
+      default: return Colors.transparent;
     }
+  }
+
+  // Радиальный градиент для спорт+алкоголь (центр зелёный → край цвет алкоголя)
+  RadialGradient? get _sportGradient {
+    final lvl = _level;
+    if (lvl == null || (lvl != 5 && lvl != 6 && lvl != 7)) return null;
+    final edge = _alcoholColor(lvl);
+    return RadialGradient(
+      colors: [
+        const Color(0xFFC7FF00),
+        const Color(0xFFC7FF00),
+        Color(0xFFC7FF00).withOpacity(0.7),
+        edge.withOpacity(0.5),
+      ],
+      stops: const [0.0, 0.4, 0.65, 1.0],
+    );
   }
 
   @override
@@ -512,10 +521,12 @@ class _SmallDayCell extends StatelessWidget {
             isFuture: _isFuture,
             isUnknown: _isUnknown,
             isToday: _isToday,
+            hasRecord: _level != null,
             hasSport: _hasSport,
             hasAlcohol: _hasAlcohol,
             cellColor: _cellColor,
             alcoholColor: _level != null ? _alcoholColor(_level!) : Colors.transparent,
+            sportGradient: _sportGradient,
           ),
           child: Center(
             child: Text(
@@ -590,17 +601,10 @@ class _LargeDayCell extends StatelessWidget {
 
   Color _alcoholColor(int lvl) {
     switch (lvl) {
-      case 1:
-      case 5:
-        return const Color(0xFFFF0072);
-      case 2:
-      case 6:
-        return const Color(0xFF9126EF);
-      case 3:
-      case 7:
-        return const Color(0xFF482FED);
-      default:
-        return Colors.transparent;
+      case 1: case 5: return const Color(0xFFFF0072);
+      case 2: case 6: return const Color(0xFF9126EF);
+      case 3: case 7: return const Color(0xFF482FED);
+      default: return Colors.transparent;
     }
   }
 
@@ -609,6 +613,21 @@ class _LargeDayCell extends StatelessWidget {
     final lvl = _level;
     if (lvl == null) return Colors.transparent;
     return _colorForLevel(lvl);
+  }
+
+  RadialGradient? get _sportGradient {
+    final lvl = _level;
+    if (lvl == null || (lvl != 5 && lvl != 6 && lvl != 7)) return null;
+    final edge = _alcoholColor(lvl);
+    return RadialGradient(
+      colors: [
+        const Color(0xFFC7FF00),
+        const Color(0xFFC7FF00),
+        Color(0xFFC7FF00).withOpacity(0.7),
+        edge.withOpacity(0.5),
+      ],
+      stops: const [0.0, 0.4, 0.65, 1.0],
+    );
   }
 
   @override
@@ -620,10 +639,12 @@ class _LargeDayCell extends StatelessWidget {
           isFuture: _isFuture,
           isUnknown: _isUnknown,
           isToday: _isToday,
+          hasRecord: _level != null,
           hasSport: _hasSport,
           hasAlcohol: _hasAlcohol,
           cellColor: _cellColor,
           alcoholColor: _level != null ? _alcoholColor(_level!) : Colors.transparent,
+          sportGradient: _sportGradient,
         ),
         child: Center(
           child: Text(
@@ -650,19 +671,23 @@ class _DayCellPainter extends CustomPainter {
   final bool isFuture;
   final bool isUnknown;
   final bool isToday;
+  final bool hasRecord;
   final bool hasSport;
   final bool hasAlcohol;
   final Color cellColor;
   final Color alcoholColor;
+  final RadialGradient? sportGradient;
 
   const _DayCellPainter({
     required this.isFuture,
     required this.isUnknown,
     required this.isToday,
+    required this.hasRecord,
     required this.hasSport,
     required this.hasAlcohol,
     required this.cellColor,
     required this.alcoholColor,
+    this.sportGradient,
   });
 
   @override
@@ -671,35 +696,37 @@ class _DayCellPainter extends CustomPainter {
     final radius = size.width / 2;
     final paint = Paint()..style = PaintingStyle.fill;
 
+    // Сегодня без отметки — голубой кружок
+    if (isToday && !hasRecord && !isFuture) {
+      paint.color = Colors.blue.withOpacity(0.15);
+      canvas.drawCircle(center, radius, paint);
+    }
+
     if (!isFuture && !isUnknown) {
-      if (hasSport && hasAlcohol) {
-        // Зелёный фон + цветная обводка
+      if (hasSport && hasAlcohol && sportGradient != null) {
+        // Спорт + алкоголь: радиальный градиент (центр зелёный → край цвет алкоголя)
+        final rect = Rect.fromCircle(center: center, radius: radius);
+        paint.shader = sportGradient!.createShader(rect);
+        canvas.drawCircle(center, radius, paint);
+        paint.shader = null;
+      } else if (hasSport && hasAlcohol) {
+        // Запасной вариант без градиента
         paint.color = const Color(0xFFC7FF00).withOpacity(0.4);
         canvas.drawCircle(center, radius, paint);
-
-        // Обводка цвета алкоголя
-        paint.color = alcoholColor;
-        paint.style = PaintingStyle.stroke;
-        paint.strokeWidth = 2;
-        canvas.drawCircle(center, radius - 1, paint);
-        paint.style = PaintingStyle.fill;
       } else if (cellColor != Colors.transparent) {
         paint.color = cellColor;
         canvas.drawCircle(center, radius, paint);
       }
     }
-
-    if (isToday) {
-      paint.color = const Color(0xFF8B5CF6);
-      paint.style = PaintingStyle.stroke;
-      paint.strokeWidth = 2;
-      canvas.drawCircle(center, radius - 1, paint);
-    }
+    // Фиолетовая обводка убрана
   }
 
-
   @override
-  bool shouldRepaint(_DayCellPainter old) => false;
+  bool shouldRepaint(_DayCellPainter old) =>
+      old.sportGradient != sportGradient ||
+      old.cellColor != cellColor ||
+      old.isToday != isToday ||
+      old.hasRecord != hasRecord;
 }
 
 // ─── Цвета по уровню ──────────────────────────────────────────────────────────
@@ -707,17 +734,17 @@ class _DayCellPainter extends CustomPainter {
 Color _colorForLevel(int level) {
   switch (level) {
     case 1: // little
-      return const Color(0xFFF7B0BB).withOpacity(0.7);
+      return const Color(0xFFFF0072).withOpacity(0.3);
     case 2: // medium
-      return const Color(0xFFEA0505).withOpacity(0.7);
+      return const Color(0xFF9126EF).withOpacity(0.4);
     case 3: // heavy
-      return const Color(0xFF9C27B0).withOpacity(0.7);
+      return const Color(0xFF482FED).withOpacity(0.6);
     case 4: // sport
       return const Color(0xFFC7FF00).withOpacity(0.4);
     case 5: // little+sport
     case 6: // medium+sport
     case 7: // heavy+sport
-      return const Color(0xFFC7FF00).withOpacity(0.4);
+      return const Color(0xFFC7FF00).withOpacity(0.4); // используется градиент
     default:
       return Colors.transparent;
   }

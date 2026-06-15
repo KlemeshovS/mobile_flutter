@@ -34,8 +34,12 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
   String? _myUsername;
   bool _showFriendsOnly = false;
   Set<String> _myFollowUsernames = {};
+  Set<String> _myMutualUsernames = {};
+  Set<String> _myOneWayFollowUsernames = {};
+  Set<String> _pendingFollowerUsernames = {};
   bool _isLoadingFollows = false;
   SessionType _sessionType = SessionType.guest;
+  String? _myAvatarUrl;
 
   @override
   void initState() {
@@ -68,9 +72,16 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
     if (token == null) return;
     setState(() => _isLoadingFollows = true);
     try {
-      final response = await UserAPIService().getMyFollows(token);
+      final followsResp = await UserAPIService().getMyFollows(token);
+      final followersResp = await UserAPIService().getMyFollowers(token);
+      final followSet = followsResp.items.map((f) => f.username).toSet();
+      final mutualSet = followsResp.items.where((f) => f.isMutual).map((f) => f.username).toSet();
+      final followerSet = followersResp.items.map((f) => f.username).toSet();
       setState(() {
-        _myFollowUsernames = response.items.map((f) => f.username).toSet();
+        _myFollowUsernames = followSet;
+        _myMutualUsernames = mutualSet;
+        _myOneWayFollowUsernames = followSet.difference(mutualSet);
+        _pendingFollowerUsernames = followerSet.difference(followSet);
       });
     } catch (e) {
       print('❌ loadMyFollows error: $e');
@@ -111,6 +122,17 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
         _myUsername = prefs.getString('userName');
       });
       if (mounted) await _loadData(context);
+
+      // Загружаем аватар авторизованного пользователя
+      if (_sessionType == SessionType.authenticated) {
+        final token = SessionManager().accessToken;
+        if (token != null) {
+          try {
+            final profile = await UserAPIService().getMyProfile(token);
+            if (mounted) setState(() => _myAvatarUrl = UserAPIService.fullAvatarUrl(profile.avatarUrl));
+          } catch (_) {}
+        }
+      }
 
       if (mounted && (_sessionType == SessionType.guest || !_participate)) {
         if (!_hasShownNotParticipatingPopup) {
@@ -365,84 +387,122 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
 
   Widget _buildCustomTabBar(AppLocalizations loc) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final tabWidth = (screenWidth - 40) / 2;
+    // Слева 16, справа 16, spacing 10, аватар 36 → область таба
+    final tabAreaWidth = screenWidth - 16 - 10 - 36 - 16;
+    final tabWidth = tabAreaWidth / 2;
     final bool isTop = _tabController.index == 0;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      child: Stack(
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Container(
+          // Tab switcher
+          SizedBox(
+            width: tabAreaWidth,
             height: 40,
-            decoration: BoxDecoration(
-              color: const Color(0xFF2D2B55).withOpacity(0.3),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withOpacity(0.2)),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4)),
+            child: Stack(
+              children: [
+                Container(
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2D2B55).withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white.withOpacity(0.2)),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4)),
+                    ],
+                  ),
+                ),
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeInOut,
+                  left: _tabController.index == 0 ? 0 : tabWidth,
+                  child: Container(
+                    width: tabWidth,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2D2B55).withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isTop ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: (isTop ? const Color(0xFF2E7D32) : const Color(0xFFC62828)).withOpacity(0.4),
+                          blurRadius: 10,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => _tabController.animateTo(0),
+                        behavior: HitTestBehavior.opaque,
+                        child: Container(
+                          height: 40,
+                          alignment: Alignment.center,
+                          child: Text(
+                            loc.translate('top_100'),
+                            style: TextStyle(
+                              color: _tabController.index == 0 ? Colors.white : Colors.white.withOpacity(0.6),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => _tabController.animateTo(1),
+                        behavior: HitTestBehavior.opaque,
+                        child: Container(
+                          height: 40,
+                          alignment: Alignment.center,
+                          child: Text(
+                            loc.translate('bottom_100'),
+                            style: TextStyle(
+                              color: _tabController.index == 1 ? Colors.white : Colors.white.withOpacity(0.6),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
-          AnimatedPositioned(
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.easeInOut,
-            left: _tabController.index == 0 ? 0 : tabWidth,
-            child: Container(
-              width: tabWidth,
-              height: 40,
-              decoration: BoxDecoration(
-                color: const Color(0xFF2D2B55).withOpacity(0.9),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isTop ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: (isTop ? const Color(0xFF2E7D32) : const Color(0xFFC62828)).withOpacity(0.4),
-                    blurRadius: 10,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => _tabController.animateTo(0),
-                  behavior: HitTestBehavior.opaque,
-                  child: Container(
-                    height: 40,
-                    alignment: Alignment.center,
-                    child: Text(
-                      loc.translate('top_100'),
-                      style: TextStyle(
-                        color: _tabController.index == 0 ? Colors.white : Colors.white.withOpacity(0.6),
-                        fontWeight: FontWeight.w600,
-                      ),
+          const SizedBox(width: 10),
+          // Аватар / заглушка
+          GestureDetector(
+            onTap: _showProfileModal,
+            child: _myAvatarUrl != null
+                ? CircleAvatar(
+                    radius: 18,
+                    backgroundImage: CachedNetworkImageProvider(
+                      _myAvatarUrl!,
+                      headers: UserAPIService.stagingHeaders,
+                    ),
+                  )
+                : Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.15),
+                    ),
+                    child: const Icon(
+                      Icons.person,
+                      color: Colors.white,
+                      size: 20,
                     ),
                   ),
-                ),
-              ),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => _tabController.animateTo(1),
-                  behavior: HitTestBehavior.opaque,
-                  child: Container(
-                    height: 40,
-                    alignment: Alignment.center,
-                    child: Text(
-                      loc.translate('bottom_100'),
-                      style: TextStyle(
-                        color: _tabController.index == 1 ? Colors.white : Colors.white.withOpacity(0.6),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
           ),
         ],
       ),
@@ -644,6 +704,21 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
                 overflow: TextOverflow.ellipsis,
               ),
             ),
+            if (!isCurrentUser && _myMutualUsernames.contains(item.username))
+              const Padding(
+                padding: EdgeInsets.only(right: 6),
+                child: Icon(Icons.people, color: Color(0xFFC7FF00), size: 16),
+              )
+            else if (!isCurrentUser && _myOneWayFollowUsernames.contains(item.username))
+              const Padding(
+                padding: EdgeInsets.only(right: 6),
+                child: _IFollowThemIcon(),
+              )
+            else if (!isCurrentUser && _pendingFollowerUsernames.contains(item.username))
+              const Padding(
+                padding: EdgeInsets.only(right: 6),
+                child: _TheyFollowMeIcon(),
+              ),
             Text(
               '${item.score.abs()}',
               style: TextStyle(
@@ -770,6 +845,56 @@ class RatingsScreenState extends State<RatingsScreen> with SingleTickerProviderS
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// Я подписан на них (левый зелёный, правый серый)
+class _IFollowThemIcon extends StatelessWidget {
+  const _IFollowThemIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 22,
+      height: 16,
+      child: Stack(
+        children: const [
+          Positioned(
+            left: 8,
+            child: Icon(Icons.person, color: Colors.grey, size: 14),
+          ),
+          Positioned(
+            left: 0,
+            child: Icon(Icons.person, color: Color(0xFFC7FF00), size: 14),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Они подписаны на меня (левый серый, правый зелёный)
+class _TheyFollowMeIcon extends StatelessWidget {
+  const _TheyFollowMeIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 22,
+      height: 16,
+      child: Stack(
+        children: const [
+          Positioned(
+            left: 0,
+            child: Icon(Icons.person, color: Colors.grey, size: 14),
+          ),
+          Positioned(
+            left: 8,
+            child: Icon(Icons.person, color: Color(0xFFC7FF00), size: 14),
+          ),
+        ],
       ),
     );
   }
