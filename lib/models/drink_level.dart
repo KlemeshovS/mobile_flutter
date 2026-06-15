@@ -55,19 +55,19 @@ enum DrinkLevel {
       case DrinkLevel.none:
         return Colors.transparent;
       case DrinkLevel.little:
-        return Color(0xFFF7B0BB);
+        return Color(0xFFFF0072).withOpacity(0.3);
       case DrinkLevel.medium:
-        return Color(0xFFEA0505);
+        return Color(0xFF9126EF).withOpacity(0.4);
       case DrinkLevel.heavy:
-        return Color(0xFF9C27B0);
+        return Color(0xFF482FED).withOpacity(0.6);
       case DrinkLevel.sport:
-        return Color(0xFFC7FF00);
+        return Color(0xFFC7FF00).withOpacity(0.4);
       case DrinkLevel.little_sport:
-        return Color(0xFF9C27B0);
+        return Color(0xFFFF0072).withOpacity(0.3);
       case DrinkLevel.medium_sport:
-        return Color(0xFFEA0505);
+        return Color(0xFF9126EF).withOpacity(0.4);
       case DrinkLevel.heavy_sport:
-        return Color(0xFF9C27B0);
+        return Color(0xFF482FED).withOpacity(0.6);
     }
   }
 

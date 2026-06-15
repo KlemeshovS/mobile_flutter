@@ -15,12 +15,14 @@ class CalendarScreen extends StatefulWidget {
   final Map<String, DayRecord> daysData;
   final Function(DayData, DayRecord) onDayRecordUpdated;
   final double? initialScrollOffset;
+  final int progressDays;
 
   const CalendarScreen({
     super.key,
     required this.daysData,
     required this.onDayRecordUpdated,
     this.initialScrollOffset,
+    this.progressDays = 0,
   });
 
   @override
@@ -30,6 +32,7 @@ class CalendarScreen extends StatefulWidget {
 class CalendarScreenState extends State<CalendarScreen> {
   final List<int> _years = calendarYears;
   late final ScrollController _scrollController;
+  int _calendarViewMode = 1;
 
   void maybeShowMotivation() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -208,6 +211,8 @@ class CalendarScreenState extends State<CalendarScreen> {
       initialScrollOffset: widget.initialScrollOffset ?? 0,
     );
 
+    _loadViewMode();
+
     // Если смещение не было передано (старый запуск), прокручиваем после сборки
     if (widget.initialScrollOffset == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -220,15 +225,84 @@ class CalendarScreenState extends State<CalendarScreen> {
     });
   }
 
-  void _scrollToCurrentMonth() {
+  Future<void> _loadViewMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _calendarViewMode = prefs.getInt('calendarViewMode') ?? 1;
+      });
+    }
+  }
+
+  Future<void> _setViewMode(int mode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('calendarViewMode', mode);
+    // Прыгаем сначала с новым режимом ДО rebuild, чтобы список не мелькал на старой позиции
+    _scrollToCurrentMonth(forMode: mode);
+    setState(() => _calendarViewMode = mode);
+    // После rebuild — корректируем точно (maxScrollExtent обновился)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToCurrentMonth();
+    });
+  }
+
+  IconData get _viewModeIcon {
+    switch (_calendarViewMode) {
+      case 1: return Icons.view_stream;
+      case 2: return Icons.grid_view;
+      case 3: return Icons.apps;
+      default: return Icons.view_stream;
+    }
+  }
+
+  // Вычисляет целевое смещение для заданного режима
+  double _calculateOffset(int mode) {
     final now = DateTime.now();
     final yearIndex = calendarYears.indexOf(now.year);
-    if (yearIndex == -1) return;
-    const double monthHeight = 300.0;
-    const double yearHeaderHeight = 70.0;
-    final offset = yearIndex * (12 * monthHeight + yearHeaderHeight) +
-        (now.month - 1) * monthHeight;
-    _scrollController.jumpTo(offset);
+    if (yearIndex == -1) return 0;
+
+    const double yearLabelHeight = 48.0;
+    const double yearBottomPadding = 16.0;
+    const double listTopPadding = 8.0;
+
+    double monthHeight;
+    int monthsPerRow;
+    switch (mode) {
+      case 2:
+        monthHeight = 180.0;
+        monthsPerRow = 2;
+        break;
+      case 3:
+        monthHeight = 125.0;
+        monthsPerRow = 3;
+        break;
+      default:
+        monthHeight = 355.0;
+        monthsPerRow = 1;
+    }
+
+    final rowsPerYear = (12 / monthsPerRow).ceil();
+    final yearTotalHeight = yearLabelHeight + rowsPerYear * monthHeight + yearBottomPadding;
+    final yearStart = listTopPadding + yearIndex * yearTotalHeight;
+
+    if (mode == 3) {
+      return yearStart;
+    } else if (mode == 2) {
+      final currentRowIndex = ((now.month - 1) / monthsPerRow).floor();
+      final targetRowIndex = (currentRowIndex - 1).clamp(0, rowsPerYear - 1);
+      return yearStart + yearLabelHeight + targetRowIndex * monthHeight;
+    } else {
+      final rowIndex = ((now.month - 1) / monthsPerRow).floor();
+      return yearStart + yearLabelHeight + rowIndex * monthHeight;
+    }
+  }
+
+  void _scrollToCurrentMonth({int? forMode}) {
+    if (!_scrollController.hasClients) return;
+    final offset = _calculateOffset(forMode ?? _calendarViewMode);
+    _scrollController.jumpTo(
+      offset.clamp(0.0, _scrollController.position.maxScrollExtent),
+    );
   }
 
   void _onDaySelected(DayData dayData) {
@@ -269,27 +343,111 @@ class CalendarScreenState extends State<CalendarScreen> {
     widget.onDayRecordUpdated(dayData, newRecord);
   }
 
+  Widget _buildHeader(BuildContext context) {
+    final loc = AppLocalizations.of(context);
+    final isPositive = widget.progressDays >= 0;
+    final color = isPositive ? Colors.greenAccent : Colors.pinkAccent;
+    final absValue = widget.progressDays.abs();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Очки слева
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    '$absValue',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    loc.translate('progress_unit'),
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
+                  ),
+                ],
+              ),
+              Text(
+                isPositive
+                    ? loc.translate('progress_label_positive')
+                    : loc.translate('progress_label_negative'),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.white.withOpacity(0.6),
+                ),
+              ),
+            ],
+          ),
+          const Spacer(),
+          // Кнопка переключения режима
+          GestureDetector(
+            onTap: () {
+              final newMode = _calendarViewMode == 3 ? 1 : _calendarViewMode + 1;
+              _setViewMode(newMode);
+            },
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.2),
+              ),
+              child: Icon(
+                _viewModeIcon,
+                color: Colors.white,
+                size: 18,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        bottom: false, // Не добавляем отступ снизу
+        bottom: false,
         child: GradientBackground(
-          child: Scrollbar(
-            controller: _scrollController,
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              itemCount: _years.length,
-              itemBuilder: (context, index) {
-                return YearSection(
-                  year: _years[index],
-                  daysData: widget.daysData,
-                  onDaySelected: _onDaySelected,
-                  onDayLongPressed: _onDayLongPressed,
-                );
-              },
-            ),
+          child: Column(
+            children: [
+              _buildHeader(context),
+              Expanded(
+                child: Scrollbar(
+                  controller: _scrollController,
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    itemCount: _years.length,
+                    itemBuilder: (context, index) {
+                      return YearSection(
+                        year: _years[index],
+                        daysData: widget.daysData,
+                        onDaySelected: _onDaySelected,
+                        onDayLongPressed: _onDayLongPressed,
+                        calendarViewMode: _calendarViewMode,
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

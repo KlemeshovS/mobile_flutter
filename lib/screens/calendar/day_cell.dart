@@ -12,6 +12,8 @@ class DayCell extends StatelessWidget {
   final Map<String, DayRecord> daysData;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
+  final double fontSize;
+  final double cellPadding;
 
   const DayCell({
     super.key,
@@ -21,6 +23,8 @@ class DayCell extends StatelessWidget {
     required this.daysData,
     required this.onTap,
     required this.onLongPress,
+    this.fontSize = 14,
+    this.cellPadding = 3.0,
   });
 
   DayData get dayData => DayData(day: day, month: month, year: year);
@@ -39,58 +43,64 @@ class DayCell extends StatelessWidget {
     return daysData[dayData.key];
   }
 
+  // Цвет края градиента для алкоголя (совпадает со Swift)
+  Color _alcoholEdgeColor(DrinkLevel level) {
+    switch (level) {
+      case DrinkLevel.little: return const Color(0xFFFF0072);
+      case DrinkLevel.medium: return const Color(0xFF9126EF);
+      case DrinkLevel.heavy:  return const Color(0xFF482FED);
+      default: return Colors.transparent;
+    }
+  }
+
+  RadialGradient _sportAlcoholGradient(DrinkLevel level) {
+    final edge = _alcoholEdgeColor(level);
+    return RadialGradient(
+      colors: [
+        const Color(0xFFC7FF00),              // центр — зелёный
+        const Color(0xFFC7FF00),
+        Color(0xFFC7FF00).withOpacity(0.7),   // переход
+        edge.withOpacity(0.5),                // край — цвет алкоголя
+      ],
+      stops: const [0.0, 0.4, 0.65, 1.0],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final record = dayRecord;
 
-    // Определяем параметры отображения
     Color? backgroundColor;
-    Color? borderColor;
-    double borderWidth = 0;
+    RadialGradient? gradient;
 
     if (record != null) {
-      if (record.drinkLevel == DrinkLevel.little && record.hasSport) {
-        backgroundColor = Color(0xFFC7FF00).withOpacity(0.4);
-        borderColor = Color(0xFFF7B0BB);
-        borderWidth = 2.0;
-      } else if (record.drinkLevel == DrinkLevel.medium && record.hasSport) {
-        backgroundColor = Color(0xFFC7FF00).withOpacity(0.4);
-        borderColor = Color(0xFFEA0505);
-        borderWidth = 2.0;
-      } else if (record.drinkLevel == DrinkLevel.heavy && record.hasSport) {
-        backgroundColor = Color(0xFFC7FF00).withOpacity(0.4);
-        borderColor = Color(0xFF9C27B0);
-        borderWidth = 2.0;
-      } else if (record.hasSport) {
-        backgroundColor = Color(0xFFC7FF00).withOpacity(0.4);
-      } else if (record.drinkLevel != DrinkLevel.none) {
-        // Алкоголь (без спорта)
-        backgroundColor = record.drinkLevel.color.withOpacity(0.7);
+      final hasSport = record.hasSport;
+      final level = record.drinkLevel;
+
+      if (hasSport && level != DrinkLevel.none && level != DrinkLevel.unknown) {
+        // Спорт + алкоголь: радиальный градиент
+        gradient = _sportAlcoholGradient(level);
+      } else if (hasSport) {
+        backgroundColor = const Color(0xFFC7FF00).withOpacity(0.4);
+      } else if (level != DrinkLevel.none && level != DrinkLevel.unknown) {
+        backgroundColor = level.color; // opacity уже вшит в drink_level.dart
       }
     }
 
-    // Для сегодняшнего дня добавляем или изменяем обводку
-    if (isToday) {
-      borderColor = Color(0xFF8B5CF6); // Фиолетовый для сегодня
-      borderWidth = 2.0;
-    }
-
-    // Если нет записи, но сегодняшний день
-    if (record == null && isToday) {
-      backgroundColor = Color(0xFF8B5CF6).withOpacity(0.1);
+    // Сегодняшний день без записи — только голубой кружок
+    if (isToday && record == null) {
+      backgroundColor = Colors.blue.withOpacity(0.1);
     }
 
     return GestureDetector(
       onTap: isFuture ? null : onTap,
       onLongPress: isFuture ? null : onLongPress,
       child: Container(
-        margin: EdgeInsets.all(3),
+        margin: EdgeInsets.all(cellPadding),
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: backgroundColor ?? Colors.transparent,
-          border: borderColor != null
-              ? Border.all(color: borderColor!, width: borderWidth)
-              : null,
+          color: gradient != null ? null : (backgroundColor ?? Colors.transparent),
+          gradient: gradient,
         ),
         child: Center(
           child: Text(
@@ -98,7 +108,7 @@ class DayCell extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'Inter',
               color: _getTextColor(record),
-              fontSize: 14,
+              fontSize: fontSize,
               fontWeight: FontWeight.w400,
             ),
           ),
@@ -108,25 +118,8 @@ class DayCell extends StatelessWidget {
   }
 
   Color _getTextColor(DayRecord? record) {
-    // Будущие даты - серый
-    if (isFuture) {
-      return Colors.grey[500]!;
-    }
-
-    // Для дней с записью - черный текст (хорошая читаемость)
-    if (record != null) {
-      if ((record.drinkLevel == DrinkLevel.little ||
-          record.drinkLevel == DrinkLevel.medium ||
-          record.drinkLevel == DrinkLevel.heavy) && record.hasSport) {
-        return Colors.black;
-      } else if (record.hasSport) {
-        return Colors.black;
-      } else if (record.drinkLevel != DrinkLevel.none) {
-        return Colors.black;
-      }
-    }
-
-    // Обычные дни и сегодняшний день без записи - черный
+    if (isFuture) return Colors.grey[500]!;
+    if (record != null) return Colors.black;
     return Colors.black;
   }
 }

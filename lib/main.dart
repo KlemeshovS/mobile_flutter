@@ -512,6 +512,7 @@ class MainAppState extends State<MainApp> {
                       daysData: _daysData,
                       onDayRecordUpdated: _updateDayRecord,
                       initialScrollOffset: widget.initialScrollOffset,
+                      progressDays: _progressDays,
                     ),
                     StatsScreen(
                       key: _statsKey,
