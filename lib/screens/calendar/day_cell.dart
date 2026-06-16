@@ -55,6 +55,18 @@ class DayCell extends StatelessWidget {
 
   RadialGradient _sportAlcoholGradient(DrinkLevel level) {
     final edge = _alcoholEdgeColor(level);
+    // mode 3 (3 колонки, весь год) — усиленный контраст, как в Swift CompactDayCell
+    if (fontSize <= 7) {
+      return RadialGradient(
+        colors: [
+          const Color(0xFFC7FF00),
+          Color(0xFFC7FF00).withOpacity(0.7),
+          Color(0xFFC7FF00).withOpacity(0.3),
+          edge.withOpacity(0.75),
+        ],
+        stops: const [0.0, 0.33, 0.65, 1.0],
+      );
+    }
     return RadialGradient(
       colors: [
         const Color(0xFFC7FF00),              // центр — зелёный
