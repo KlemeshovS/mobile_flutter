@@ -325,6 +325,9 @@ class AchievementManager {
     Achievement(id: 'sober_month_10', titleKey: 'ach_sober_month_10_title', descriptionKey: 'ach_sober_month_10_desc', type: AchievementType.soberMonth, requiredValue: 10),
     Achievement(id: 'sober_month_11', titleKey: 'ach_sober_month_11_title', descriptionKey: 'ach_sober_month_11_desc', type: AchievementType.soberMonth, requiredValue: 11),
     Achievement(id: 'sober_month_12', titleKey: 'ach_sober_month_12_title', descriptionKey: 'ach_sober_month_12_desc', type: AchievementType.soberMonth, requiredValue: 12),
+
+    // Ачивка за отзыв в Google Play (ручная разблокировка)
+    Achievement(id: 'left_review', titleKey: 'ach_review_title', descriptionKey: 'ach_review_desc', type: AchievementType.leftReview, requiredValue: 0),
   ];
   List<Achievement> get achievements => _currentAchievements;
 
@@ -415,7 +418,19 @@ class AchievementManager {
         return _countDrinkingDaysInYear(daysData) >= ach.requiredValue;
       case AchievementType.soberMonth:
         return _checkSoberMonth(ach.requiredValue, daysData);
+      case AchievementType.leftReview:
+        return false; // разблокируется только вручную через unlockReviewAchievement()
     }
+  }
+
+  /// Вызвать после того как пользователь нажал «Оценить» и перешёл в Google Play.
+  Future<Achievement?> unlockReviewAchievement() async {
+    final index = _currentAchievements.indexWhere((a) => a.id == 'left_review');
+    if (index == -1 || _currentAchievements[index].isUnlocked) return null;
+    _currentAchievements[index].isUnlocked = true;
+    _currentAchievements[index].unlockDate = DateTime.now();
+    await _saveAchievements();
+    return _currentAchievements[index];
   }
 
   bool _checkMilestoneCondition(Achievement ach, int progressDays) {
@@ -443,6 +458,8 @@ class AchievementManager {
           changed = true;
           print('🎉 Milestone разблокирована: ${ach.id}');
         }
+      } else if (ach.type == AchievementType.leftReview) {
+        // Ручная ачивка — никогда не перезаблокировывать автоматически
       } else {
         // Для остальных типов: полная синхронизация
         final shouldUnlock = await _checkAchievement(ach, daysData);
@@ -577,6 +594,7 @@ class AchievementManager {
       AchievementType.soberMonth: 6,
       AchievementType.uniqueEvent: 7,
       AchievementType.milestone: 8,
+      AchievementType.leftReview: 9,
     };
 
     final typeCompare = order[a.type]!.compareTo(order[b.type]!);

@@ -47,6 +47,7 @@ enum AchievementType {
   soberDaysInYear,
   drinkingDaysInYear,
   soberMonth,
+  leftReview,
 }
 
 class Achievement {

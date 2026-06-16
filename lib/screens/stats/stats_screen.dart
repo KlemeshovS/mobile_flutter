@@ -443,6 +443,8 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
           'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
         final monthName = months[achievement.requiredValue - 1];
         return 'Трезвый $monthName';
+      case AchievementType.leftReview:
+        return localizations.translate('ach_requirement_review');
     }
   }
 
