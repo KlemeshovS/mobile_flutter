@@ -121,12 +121,22 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
     setState(() => _isLoadingCalendar = true);
     try {
       final cal = await UserAPIService().getFriendCalendar(token, widget.userId);
-      // Вычисляем статус из данных календаря
+      // Вычисляем статус из данных календаря.
+      // Ключи с сервера 0-based ("2024-0-15"), а DayData.key ожидает 1-based ("2024-1-15").
       UserStatus? status;
       if (!cal.isEmpty) {
-        final records = cal.days.map(
-          (key, value) => MapEntry(key, DayRecord.fromLegacy(value)),
-        );
+        final records = <String, DayRecord>{};
+        for (final entry in cal.days.entries) {
+          final parts = entry.key.split('-');
+          String convertedKey = entry.key;
+          if (parts.length == 3) {
+            final month = int.tryParse(parts[1]);
+            if (month != null) {
+              convertedKey = '${parts[0]}-${month + 1}-${parts[2]}';
+            }
+          }
+          records[convertedKey] = DayRecord.fromLegacy(entry.value);
+        }
         status = UserStatusManager.calculateStatus(records);
       }
       setState(() {
