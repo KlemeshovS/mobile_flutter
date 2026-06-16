@@ -429,6 +429,29 @@ class MainMenuContent extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
+          // Оставить отзыв
+          _buildMenuItem(
+            icon: Icons.star_rounded,
+            title: localizations.translate('menu_rate_app_title'),
+            subtitle: localizations.translate('menu_rate_app_subtitle'),
+            gradient: const [Color(0xFFFFD700), Color(0xFFFFAA00)],
+            onTap: () async {
+              Navigator.of(context).pop();
+              const packageName = 'com.tritan.wobbly_flutter';
+              final url = 'market://details?id=$packageName';
+              if (await canLaunch(url)) {
+                await launch(url);
+              } else {
+                final webUrl = 'https://play.google.com/store/apps/details?id=$packageName';
+                if (await canLaunch(webUrl)) {
+                  await launch(webUrl);
+                }
+              }
+              await AchievementManager().unlockReviewAchievement();
+            },
+          ),
+          const SizedBox(height: 12),
+
           // О приложении
           _buildMenuItem(
             icon: Icons.info,

@@ -123,6 +123,8 @@ class AppLocalizations {
       'menu_tg_title': 'Write in Telegram',
       'menu_achievements_title': 'Achievements',
       'menu_version_title': 'Version',
+      'menu_rate_app_title': 'Rate the App',
+      'menu_rate_app_subtitle': 'Leave a review on Google Play',
       'about': 'About',
       'back': 'Back',
       'WOBBLY': 'WOBBLY',
@@ -543,6 +545,10 @@ class AppLocalizations {
       'ach_sober_month_12_title': 'Office Rebel',
       'ach_sober_month_12_desc': 'December. Corporate parties with cola and camera. You remember everything. HR is suspicious. But you\'re clean.',
 
+      'ach_review_title': 'Connoisseur of Fine Things',
+      'ach_review_desc': 'You left a review. Not because you\'re nice. Because you want someone else to survive this too. That\'s almost altruism. Almost.',
+      'ach_requirement_review': 'Leave a review in Google Play',
+
       'no_achievements_yet': 'No achievements yet',
 
       //Окно оценки
@@ -756,6 +762,8 @@ class AppLocalizations {
       'menu_tg_title': 'Написать в Telegram',
       'menu_achievements_title': 'Достижений',
       'menu_version_title': 'Версия',
+      'menu_rate_app_title': 'Оценить приложение',
+      'menu_rate_app_subtitle': 'Оставить отзыв в Google Play',
       'about': 'О приложении',
       'back': 'Назад',
       'WOBBLY': 'WOBBLY',
@@ -1174,6 +1182,10 @@ class AppLocalizations {
       'ach_sober_month_11_desc': '4 ноября — День народного единства. Ты един со своей трезвостью. Это тоже единство. Считается.',
       'ach_sober_month_12_title': 'Офисный бунтарь',
       'ach_sober_month_12_desc': 'Декабрь. Корпоративы с колой и камерой. Ты всё помнишь. HR подозревает. Но ты чист.',
+
+      'ach_review_title': 'Любитель прекрасного',
+      'ach_review_desc': 'Ты оставил отзыв. Не потому что добрый. А потому что хочешь, чтобы кто-то ещё тоже это пережил. Это почти альтруизм. Почти.',
+      'ach_requirement_review': 'Оставить отзыв в Google Play',
 
       'no_achievements_yet': 'Пока нет достижений',
 

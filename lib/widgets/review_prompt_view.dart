@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../utils/localization.dart';
 import '../utils/review_manager.dart';
+import '../utils/achievement_manager.dart';
 import 'info_sheet.dart';
 
 class ReviewPromptView extends StatefulWidget {
@@ -40,6 +41,7 @@ class ReviewPromptView extends StatefulWidget {
             onRate: () async {
               Navigator.of(context).pop();
               await ReviewManager().didRate();
+              await AchievementManager().unlockReviewAchievement();
               const packageName = 'com.tritan.wobbly_flutter'; // Ссылка на приложение в google play
               final url = 'market://details?id=$packageName';
               if (await canLaunch(url)) {
