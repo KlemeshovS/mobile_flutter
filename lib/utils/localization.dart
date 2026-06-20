@@ -641,6 +641,26 @@ class AppLocalizations {
       'friend_stats_title': 'Statistics',
       'friend_stats_as_of': 'As of %s',
 
+      // MonthlyAverageWidget
+      'monthly_average_title': 'Monthly Average',
+      'monthly_mode_alcohol': 'Alcohol',
+      'monthly_mode_sport': 'Sport',
+      'monthly_mode_combined': 'Both',
+      'monthly_avg_prefix': 'Avg.',
+      'monthly_legend_alcohol': 'Avg alcohol days per month',
+      'monthly_legend_sport': 'Avg sport days per month',
+
+      // AlcoholChartWidget
+      'alcohol_chart_clean_month': 'Clean month — no alcohol!',
+      'alcohol_chart_legend_avg': 'Past months average',
+      'alcohol_chart_info_title': 'How to read the chart',
+      'alcohol_chart_info_body': 'The chart shows your cumulative alcohol score for the current month.\n\nPoints are based on intake level:\n• A little — 1 pt\n• Moderate — 3 pts\n• Heavy — 5 pts\n\nThe higher the line, the more alcohol this month.',
+      'alcohol_chart_info_ok': 'Got it',
+      'alcohol_drink_as_usual': 'You drink as usual',
+      'alcohol_drink_more': 'You drink more than usual',
+      'alcohol_drink_lot_more': 'You drink a lot more than usual',
+      'alcohol_drink_less': 'You drink less than usual',
+      'alcohol_drink_lot_less': 'You drink a lot less than usual',
 
     },
     'ru': {
@@ -1276,6 +1296,27 @@ class AppLocalizations {
       'friend_calendar_empty': 'У этого пользователя пока нет данных',
       'friend_stats_title': 'Статистика',
       'friend_stats_as_of': 'Данные на %s',
+
+      // MonthlyAverageWidget
+      'monthly_average_title': 'Среднее за месяц',
+      'monthly_mode_alcohol': 'Алкоголь',
+      'monthly_mode_sport': 'Спорт',
+      'monthly_mode_combined': 'Общее',
+      'monthly_avg_prefix': 'В среднем',
+      'monthly_legend_alcohol': 'Среднее кол-во алкогольных дней в месяце',
+      'monthly_legend_sport': 'Среднее кол-во спортивных дней в месяце',
+
+      // AlcoholChartWidget
+      'alcohol_chart_clean_month': 'Чистый месяц — без алкоголя!',
+      'alcohol_chart_legend_avg': 'Среднее за прошлые месяцы',
+      'alcohol_chart_info_title': 'Как читать график',
+      'alcohol_chart_info_body': 'График показывает накопленное количество баллов за текущий месяц.\n\nБаллы начисляются по степени употребления:\n• Чуть-чуть — 1 балл\n• Средне — 3 балла\n• Всё плохо — 5 баллов\n\nЧем выше линия, тем больше алкоголя за месяц.',
+      'alcohol_chart_info_ok': 'Понятно',
+      'alcohol_drink_as_usual': 'Вы пьёте как обычно',
+      'alcohol_drink_more': 'Вы пьёте больше обычного',
+      'alcohol_drink_lot_more': 'Вы пьёте сильно больше обычного',
+      'alcohol_drink_less': 'Вы пьёте меньше обычного',
+      'alcohol_drink_lot_less': 'Вы пьёте сильно меньше обычного',
 
     },
   };
