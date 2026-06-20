@@ -25,6 +25,8 @@ import 'package:wobbly/models/achievement.dart';
 import 'package:wobbly/services/score_sync_manager.dart';
 import 'package:wobbly/screens/ratings/ratings_screen.dart';
 import 'package:wobbly/widgets/week_stats_view.dart';
+import 'package:wobbly/widgets/monthly_average_widget.dart';
+import 'package:wobbly/widgets/alcohol_chart_widget.dart';
 
 
 // Класс для хранения статистики за год (оставлен как был)
@@ -554,6 +556,16 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
                               ),
                             ],
                           ),
+                        ),
+                        const SizedBox(height: 16),
+                        MonthlyAverageWidget(
+                          daysData: widget.daysData,
+                          selectedYear: _selectedYear,
+                        ),
+                        const SizedBox(height: 16),
+                        AlcoholChartWidget(
+                          daysData: widget.daysData,
+                          selectedYear: _selectedYear,
                         ),
                         const SizedBox(height: 16),
                         AdaptiveSobrietyFactsView(soberDays: (_calculateSoftSoberStreak() - 1).clamp(0, 9999)),

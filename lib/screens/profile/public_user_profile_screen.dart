@@ -12,6 +12,9 @@ import 'package:wobbly/models/user_status.dart';
 import 'package:wobbly/models/day_record.dart';
 import 'package:intl/intl.dart';
 import 'package:wobbly/models/api_models.dart';
+import 'package:wobbly/utils/data_manager.dart';
+import 'package:wobbly/widgets/monthly_average_widget.dart';
+import 'package:wobbly/widgets/alcohol_chart_widget.dart';
 
 class PublicUserProfileScreen extends StatefulWidget {
   final int userId;
@@ -55,6 +58,10 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
   bool _calendarNotFriends = false;
   UserStatus? _friendStatus;
 
+  // Мои данные для виджета сравнения
+  Map<String, DayRecord> _myDaysData = {};
+  String _myUsername = '';
+
   Future<void> _loadActualScore() async {
     try {
       final top = await UserAPIService().fetchTop100();
@@ -86,6 +93,39 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
     _loadFollowStatus();
     _loadFriendCalendar();
     _loadActualScore();
+    _loadMyData();
+  }
+
+  Future<void> _loadMyData() async {
+    final data = await DataManager().loadData();
+    if (!mounted) return;
+    setState(() => _myDaysData = data);
+
+    final token = SessionManager().accessToken;
+    if (token == null) return;
+    try {
+      final session = await UserAPIService().getSession(token);
+      if (!mounted) return;
+      setState(() => _myUsername = session.username ?? '');
+    } catch (_) {}
+  }
+
+  /// Конвертирует raw-данные сервера (0-based месяц, int значения) → DayRecord с 1-based ключами.
+  /// Сервер: "2024-5-15" = июнь (0-based). DayData.key формат: "2024-6-15" = июнь (1-based).
+  Map<String, DayRecord> _friendDayRecords() {
+    final cal = _friendCalendar;
+    if (cal == null) return {};
+    return cal.days.map((key, value) {
+      final parts = key.split('-');
+      String convertedKey = key;
+      if (parts.length == 3) {
+        final month0 = int.tryParse(parts[1]);
+        if (month0 != null) {
+          convertedKey = '${parts[0]}-${month0 + 1}-${parts[2]}';
+        }
+      }
+      return MapEntry(convertedKey, DayRecord.fromLegacy(value));
+    });
   }
 
   Future<void> _loadFollowStatus() async {
@@ -374,6 +414,19 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
                 if (_status == _FollowStatus.mutual) ...[
                   const SizedBox(height: 24),
                   FriendStatsView(calendar: _friendCalendar!),
+                  const SizedBox(height: 16),
+                  MonthlyAverageWidget(
+                    daysData: _friendDayRecords(),
+                    selectedYear: DateTime.now().year,
+                    username: widget.username,
+                  ),
+                  const SizedBox(height: 16),
+                  AlcoholChartWidget(
+                    daysData: _friendDayRecords(),
+                    comparisonData: _myDaysData.isNotEmpty ? _myDaysData : null,
+                    primaryLabel: widget.username,
+                    comparisonLabel: _myUsername.isNotEmpty ? _myUsername : 'Я',
+                  ),
                 ],
               ],
             )
