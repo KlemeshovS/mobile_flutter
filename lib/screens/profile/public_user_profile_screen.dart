@@ -15,6 +15,7 @@ import 'package:wobbly/models/api_models.dart';
 import 'package:wobbly/utils/data_manager.dart';
 import 'package:wobbly/widgets/monthly_average_widget.dart';
 import 'package:wobbly/widgets/alcohol_chart_widget.dart';
+import 'package:wobbly/widgets/sport_correlation_widget.dart';
 
 class PublicUserProfileScreen extends StatefulWidget {
   final int userId;
@@ -90,10 +91,14 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _loadFollowStatus();
-    _loadFriendCalendar();
+    _loadAll();
+  }
+
+  Future<void> _loadAll() async {
+    await _loadMyData();
+    await _loadFollowStatus();
+    await _loadFriendCalendar();
     _loadActualScore();
-    _loadMyData();
   }
 
   Future<void> _loadMyData() async {
@@ -357,6 +362,7 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: _buildCalendarSection(loc),
             ),
+            const SizedBox(height: 40),
           ],
         ),
       ),
@@ -419,6 +425,11 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
                     daysData: _friendDayRecords(),
                     selectedYear: DateTime.now().year,
                     username: widget.username,
+                  ),
+                  const SizedBox(height: 16),
+                  SportCorrelationWidget(
+                    daysData: _friendDayRecords(),
+                    selectedYear: DateTime.now().year,
                   ),
                   const SizedBox(height: 16),
                   AlcoholChartWidget(

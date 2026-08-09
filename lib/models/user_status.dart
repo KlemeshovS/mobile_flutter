@@ -150,7 +150,7 @@ class UserStatusManager {
             mediumHeavyDays++;
           }
         }
-        if (record.hasSport) {
+        if (record.hasSport && record.drinkLevel == DrinkLevel.none) {
           sportDays++;
         }
       }

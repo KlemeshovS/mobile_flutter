@@ -213,12 +213,6 @@ class CalendarScreenState extends State<CalendarScreen> {
 
     _loadViewMode();
 
-    // Если смещение не было передано (старый запуск), прокручиваем после сборки
-    if (widget.initialScrollOffset == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _scrollToCurrentMonth();
-      });
-    }
     // Добавляем вызов мотивационного сообщения после сборки виджета
     WidgetsBinding.instance.addPostFrameCallback((_) {
       maybeShowMotivation();
@@ -227,11 +221,15 @@ class CalendarScreenState extends State<CalendarScreen> {
 
   Future<void> _loadViewMode() async {
     final prefs = await SharedPreferences.getInstance();
-    if (mounted) {
-      setState(() {
-        _calendarViewMode = prefs.getInt('calendarViewMode') ?? 1;
-      });
-    }
+    if (!mounted) return;
+    final mode = prefs.getInt('calendarViewMode') ?? 1;
+    setState(() {
+      _calendarViewMode = mode;
+    });
+    // После того как режим применён и виджет перестроен — прокручиваем точно
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToCurrentMonth();
+    });
   }
 
   Future<void> _setViewMode(int mode) async {
@@ -255,6 +253,34 @@ class CalendarScreenState extends State<CalendarScreen> {
     }
   }
 
+  // Вычисляет реальную высоту одного месяца с учётом ширины экрана.
+  // CalendarGrid использует AspectRatio(1:1) для ячеек, поэтому высота
+  // зависит от screenWidth.
+  double _monthHeight(int mode, double screenWidth) {
+    // Ширина ListView-контента (padding 16 с каждой стороны)
+    final listWidth = screenWidth - 32.0;
+    switch (mode) {
+      case 2:
+        // 2 месяца в ряд; margin horiz 2, padding horiz 5 с каждой стороны
+        final gridW = listWidth / 2.0 - 14.0;
+        final cellW = gridW / 7.0;
+        // 16 (margin+pad) + 15 (имя) + 11.6 (строка дней нед.) + 6*cell
+        return 42.6 + 6.0 * cellW;
+      case 3:
+        // 3 месяца в ряд
+        final gridW = listWidth / 3.0 - 14.0;
+        final cellW = gridW / 7.0;
+        // 16 + 12.6 + 9.2 + 6*cell
+        return 37.8 + 6.0 * cellW;
+      default:
+        // 1 месяц в ряд; margin horiz 4, padding horiz 12 с каждой стороны
+        final gridW = listWidth - 32.0;
+        final cellW = gridW / 7.0;
+        // 36 (margin+pad) + 28.8 (имя) + 15.2 (строка дней нед.) + 6*cell
+        return 80.0 + 6.0 * cellW;
+    }
+  }
+
   // Вычисляет целевое смещение для заданного режима
   double _calculateOffset(int mode) {
     final now = DateTime.now();
@@ -265,21 +291,10 @@ class CalendarScreenState extends State<CalendarScreen> {
     const double yearBottomPadding = 16.0;
     const double listTopPadding = 8.0;
 
-    double monthHeight;
-    int monthsPerRow;
-    switch (mode) {
-      case 2:
-        monthHeight = 180.0;
-        monthsPerRow = 2;
-        break;
-      case 3:
-        monthHeight = 125.0;
-        monthsPerRow = 3;
-        break;
-      default:
-        monthHeight = 355.0;
-        monthsPerRow = 1;
-    }
+    final screenWidth = MediaQuery.of(context).size.width;
+    final monthHeight = _monthHeight(mode, screenWidth);
+
+    final int monthsPerRow = mode == 2 ? 2 : (mode == 3 ? 3 : 1);
 
     final rowsPerYear = (12 / monthsPerRow).ceil();
     final yearTotalHeight = yearLabelHeight + rowsPerYear * monthHeight + yearBottomPadding;

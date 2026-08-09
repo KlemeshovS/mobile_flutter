@@ -27,6 +27,7 @@ import 'package:wobbly/screens/ratings/ratings_screen.dart';
 import 'package:wobbly/widgets/week_stats_view.dart';
 import 'package:wobbly/widgets/monthly_average_widget.dart';
 import 'package:wobbly/widgets/alcohol_chart_widget.dart';
+import 'package:wobbly/widgets/sport_correlation_widget.dart';
 
 
 // Класс для хранения статистики за год (оставлен как был)
@@ -447,6 +448,8 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
         return 'Трезвый $monthName';
       case AchievementType.leftReview:
         return localizations.translate('ach_requirement_review');
+      case AchievementType.noHangoverStreak:
+        return '${achievement.requiredValue} дней без тяжёлого похмелья';
     }
   }
 
@@ -556,6 +559,11 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
                               ),
                             ],
                           ),
+                        ),
+                        const SizedBox(height: 16),
+                        SportCorrelationWidget(
+                          daysData: widget.daysData,
+                          selectedYear: _selectedYear,
                         ),
                         const SizedBox(height: 16),
                         MonthlyAverageWidget(
