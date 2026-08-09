@@ -326,6 +326,56 @@ class AchievementManager {
     Achievement(id: 'sober_month_11', titleKey: 'ach_sober_month_11_title', descriptionKey: 'ach_sober_month_11_desc', type: AchievementType.soberMonth, requiredValue: 11),
     Achievement(id: 'sober_month_12', titleKey: 'ach_sober_month_12_title', descriptionKey: 'ach_sober_month_12_desc', type: AchievementType.soberMonth, requiredValue: 12),
 
+    // Ачивки "без похмелья" (без medium/heavy N дней подряд)
+    Achievement(
+      id: 'no_hangover_90',
+      titleKey: 'ach_no_hangover_90_title',
+      descriptionKey: 'ach_no_hangover_90_desc',
+      type: AchievementType.noHangoverStreak,
+      requiredValue: 90,
+    ),
+    Achievement(
+      id: 'no_hangover_180',
+      titleKey: 'ach_no_hangover_180_title',
+      descriptionKey: 'ach_no_hangover_180_desc',
+      type: AchievementType.noHangoverStreak,
+      requiredValue: 180,
+    ),
+    Achievement(
+      id: 'no_hangover_365',
+      titleKey: 'ach_no_hangover_365_title',
+      descriptionKey: 'ach_no_hangover_365_desc',
+      type: AchievementType.noHangoverStreak,
+      requiredValue: 365,
+    ),
+
+    // Уникальные ачивки
+    Achievement(
+      id: 'sober_new_year',
+      titleKey: 'ach_unique_sober_ny_title',
+      descriptionKey: 'ach_unique_sober_ny_desc',
+      type: AchievementType.uniqueEvent,
+      requiredValue: 0,
+      event: UniqueEvent.soberNewYear,
+    ),
+    Achievement(
+      id: 'sport_new_year',
+      titleKey: 'ach_unique_sport_ny_title',
+      descriptionKey: 'ach_unique_sport_ny_desc',
+      type: AchievementType.uniqueEvent,
+      requiredValue: 0,
+      event: UniqueEvent.sportNewYear,
+    ),
+
+    // Milestone — впадина Романш (пропущена)
+    Achievement(
+      id: 'milestone_7729_negative',
+      titleKey: 'ach_milestone_7729_negative_title',
+      descriptionKey: 'ach_milestone_7729_negative_desc',
+      type: AchievementType.milestone,
+      requiredValue: 7729,
+    ),
+
     // Ачивка за отзыв в Google Play (ручная разблокировка)
     Achievement(id: 'left_review', titleKey: 'ach_review_title', descriptionKey: 'ach_review_desc', type: AchievementType.leftReview, requiredValue: 0),
   ];
@@ -409,7 +459,7 @@ class AchievementManager {
       case AchievementType.sportCount:
         return _checkSportAchievement(ach.period!, ach.requiredValue, daysData);
       case AchievementType.uniqueEvent:
-        return false;
+        return _checkUniqueEvent(ach.event!, daysData);
       case AchievementType.milestone:
         return false;
       case AchievementType.soberDaysInYear:
@@ -420,6 +470,8 @@ class AchievementManager {
         return _checkSoberMonth(ach.requiredValue, daysData);
       case AchievementType.leftReview:
         return false; // разблокируется только вручную через unlockReviewAchievement()
+      case AchievementType.noHangoverStreak:
+        return _checkNoHangoverStreak(ach.requiredValue, daysData);
     }
   }
 
@@ -589,12 +641,13 @@ class AchievementManager {
       AchievementType.soberStreak: 1,
       AchievementType.drinkingStreak: 2,
       AchievementType.sportCount: 3,
-      AchievementType.soberDaysInYear: 4,
-      AchievementType.drinkingDaysInYear: 5,
-      AchievementType.soberMonth: 6,
-      AchievementType.uniqueEvent: 7,
-      AchievementType.milestone: 8,
-      AchievementType.leftReview: 9,
+      AchievementType.noHangoverStreak: 4,
+      AchievementType.soberDaysInYear: 5,
+      AchievementType.drinkingDaysInYear: 6,
+      AchievementType.soberMonth: 7,
+      AchievementType.uniqueEvent: 8,
+      AchievementType.milestone: 9,
+      AchievementType.leftReview: 10,
     };
 
     final typeCompare = order[a.type]!.compareTo(order[b.type]!);
@@ -695,6 +748,55 @@ class AchievementManager {
         record.drinkLevel == DrinkLevel.little_sport ||
         record.drinkLevel == DrinkLevel.medium_sport ||
         record.drinkLevel == DrinkLevel.heavy_sport;
+  }
+
+  // Стрик без "тяжёлых" дней (medium/heavy) — как в Swift noHangoverStreak
+  bool _checkNoHangoverStreak(int requiredDays, Map<String, DayRecord> daysData) {
+    if (daysData.isEmpty) return false;
+    final dates = daysData.keys.map(_parseDate).where((d) => d != null).cast<DateTime>().toList();
+    if (dates.isEmpty) return false;
+    dates.sort();
+    final firstDate = dates.first;
+    final today = DateTime.now();
+    final lastDate = DateTime(today.year, today.month, today.day);
+
+    int maxStreak = 0;
+    int currentStreak = 0;
+    DateTime current = firstDate;
+    while (!current.isAfter(lastDate)) {
+      final key = _dateToKey(current);
+      final record = daysData[key] ?? DayRecord();
+      final isHangover = record.drinkLevel == DrinkLevel.medium || record.drinkLevel == DrinkLevel.heavy;
+      if (isHangover) {
+        currentStreak = 0;
+      } else {
+        currentStreak++;
+        if (currentStreak > maxStreak) maxStreak = currentStreak;
+      }
+      current = current.add(const Duration(days: 1));
+    }
+    return maxStreak >= requiredDays;
+  }
+
+  // Уникальные события — трезвый/спортивный Новый год
+  bool _checkUniqueEvent(UniqueEvent event, Map<String, DayRecord> daysData) {
+    final now = DateTime.now();
+    final currentYear = now.year;
+    for (int year = currentYear - 3; year <= currentYear; year++) {
+      final dec31 = DateTime(year, 12, 31);
+      if (dec31.isAfter(now)) continue;
+      final key = '$year-12-31';
+      final record = daysData[key] ?? DayRecord();
+      switch (event) {
+        case UniqueEvent.soberNewYear:
+          if (!_isDrinkingDay(record)) return true;
+          break;
+        case UniqueEvent.sportNewYear:
+          if (record.hasSport) return true;
+          break;
+      }
+    }
+    return false;
   }
 
   bool _checkSoberMonth(int month, Map<String, DayRecord> daysData) {

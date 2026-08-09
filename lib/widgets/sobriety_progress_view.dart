@@ -336,22 +336,12 @@ class _SobrietyProgressViewState extends State<SobrietyProgressView>
             ],
           ),
 
-        // Вехи после 500
+        // Скроллируемый ряд глубин с научными фактами
         const SizedBox(height: 12),
-        Row(
-          children: SobrietyProgressCalculator.postNegativeMilestones.map((milestone) {
-            final isNext = nextMilestone == milestone;
-            final isCompleted = widget.progressDays.abs() >= milestone;
-
-            return Expanded(
-              child: PostNegativeMilestoneIndicator(
-                milestone: milestone,
-                isCompleted: isCompleted,
-                isNext: isNext,
-                title: '$milestone${_localize('negative_days_suffix')}',
-              ),
-            );
-          }).toList(),
+        MilestoneScrollRow(
+          milestones: const [202, 1642, 3800, 6066, 7729, 10047, 11022],
+          progressDays: widget.progressDays,
+          isPositive: false,
         ),
       ],
     );
@@ -497,21 +487,12 @@ class _SobrietyProgressViewState extends State<SobrietyProgressView>
             ],
           ),
 
-        // Вехи после года
+        // Скроллируемый ряд гор с научными фактами
         const SizedBox(height: 12),
-        Row(
-          children: SobrietyProgressCalculator.postYearMilestones.map((milestone) {
-            final isNext = nextMilestone == milestone;
-
-            return Expanded(
-              child: PostYearMilestoneIndicator(
-                milestone: milestone,
-                isCompleted: widget.progressDays >= milestone,
-                isNext: isNext,
-                title: '$milestone${_localize('positive_days_suffix')}',
-              ),
-            );
-          }).toList(),
+        MilestoneScrollRow(
+          milestones: const [1234, 1917, 3491, 4478, 4506, 4810, 5054, 5642, 7010, 8848],
+          progressDays: widget.progressDays,
+          isPositive: true,
         ),
       ],
     );
@@ -875,6 +856,223 @@ class PostNegativeMilestoneIndicator extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
         ),
       ],
+    );
+  }
+}
+// ────────────────────────────────────────────────────────────────
+// Scrollable row of mountain / depth milestones with tap popups
+// ────────────────────────────────────────────────────────────────
+
+class MilestoneScrollRow extends StatefulWidget {
+  final List<int> milestones;
+  final int progressDays;
+  final bool isPositive;
+
+  const MilestoneScrollRow({
+    super.key,
+    required this.milestones,
+    required this.progressDays,
+    this.isPositive = true,
+  });
+
+  @override
+  State<MilestoneScrollRow> createState() => _MilestoneScrollRowState();
+}
+
+class _MilestoneScrollRowState extends State<MilestoneScrollRow> {
+  final _scrollController = ScrollController();
+
+  static const double _itemWidth = 56.0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToNext());
+  }
+
+  void _scrollToNext() {
+    if (!_scrollController.hasClients) return;
+    final abs = widget.progressDays.abs();
+    final nextIdx = widget.milestones.indexWhere((m) => abs < m);
+    if (nextIdx < 0) return;
+    final viewportWidth = _scrollController.position.viewportDimension;
+    final offset = (nextIdx * _itemWidth) - (viewportWidth / 2) + (_itemWidth / 2);
+    _scrollController.jumpTo(
+      offset.clamp(0.0, _scrollController.position.maxScrollExtent),
+    );
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _showInfo(BuildContext context, int ms) {
+    final loc = AppLocalizations.of(context);
+    final suffix = loc.translate(
+        widget.isPositive ? 'positive_days_suffix' : 'negative_days_suffix');
+    final nameKey = widget.isPositive
+        ? 'ach_milestone_${ms}_title'
+        : 'ach_milestone_${ms}_negative_title';
+    final factKey = widget.isPositive
+        ? 'milestone_${ms}_fact'
+        : 'milestone_${ms}_negative_fact';
+
+    final title = '${loc.translate(nameKey)} $ms$suffix';
+    final body = loc.translate(factKey);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => SafeArea(
+        top: false,
+        bottom: true,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: const BoxDecoration(
+            color: Color(0xFF2D2B55),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                body,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 13,
+                  color: Colors.white.withOpacity(0.8),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
+    final abs = widget.progressDays.abs();
+    final suffix = loc.translate(
+        widget.isPositive ? 'positive_days_suffix' : 'negative_days_suffix');
+
+    return ShaderMask(
+      shaderCallback: (bounds) => const LinearGradient(
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+        colors: [Colors.black, Colors.black, Colors.transparent],
+        stops: [0.0, 0.82, 1.0],
+      ).createShader(bounds),
+      blendMode: BlendMode.dstIn,
+      child: SingleChildScrollView(
+        controller: _scrollController,
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: Row(
+          children: widget.milestones.map((ms) {
+            final isCompleted = abs >= ms;
+            return GestureDetector(
+              onTap: () => _showInfo(context, ms),
+              child: SizedBox(
+                width: _itemWidth,
+                child: _MilestoneScrollIndicator(
+                  milestone: ms,
+                  isCompleted: isCompleted,
+                  isPositive: widget.isPositive,
+                  suffix: suffix,
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+}
+
+class _MilestoneScrollIndicator extends StatelessWidget {
+  final int milestone;
+  final bool isCompleted;
+  final bool isPositive;
+  final String suffix;
+
+  const _MilestoneScrollIndicator({
+    required this.milestone,
+    required this.isCompleted,
+    required this.isPositive,
+    required this.suffix,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isPositive ? Colors.yellow : const Color(0xFFFF0072);
+    final icon = isPositive ? Icons.emoji_events : Icons.water_drop;
+    final outlineIcon =
+        isPositive ? Icons.emoji_events_outlined : Icons.water_drop_outlined;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 24,
+            height: 24,
+            child: Center(
+              child: isCompleted
+                  ? Icon(icon, size: 16, color: color)
+                  : Container(
+                      width: 16,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.3),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Icon(
+                        outlineIcon,
+                        size: 9,
+                        color: Colors.white.withOpacity(0.5),
+                      ),
+                    ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '$milestone$suffix',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 9,
+              fontWeight: isCompleted ? FontWeight.bold : FontWeight.normal,
+              color: isCompleted ? color : Colors.white.withOpacity(0.6),
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
     );
   }
 }
