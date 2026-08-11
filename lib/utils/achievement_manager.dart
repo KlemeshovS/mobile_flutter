@@ -780,13 +780,27 @@ class AchievementManager {
 
   // Уникальные события — трезвый/спортивный Новый год
   bool _checkUniqueEvent(UniqueEvent event, Map<String, DayRecord> daysData) {
+    if (daysData.isEmpty) return false;
     final now = DateTime.now();
     final currentYear = now.year;
+
+    // Дата начала использования приложения — самая ранняя запись в данных
+    final startDate = _getStartDate(daysData);
+    if (startDate == null) return false;
+
     for (int year = currentYear - 3; year <= currentYear; year++) {
       final dec31 = DateTime(year, 12, 31);
+      // Не проверяем будущие даты
       if (dec31.isAfter(now)) continue;
+      // Не проверяем даты раньше начала использования приложения
+      if (dec31.isBefore(startDate)) continue;
+
       final key = '$year-12-31';
-      final record = daysData[key] ?? DayRecord();
+      // Если записи нет — день не зафиксирован, пропускаем
+      // (пользователь мог не открывать приложение в этот день)
+      if (!daysData.containsKey(key)) continue;
+
+      final record = daysData[key]!;
       switch (event) {
         case UniqueEvent.soberNewYear:
           if (!_isDrinkingDay(record)) return true;
@@ -797,6 +811,18 @@ class AchievementManager {
       }
     }
     return false;
+  }
+
+  // Самая ранняя дата в данных пользователя
+  DateTime? _getStartDate(Map<String, DayRecord> daysData) {
+    DateTime? earliest;
+    for (final key in daysData.keys) {
+      final date = _parseDate(key);
+      if (date != null && (earliest == null || date.isBefore(earliest))) {
+        earliest = date;
+      }
+    }
+    return earliest;
   }
 
   bool _checkSoberMonth(int month, Map<String, DayRecord> daysData) {
