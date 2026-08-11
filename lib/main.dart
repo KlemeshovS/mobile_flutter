@@ -92,60 +92,49 @@ class _MyAppState extends State<MyApp> {
   void _onSplashComplete(Map<String, DayRecord>? data, bool isFirstLaunch) async {
     if (!mounted) return;
 
-    await _restoreSession();
-    await CalendarSyncManager().sync();
-    await CalendarSyncManager().pushToServer(); // принудительно отправляем после старта
-    await AppNotificationManager.shared.checkNewFollowers();
-    await AppNotificationManager.shared.checkNewAchievements();
-
-    // Перезагружаем данные после синхронизации
-    final freshData = await DataManager().loadData();
-    if (freshData.isNotEmpty) {
-      _loadedData = freshData;
-    }
+    // Только локальная инициализация сессии — без сети
+    await SessionManager().init();
 
     if (!mounted) return;
 
-    double? offset;
-    if (data != null) {
-      const double monthHeight = 300.0;
-      const double yearHeaderHeight = 70.0;
-      final now = DateTime.now();
-      final yearIndex = calendarYears.indexOf(now.year);
-      if (yearIndex != -1) {
-        offset = yearIndex * (12 * monthHeight + yearHeaderHeight) +
-            (now.month - 1) * monthHeight;
-      }
-    }
-
+    // Сразу показываем главный экран с локальными данными
     setState(() {
       _showSplash = false;
-      _loadedData = (_loadedData != null && _loadedData!.isNotEmpty)
-          ? _loadedData
-          : (data ?? {});
-      _initialScrollOffset = offset;
+      _loadedData = data ?? {};
       _isFirstLaunch = isFirstLaunch;
+      _initialScrollOffset = null; // CalendarScreen сам вычислит позицию через _scrollToCurrentMonth
     });
+
+    // Все сетевые операции — в фоне, не блокируют UI
+    _backgroundSync();
   }
 
-  Future<void> _restoreSession() async {
-    await SessionManager().init();
-    final session = SessionManager();
-    if (session.accessToken != null && session.refreshToken != null) {
-      // Проверяем, валиден ли ещё accessToken
-      try {
-        await UserAPIService().getSession(session.accessToken!);
-        // сессия жива
-      } catch (e) {
-        if (e is UserAPIError && e == UserAPIError.invalidToken) {
-          // Пробуем обновить
-          final success = await AuthService().refreshSession();
-          if (!success) {
-            // Если не удалось, остаёмся гостем
+  Future<void> _backgroundSync() async {
+    // Проверяем/обновляем сессию
+    try {
+      final session = SessionManager();
+      if (session.accessToken != null) {
+        try {
+          await UserAPIService().getSession(session.accessToken!);
+        } catch (e) {
+          if (e is UserAPIError && e == UserAPIError.invalidToken) {
+            await AuthService().refreshSession();
           }
         }
       }
-    }
+    } catch (_) {}
+
+    // Синхронизируем календарь
+    try {
+      await CalendarSyncManager().sync();
+      await CalendarSyncManager().pushToServer();
+    } catch (_) {}
+
+    // Проверяем уведомления
+    try {
+      await AppNotificationManager.shared.checkNewFollowers();
+      await AppNotificationManager.shared.checkNewAchievements();
+    } catch (_) {}
   }
 
   void _onTutorialComplete() async {
