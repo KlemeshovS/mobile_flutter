@@ -339,7 +339,7 @@ class _SobrietyProgressViewState extends State<SobrietyProgressView>
         // Скроллируемый ряд глубин с научными фактами
         const SizedBox(height: 12),
         MilestoneScrollRow(
-          milestones: const [202, 1642, 3800, 6066, 7729, 10047, 11022],
+          milestones: const [202, 1642, 3800, 6066, 7729, 10047, 11022, 20000],
           progressDays: widget.progressDays,
           isPositive: false,
         ),
@@ -490,7 +490,7 @@ class _SobrietyProgressViewState extends State<SobrietyProgressView>
         // Скроллируемый ряд гор с научными фактами
         const SizedBox(height: 12),
         MilestoneScrollRow(
-          milestones: const [1234, 1917, 3491, 4478, 4506, 4810, 5054, 5642, 7010, 8848],
+          milestones: const [1234, 1917, 3491, 4478, 4506, 4810, 5054, 5642, 7010, 8848, 21900],
           progressDays: widget.progressDays,
           isPositive: true,
         ),

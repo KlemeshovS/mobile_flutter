@@ -15,9 +15,9 @@ class SobrietyProgressCalculator {
   ];
 
   static const int maxNegativeDays = 500;
-  static const List<int> postYearMilestones = [1234, 4810, 5642, 7010, 8848];
+  static const List<int> postYearMilestones = [1234, 1917, 3491, 4478, 4506, 4810, 5054, 5642, 7010, 8848];
   static const List<int> negativeMilestones = [50, 100, 202, 300, 500];
-  static const List<int> postNegativeMilestones = [1642, 3800, 6066, 10047, 11022];
+  static const List<int> postNegativeMilestones = [1642, 3800, 6066, 7729, 10047, 11022];
   //1642 - байкал, 3800 - титаник, 202 - голубая дыра, 6066 - Атакамский желоб, 10047 - Жёлоб Кермадек
 
   /// Основной метод расчёта прогресса.
