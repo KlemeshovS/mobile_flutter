@@ -16,6 +16,7 @@ class CalendarScreen extends StatefulWidget {
   final Function(DayData, DayRecord) onDayRecordUpdated;
   final double? initialScrollOffset;
   final int progressDays;
+  final int initialViewMode;
 
   const CalendarScreen({
     super.key,
@@ -23,16 +24,64 @@ class CalendarScreen extends StatefulWidget {
     required this.onDayRecordUpdated,
     this.initialScrollOffset,
     this.progressDays = 0,
+    this.initialViewMode = 1,
   });
 
   @override
   State<CalendarScreen> createState() => CalendarScreenState();
+
+  /// Вычисляет начальное смещение скролла до создания State.
+  /// Вызывается из MainApp.build() где доступен MediaQuery.
+  static double computeInitialScrollOffset(int mode, double screenWidth) {
+    final now = DateTime.now();
+    final yearIndex = calendarYears.indexOf(now.year);
+    if (yearIndex == -1) return 0;
+
+    const double yearLabelHeight = 48.0;
+    const double yearBottomPadding = 16.0;
+    const double listTopPadding = 8.0;
+
+    final listWidth = screenWidth - 32.0;
+    final double monthHeight;
+    switch (mode) {
+      case 2:
+        final gridW = listWidth / 2.0 - 14.0;
+        final cellW = gridW / 7.0;
+        monthHeight = 42.6 + 6.0 * cellW;
+        break;
+      case 3:
+        final gridW = listWidth / 3.0 - 14.0;
+        final cellW = gridW / 7.0;
+        monthHeight = 37.8 + 6.0 * cellW;
+        break;
+      default:
+        final gridW = listWidth - 32.0;
+        final cellW = gridW / 7.0;
+        monthHeight = 80.0 + 6.0 * cellW;
+    }
+
+    final int monthsPerRow = mode == 2 ? 2 : (mode == 3 ? 3 : 1);
+    final rowsPerYear = (12 / monthsPerRow).ceil();
+    final yearTotalHeight = yearLabelHeight + rowsPerYear * monthHeight + yearBottomPadding;
+    final yearStart = listTopPadding + yearIndex * yearTotalHeight;
+
+    if (mode == 3) {
+      return yearStart;
+    } else if (mode == 2) {
+      final currentRowIndex = ((now.month - 1) / monthsPerRow).floor();
+      final targetRowIndex = (currentRowIndex - 1).clamp(0, rowsPerYear - 1);
+      return yearStart + yearLabelHeight + targetRowIndex * monthHeight;
+    } else {
+      final rowIndex = ((now.month - 1) / monthsPerRow).floor();
+      return yearStart + yearLabelHeight + rowIndex * monthHeight;
+    }
+  }
 }
 
 class CalendarScreenState extends State<CalendarScreen> {
   final List<int> _years = calendarYears;
   late final ScrollController _scrollController;
-  int _calendarViewMode = 1;
+  late int _calendarViewMode;
 
   void maybeShowMotivation() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -207,13 +256,14 @@ class CalendarScreenState extends State<CalendarScreen> {
   @override
   void initState() {
     super.initState();
+    // Используем режим, переданный из main (уже известен до первого кадра)
+    _calendarViewMode = widget.initialViewMode;
     _scrollController = ScrollController(
       initialScrollOffset: widget.initialScrollOffset ?? 0,
     );
 
     _loadViewMode();
 
-    // Добавляем вызов мотивационного сообщения после сборки виджета
     WidgetsBinding.instance.addPostFrameCallback((_) {
       maybeShowMotivation();
     });
@@ -223,13 +273,15 @@ class CalendarScreenState extends State<CalendarScreen> {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
     final mode = prefs.getInt('calendarViewMode') ?? 1;
-    setState(() {
-      _calendarViewMode = mode;
-    });
-    // После того как режим применён и виджет перестроен — прокручиваем точно
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToCurrentMonth();
-    });
+    // Если режим совпадает с уже установленным (передан из main), setState не нужен
+    if (mode != _calendarViewMode) {
+      setState(() {
+        _calendarViewMode = mode;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToCurrentMonth();
+      });
+    }
   }
 
   Future<void> _setViewMode(int mode) async {

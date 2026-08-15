@@ -1,6 +1,7 @@
 // lib/models/achievement.dart
 import 'package:flutter/material.dart';
 import 'package:wobbly/utils/localization.dart';
+import 'package:wobbly/models/drink_level.dart';
 
 enum SportPeriod {
   last30Days,
@@ -46,6 +47,7 @@ enum AchievementType {
   milestone,
   soberDaysInYear,
   drinkingDaysInYear,
+  drinkingLevelDaysInYear, // дни года с конкретным уровнем алкоголя (little/medium/heavy)
   soberMonth,
   leftReview,
   noHangoverStreak,
@@ -59,6 +61,7 @@ class Achievement {
   final int requiredValue;       // для soberStreak/drinkingStreak – дни, для sportCount – количество
   final SportPeriod? period;      // для sportCount
   final UniqueEvent? event;       // для uniqueEvent
+  final DrinkLevel? drinkLevel;    // для drinkingLevelDaysInYear
   bool isUnlocked;
   DateTime? unlockDate;
 
@@ -70,6 +73,7 @@ class Achievement {
     required this.requiredValue,
     this.period,
     this.event,
+    this.drinkLevel,
     this.isUnlocked = false,
     this.unlockDate,
   });
@@ -83,6 +87,7 @@ class Achievement {
     'requiredValue': requiredValue,
     'period': period?.toJson(),
     'event': event?.toJson(),
+    'drinkLevel': drinkLevel?.name,
     'isUnlocked': isUnlocked,
     'unlockDate': unlockDate?.toIso8601String(),
   };
@@ -95,6 +100,9 @@ class Achievement {
     requiredValue: json['requiredValue'],
     period: json['period'] != null ? SportPeriod.fromJson(json['period']) : null,
     event: json['event'] != null ? UniqueEvent.fromJson(json['event']) : null,
+    drinkLevel: json['drinkLevel'] != null
+        ? DrinkLevel.values.firstWhere((e) => e.name == json['drinkLevel'])
+        : null,
     isUnlocked: json['isUnlocked'] ?? false,
     unlockDate: json['unlockDate'] != null ? DateTime.parse(json['unlockDate']) : null,
   );

@@ -472,6 +472,8 @@ class AppLocalizations {
       'ach_milestone_7010_desc': 'Only the sky is higher. But there\'s no bar there either. At least the view\'s nice.',
       'ach_milestone_8848_title': 'Everest',
       'ach_milestone_8848_desc': 'You\'re on top of the world. Could have just stayed sober for six months. Just kidding, well done!',
+      'ach_milestone_21900_title': 'Olympus Mons',
+      'ach_milestone_21900_desc': '21,900 meters — the tallest volcano in the entire Solar System, and it\'s not even on Earth, it\'s on Mars. You\'ve climbed higher than the gods of Olympus themselves, higher than the atmosphere, higher than any excuse to drink. Too bad nectar and ambrosia don\'t count as an open bar.',
 
 
       //Ачивки для погружения
@@ -487,6 +489,8 @@ class AppLocalizations {
       'ach_milestone_10047_negative_desc': 'The deep-sea robot Nereus got crushed here. But you? Tough nut.',
       'ach_milestone_11022_negative_title': 'Mariana Trench',
       'ach_milestone_11022_negative_desc': 'You\'re at the bottom. Literally. It can\'t get worse. Or can it?',
+      'ach_milestone_20000_negative_title': 'Visiting Hades',
+      'ach_milestone_20000_negative_desc': '20,000 meters — deeper than the Mariana Trench, deeper than anything that actually exists on Earth. This is where the underworld begins, and Hades is waiting for you with a stone-cold sober stare. Charon doesn\'t take coins down here — only excuses.',
 
       'condition_milestone_positive': '%1 meters above sea level',
       'condition_milestone_negative': '%1 meters under water',
@@ -519,6 +523,20 @@ class AppLocalizations {
       'ach_drink_year_200_desc': '200 days. Your liver stopped sending letters home. Now it just knocks from inside — morse code for «abyss accepted». You\'re officially cargo.',
       'ach_drink_year_300_title': 'Professional',
       'ach_drink_year_300_desc': '300 drinking days. This isn\'t a career — it\'s a dive without a bottom. Your lungs are full of darkness, and you start to like the taste of pressure. Professional deformation of the soul.',
+
+      // Дни года по уровню алкоголя (little / medium / heavy)
+      'ach_drink_little_year_50_title': 'Master of Just a Little',
+      'ach_drink_little_year_50_desc': '50 days a year of "it\'s just a little." Your liver started counting, and it\'s not a fan of the trend.',
+      'ach_drink_little_year_100_title': 'Sipping Champion',
+      'ach_drink_little_year_100_desc': '100 "just a little" days a year. That\'s basically a second job now. The pay is a mild hangover and concerned looks from friends.',
+      'ach_drink_medium_year_50_title': 'Regular, Moderately',
+      'ach_drink_medium_year_50_desc': '50 medium-level days a year. The bartender pours your drink before you even sit down.',
+      'ach_drink_medium_year_100_title': 'Customer of the Month, Every Month',
+      'ach_drink_medium_year_100_desc': '100 medium days a year. Your liver now works without weekends or vacation.',
+      'ach_drink_heavy_year_50_title': 'The Legend Nobody Remembers',
+      'ach_drink_heavy_year_50_desc': '50 fully-wasted days a year. Half of those stories aren\'t your memories — they\'re other people\'s retellings.',
+      'ach_drink_heavy_year_100_title': 'Honorary Resident of Rock Bottom',
+      'ach_drink_heavy_year_100_desc': '100 fully-blackout days a year — over a quarter of your life offline. Rock bottom already has your name on the mailbox.',
 
       'ach_sober_month_1_title': 'Hangover-Free Start',
       'ach_sober_month_1_desc': 'You started the year without a hangover. Your colleagues don\'t believe you. That\'s their problem.',
@@ -703,6 +721,7 @@ class AppLocalizations {
       'milestone_5642_fact': 'Elbrus (Russia, 5642m). The highest peak in Europe. A dormant volcano — its last eruption was around 50 AD. Cable cars reach up to 3847m.',
       'milestone_7010_fact': 'Khan Tengri (Kazakhstan/Kyrgyzstan, 7010m). "Lord of the Spirits" in Kazakh. One of the most technically demanding peaks in the world.',
       'milestone_8848_fact': 'Everest (Nepal/Tibet, 8848m). The highest point on Earth. First summited May 29, 1953 by Edmund Hillary and Tenzing Norgay. Over 300 people reach the top each year.',
+      'milestone_21900_fact': 'Olympus Mons (Mars, 21,900m). The tallest known volcano in the entire Solar System — nearly 2.5 times higher than Everest. Its base is roughly the size of France, and its last eruption was about 25 million years ago.',
 
       // Milestone facts — depths (for large-negative scroll)
       'milestone_202_negative_fact': 'The Great Blue Hole (Belize, 202m). A giant underwater sinkhole formed during the last Ice Age. Jacques Cousteau declared it one of the top 10 diving sites in the world.',
@@ -712,6 +731,7 @@ class AppLocalizations {
       'milestone_7729_negative_fact': 'Romanche Trench (Atlantic, 7729m). Located near the equator in the Atlantic Ocean. One of the deepest points in the Atlantic, formed at the Mid-Atlantic Ridge.',
       'milestone_10047_negative_fact': 'Kermadec Trench (Pacific, 10047m). Northeast of New Zealand. The deep-sea robot Nereus, built to explore such depths, was crushed by pressure here in 2014.',
       'milestone_11022_negative_fact': 'Mariana Trench — Challenger Deep (Pacific, 11022m). The deepest known point on Earth. At this depth the pressure is 1086 bar — more than 1000 atmospheres.',
+      'milestone_20000_negative_fact': 'There is no real place this deep — even the Mariana Trench (11,034m) doesn\'t reach halfway. In Greek mythology, this is where Hades rules the underworld, and Tartarus lies even further down, as far beneath his throne as the sky is above the earth.',
 
       // Missing depth achievement
       'ach_milestone_7729_negative_title': 'Sunda Trench',
@@ -1187,6 +1207,8 @@ class AppLocalizations {
       'ach_milestone_7010_desc': 'Выше только небо. Но там тоже нет бара. Зато есть вид.',
       'ach_milestone_8848_title': 'Эверест',
       'ach_milestone_8848_desc': 'Ты на крыше мира. Обратный билет — пешком. Главное, не расслабляйся.',
+      'ach_milestone_21900_title': 'Гора Олимп',
+      'ach_milestone_21900_desc': '21 900 метров — самый высокий вулкан во всей Солнечной системе, и он не на Земле, а на Марсе. Ты поднялся выше богов Олимпа, выше атмосферы, выше любых оправданий выпить. Жаль, нектар и амброзия — это не открытый бар.',
 
       // Новые горы
       'ach_milestone_1917_title': 'Гора Вашингтон',
@@ -1214,6 +1236,20 @@ class AppLocalizations {
       'ach_drink_year_300_title': 'Ефремыч',
       'ach_drink_year_300_desc': '300 алкодней. Это уже не карьера — это погружение без дна. Лёгкие полны тьмы, и вкус давления начинает нравиться. Профессиональная деформация души.',
 
+      // Дни года по уровню алкоголя (чуть-чуть / средне / всрало)
+      'ach_drink_little_year_50_title': 'Мастер Чуть-Чуть',
+      'ach_drink_little_year_50_desc': '50 дней в году «ну это же чуть-чуть». Твоя печень завела счётчик — и он ей не нравится.',
+      'ach_drink_little_year_100_title': 'Чемпион Дегустаций',
+      'ach_drink_little_year_100_desc': '100 дней «чучуть» за год — это уже вторая работа. Зарплата: лёгкое похмелье и вопросы от близких.',
+      'ach_drink_medium_year_50_title': 'Завсегдатай Средней Руки',
+      'ach_drink_medium_year_50_desc': '50 средних дней в году. Бармен наливает твой напиток раньше, чем ты успеваешь сесть.',
+      'ach_drink_medium_year_100_title': 'Клиент Месяца',
+      'ach_drink_medium_year_100_desc': '100 средних дней за год. Твоя печень теперь работает без выходных и без отпуска.',
+      'ach_drink_heavy_year_50_title': 'Легенда, которую никто не помнит',
+      'ach_drink_heavy_year_50_desc': '50 дней «всрало» в году. Половина этих историй — не твои воспоминания, а чужие пересказы.',
+      'ach_drink_heavy_year_100_title': 'Почётный Житель Дна',
+      'ach_drink_heavy_year_100_desc': '100 дней «всрало» за год — больше четверти жизни в отключке. У дна для тебя уже готова прописка.',
+
       //Ачивки для погружения
       'ach_milestone_202_negative_title': 'Голубая дыра',
       'ach_milestone_202_negative_desc': 'Узкая, глубокая, тёмная. Как твоя жизнь после пятницы.',
@@ -1227,6 +1263,8 @@ class AppLocalizations {
       'ach_milestone_10047_negative_desc': 'Здесь раздавило глубоководного «Нерея». А ты - ничего, крепкий орешек.',
       'ach_milestone_11022_negative_title': 'Марианская впадина',
       'ach_milestone_11022_negative_desc': 'Ты на дне. Буквально. Хуже уже не будет. Или будет?',
+      'ach_milestone_20000_negative_title': 'В гостях у Аида',
+      'ach_milestone_20000_negative_desc': '20 000 метров — глубже Марианской впадины, глубже всего, что вообще существует на Земле. Здесь начинается царство мёртвых, и Аид уже ждёт тебя с трезвым взглядом. Харон в этих водах денег не берёт — только оправдания.',
       'condition_milestone_positive': '%1 метра над уровнем моря',
       'condition_milestone_negative': '%1 метра под водой',
       'progress_unit': 'м',
@@ -1414,6 +1452,7 @@ class AppLocalizations {
       'milestone_5642_fact': 'Эльбрус (Россия, 5642м). Высшая точка Европы. Потухший вулкан — последнее извержение около 50 года н.э. Канатная дорога поднимает до 3847м.',
       'milestone_7010_fact': 'Хан Тенгри (Казахстан/Кыргызстан, 7010м). «Повелитель духов» в переводе с казахского. Одна из технически сложнейших вершин мира.',
       'milestone_8848_fact': 'Эверест (Непал/Тибет, 8848м). Высшая точка Земли. Первое восхождение — 29 мая 1953 года, Эдмунд Хиллари и Тенцинг Норгей. Ежегодно на вершину поднимается более 300 человек.',
+      'milestone_21900_fact': 'Гора Олимп (Марс, 21 900м). Самый высокий известный вулкан во всей Солнечной системе — почти в 2,5 раза выше Эвереста. Его основание размером примерно с Францию, а последнее извержение было около 25 миллионов лет назад.',
 
       // Milestone facts — depths (для скролла глубин)
       'milestone_202_negative_fact': 'Большая голубая дыра (Белиз, 202м). Гигантская подводная воронка, образовавшаяся в ледниковый период. Жак Кусто назвал её одним из 10 лучших мест для дайвинга.',
@@ -1423,6 +1462,7 @@ class AppLocalizations {
       'milestone_7729_negative_fact': 'Впадина Романш (Атлантика, 7729м). Расположена у экватора в Атлантическом океане. Одна из глубочайших точек Атлантики, образована на Срединно-Атлантическом хребте.',
       'milestone_10047_negative_fact': 'Желоб Кермадек (Тихий океан, 10047м). К северо-востоку от Новой Зеландии. Глубоководный робот Nereus, специально созданный для таких глубин, был раздавлен давлением здесь в 2014 году.',
       'milestone_11022_negative_fact': 'Марианская впадина — Бездна Челленджера (Тихий океан, 11022м). Самая глубокая известная точка Земли. Давление — 1086 бар, более 1000 атмосфер.',
+      'milestone_20000_negative_fact': 'Такой глубины не существует нигде на Земле — даже Марианская впадина (11 034м) не достаёт до половины. В греческой мифологии здесь царит Аид, владыка царства мёртвых, а ещё глубже лежит Тартар — настолько же далёкий от его трона, насколько небо далеко от земли.',
 
       // Недостающее достижение для глубины 7729
       'ach_milestone_7729_negative_title': 'Зондский желоб',

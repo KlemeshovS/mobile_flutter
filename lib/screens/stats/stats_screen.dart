@@ -441,6 +441,14 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
         return '${achievement.requiredValue} трезвых дней в году';
       case AchievementType.drinkingDaysInYear:
         return '${achievement.requiredValue} алкогольных дней в году';
+      case AchievementType.drinkingLevelDaysInYear:
+        final levelLabel = switch (achievement.drinkLevel) {
+          DrinkLevel.little => 'дней «чуть-чуть»',
+          DrinkLevel.medium => 'дней «средне»',
+          DrinkLevel.heavy => 'дней «всрало»',
+          _ => 'дней',
+        };
+        return '${achievement.requiredValue} $levelLabel в году';
       case AchievementType.soberMonth:
         const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
           'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];

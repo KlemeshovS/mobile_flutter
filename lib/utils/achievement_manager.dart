@@ -312,6 +312,56 @@ class AchievementManager {
       requiredValue: 300,
     ),
 
+    // Дни года по конкретному уровню алкоголя (чуть-чуть / средне / всрало)
+    Achievement(
+      id: 'drink_little_days_year_50',
+      titleKey: 'ach_drink_little_year_50_title',
+      descriptionKey: 'ach_drink_little_year_50_desc',
+      type: AchievementType.drinkingLevelDaysInYear,
+      requiredValue: 50,
+      drinkLevel: DrinkLevel.little,
+    ),
+    Achievement(
+      id: 'drink_little_days_year_100',
+      titleKey: 'ach_drink_little_year_100_title',
+      descriptionKey: 'ach_drink_little_year_100_desc',
+      type: AchievementType.drinkingLevelDaysInYear,
+      requiredValue: 100,
+      drinkLevel: DrinkLevel.little,
+    ),
+    Achievement(
+      id: 'drink_medium_days_year_50',
+      titleKey: 'ach_drink_medium_year_50_title',
+      descriptionKey: 'ach_drink_medium_year_50_desc',
+      type: AchievementType.drinkingLevelDaysInYear,
+      requiredValue: 50,
+      drinkLevel: DrinkLevel.medium,
+    ),
+    Achievement(
+      id: 'drink_medium_days_year_100',
+      titleKey: 'ach_drink_medium_year_100_title',
+      descriptionKey: 'ach_drink_medium_year_100_desc',
+      type: AchievementType.drinkingLevelDaysInYear,
+      requiredValue: 100,
+      drinkLevel: DrinkLevel.medium,
+    ),
+    Achievement(
+      id: 'drink_heavy_days_year_50',
+      titleKey: 'ach_drink_heavy_year_50_title',
+      descriptionKey: 'ach_drink_heavy_year_50_desc',
+      type: AchievementType.drinkingLevelDaysInYear,
+      requiredValue: 50,
+      drinkLevel: DrinkLevel.heavy,
+    ),
+    Achievement(
+      id: 'drink_heavy_days_year_100',
+      titleKey: 'ach_drink_heavy_year_100_title',
+      descriptionKey: 'ach_drink_heavy_year_100_desc',
+      type: AchievementType.drinkingLevelDaysInYear,
+      requiredValue: 100,
+      drinkLevel: DrinkLevel.heavy,
+    ),
+
     // Трезвые месяцы
     Achievement(id: 'sober_month_1', titleKey: 'ach_sober_month_1_title', descriptionKey: 'ach_sober_month_1_desc', type: AchievementType.soberMonth, requiredValue: 1),
     Achievement(id: 'sober_month_2', titleKey: 'ach_sober_month_2_title', descriptionKey: 'ach_sober_month_2_desc', type: AchievementType.soberMonth, requiredValue: 2),
@@ -374,6 +424,24 @@ class AchievementManager {
       descriptionKey: 'ach_milestone_7729_negative_desc',
       type: AchievementType.milestone,
       requiredValue: 7729,
+    ),
+
+    // Гора Олимп (Марс) — самый высокий вулкан Солнечной системы
+    Achievement(
+      id: 'milestone_21900',
+      titleKey: 'ach_milestone_21900_title',
+      descriptionKey: 'ach_milestone_21900_desc',
+      type: AchievementType.milestone,
+      requiredValue: 21900,
+    ),
+
+    // В гостях у Аида — символическая глубина царства мёртвых
+    Achievement(
+      id: 'milestone_20000_negative',
+      titleKey: 'ach_milestone_20000_negative_title',
+      descriptionKey: 'ach_milestone_20000_negative_desc',
+      type: AchievementType.milestone,
+      requiredValue: 20000,
     ),
 
     // Ачивка за отзыв в Google Play (ручная разблокировка)
@@ -466,6 +534,8 @@ class AchievementManager {
         return _countSoberDaysInYear(daysData) >= ach.requiredValue;
       case AchievementType.drinkingDaysInYear:
         return _countDrinkingDaysInYear(daysData) >= ach.requiredValue;
+      case AchievementType.drinkingLevelDaysInYear:
+        return _countDrinkingLevelDaysInYear(ach.drinkLevel!, daysData) >= ach.requiredValue;
       case AchievementType.soberMonth:
         return _checkSoberMonth(ach.requiredValue, daysData);
       case AchievementType.leftReview:
@@ -644,10 +714,11 @@ class AchievementManager {
       AchievementType.noHangoverStreak: 4,
       AchievementType.soberDaysInYear: 5,
       AchievementType.drinkingDaysInYear: 6,
-      AchievementType.soberMonth: 7,
-      AchievementType.uniqueEvent: 8,
-      AchievementType.milestone: 9,
-      AchievementType.leftReview: 10,
+      AchievementType.drinkingLevelDaysInYear: 7,
+      AchievementType.soberMonth: 8,
+      AchievementType.uniqueEvent: 9,
+      AchievementType.milestone: 10,
+      AchievementType.leftReview: 11,
     };
 
     final typeCompare = order[a.type]!.compareTo(order[b.type]!);
@@ -735,6 +806,20 @@ class AchievementManager {
     daysData.forEach((key, record) {
       final date = _parseDate(key);
       if (date != null && date.year == year && _isDrinkingDay(record)) {
+        count++;
+      }
+    });
+    return count;
+  }
+
+  // Кол-во дней в текущем году с конкретным уровнем алкоголя (little/medium/heavy),
+  // независимо от того, был ли в этот день ещё и спорт.
+  int _countDrinkingLevelDaysInYear(DrinkLevel level, Map<String, DayRecord> daysData) {
+    final year = DateTime.now().year;
+    int count = 0;
+    daysData.forEach((key, record) {
+      final date = _parseDate(key);
+      if (date != null && date.year == year && record.drinkLevel == level) {
         count++;
       }
     });

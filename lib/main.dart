@@ -82,6 +82,7 @@ class _MyAppState extends State<MyApp> {
   bool _isFirstLaunch = false; // временное значение, обновится после сплэша
   Map<String, DayRecord>? _loadedData;
   double? _initialScrollOffset;
+  int _initialCalendarViewMode = 1;
 
   @override
   void initState() {
@@ -97,12 +98,19 @@ class _MyAppState extends State<MyApp> {
 
     if (!mounted) return;
 
+    // Читаем режим календаря из кешированных prefs (мгновенно, уже загружено)
+    final prefs = await SharedPreferences.getInstance();
+    final calendarViewMode = prefs.getInt('calendarViewMode') ?? 1;
+
+    if (!mounted) return;
+
     // Сразу показываем главный экран с локальными данными
     setState(() {
       _showSplash = false;
       _loadedData = data ?? {};
       _isFirstLaunch = isFirstLaunch;
-      _initialScrollOffset = null; // CalendarScreen сам вычислит позицию через _scrollToCurrentMonth
+      _initialScrollOffset = null;
+      _initialCalendarViewMode = calendarViewMode;
     });
 
     // Все сетевые операции — в фоне, не блокируют UI
@@ -173,6 +181,7 @@ class _MyAppState extends State<MyApp> {
                 : MainApp(
               initialData: _loadedData ?? {},
               initialScrollOffset: _initialScrollOffset,
+              initialCalendarViewMode: _initialCalendarViewMode,
             )),
           );
         },
@@ -184,11 +193,13 @@ class _MyAppState extends State<MyApp> {
 class MainApp extends StatefulWidget {
   final Map<String, DayRecord> initialData;
   final double? initialScrollOffset;
+  final int initialCalendarViewMode;
 
   const MainApp({
     super.key,
     required this.initialData,
     this.initialScrollOffset,
+    this.initialCalendarViewMode = 1,
   });
 
   @override
@@ -500,8 +511,12 @@ class MainAppState extends State<MainApp> {
                       key: _calendarKey,
                       daysData: _daysData,
                       onDayRecordUpdated: _updateDayRecord,
-                      initialScrollOffset: widget.initialScrollOffset,
+                      initialScrollOffset: CalendarScreen.computeInitialScrollOffset(
+                        widget.initialCalendarViewMode,
+                        MediaQuery.of(context).size.width,
+                      ),
                       progressDays: _progressDays,
+                      initialViewMode: widget.initialCalendarViewMode,
                     ),
                     StatsScreen(
                       key: _statsKey,
