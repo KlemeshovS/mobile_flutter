@@ -173,35 +173,8 @@ class _DaySelectionSheetState extends State<DaySelectionSheet> {
               color: Colors.white.withOpacity(0.1),
             ),
 
-            // Выбор спорта
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Column(
-                children: [
-                  Text(
-                    localizations.sportPrompt,
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-
-                  // Кнопка спорта
-                  _buildSportButton(localizations.sportLabel),
-                ],
-              ),
-            ),
-
-            // Триггеры (только для алкогольных дней)
+            // Триггеры (только для алкогольных дней) — сразу под выбором алкоголя
             if (_isAlcoholDay) ...[
-              Container(
-                height: 1,
-                margin: EdgeInsets.symmetric(horizontal: 20),
-                color: Colors.white.withOpacity(0.1),
-              ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: Column(
@@ -225,7 +198,34 @@ class _DaySelectionSheetState extends State<DaySelectionSheet> {
                   ],
                 ),
               ),
+              Container(
+                height: 1,
+                margin: EdgeInsets.symmetric(horizontal: 20),
+                color: Colors.white.withOpacity(0.1),
+              ),
             ],
+
+            // Выбор спорта
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Column(
+                children: [
+                  Text(
+                    localizations.sportPrompt,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+
+                  // Кнопка спорта
+                  _buildSportButton(localizations.sportLabel),
+                ],
+              ),
+            ),
 
             // Кнопка ОК
             Padding(
