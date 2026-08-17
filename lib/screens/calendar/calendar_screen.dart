@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:wobbly/models/day_record.dart';
 import 'package:wobbly/models/day_data.dart';
 import 'package:wobbly/models/drink_level.dart';
+import 'package:wobbly/models/drink_trigger.dart';
 import 'package:wobbly/widgets/gradient_background.dart';
 import 'package:wobbly/screens/day_selection/day_selection_sheet.dart';
 import 'year_section.dart';
@@ -13,7 +14,9 @@ import 'package:vibration/vibration.dart';
 
 class CalendarScreen extends StatefulWidget {
   final Map<String, DayRecord> daysData;
+  final Map<String, List<DrinkTrigger>> triggersData;
   final Function(DayData, DayRecord) onDayRecordUpdated;
+  final Function(DayData, Set<DrinkTrigger>) onDayTriggersUpdated;
   final double? initialScrollOffset;
   final int progressDays;
   final int initialViewMode;
@@ -21,7 +24,9 @@ class CalendarScreen extends StatefulWidget {
   const CalendarScreen({
     super.key,
     required this.daysData,
+    this.triggersData = const {},
     required this.onDayRecordUpdated,
+    required this.onDayTriggersUpdated,
     this.initialScrollOffset,
     this.progressDays = 0,
     this.initialViewMode = 1,
@@ -376,6 +381,7 @@ class CalendarScreenState extends State<CalendarScreen> {
     if (dayData.isFuture) return;
 
     final currentRecord = widget.daysData[dayData.key] ?? DayRecord();
+    final currentTriggers = widget.triggersData[dayData.key] ?? const [];
 
     showModalBottomSheet(
       context: context,
@@ -384,8 +390,12 @@ class CalendarScreenState extends State<CalendarScreen> {
       builder: (context) => DaySelectionSheet(
         dayData: dayData,
         currentRecord: currentRecord,
+        currentTriggers: currentTriggers,
         onRecordSelected: (newRecord) {
           widget.onDayRecordUpdated(dayData, newRecord);
+        },
+        onTriggersSelected: (triggers) {
+          widget.onDayTriggersUpdated(dayData, triggers);
         },
       ),
     );

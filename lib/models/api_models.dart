@@ -152,3 +152,19 @@ class CalendarResponse {
     updatedAt: json['updatedAt'] as String?,
   );
 }
+
+class TriggersResponse {
+  final Map<String, List<String>> triggers;
+  final String? updatedAt;
+
+  TriggersResponse({required this.triggers, this.updatedAt});
+
+  factory TriggersResponse.fromJson(Map<String, dynamic> json) => TriggersResponse(
+    triggers: Map<String, List<String>>.from(
+      (json['triggers'] as Map<String, dynamic>).map(
+            (k, v) => MapEntry(k, List<String>.from(v as List)),
+      ),
+    ),
+    updatedAt: json['updatedAt'] as String?,
+  );
+}

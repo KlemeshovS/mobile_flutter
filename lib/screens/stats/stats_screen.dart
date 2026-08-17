@@ -28,6 +28,8 @@ import 'package:wobbly/widgets/week_stats_view.dart';
 import 'package:wobbly/widgets/monthly_average_widget.dart';
 import 'package:wobbly/widgets/alcohol_chart_widget.dart';
 import 'package:wobbly/widgets/sport_correlation_widget.dart';
+import 'package:wobbly/widgets/top_triggers_widget.dart';
+import 'package:wobbly/models/drink_trigger.dart';
 
 
 // Класс для хранения статистики за год (оставлен как был)
@@ -66,6 +68,7 @@ class _DrinkingVsSportStats {
 
 class StatsScreen extends StatefulWidget {
   final Map<String, DayRecord> daysData;
+  final Map<String, List<DrinkTrigger>> triggersData;
   final int progressDays;
   final VoidCallback? onExport;
   final VoidCallback? onDataChanged;
@@ -75,6 +78,7 @@ class StatsScreen extends StatefulWidget {
   const StatsScreen({
     super.key,
     required this.daysData,
+    this.triggersData = const {},
     required this.progressDays,
     this.onExport,
     this.onDataChanged,
@@ -170,7 +174,7 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
 
   Future<void> _recalculateAchievements() async {
     print('🔄 Проверка ачивок');
-    await _achievementManager.updateAchievements(widget.progressDays, widget.daysData);
+    await _achievementManager.updateAchievements(widget.progressDays, widget.daysData, triggersData: widget.triggersData);
     if (mounted) {
       setState(() {
         _unlockedAchievements = _achievementManager.getUnlockedAchievements();
@@ -458,6 +462,11 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
         return localizations.translate('ach_requirement_review');
       case AchievementType.noHangoverStreak:
         return '${achievement.requiredValue} дней без тяжёлого похмелья';
+      case AchievementType.triggerCountInYear:
+        final triggerLabel = achievement.trigger != null
+            ? localizations.translate(achievement.trigger!.localizationKey)
+            : '';
+        return '${achievement.requiredValue} раз «$triggerLabel» в году';
     }
   }
 
@@ -571,6 +580,11 @@ class StatsScreenState extends State<StatsScreen> with WidgetsBindingObserver {
                         const SizedBox(height: 16),
                         SportCorrelationWidget(
                           daysData: widget.daysData,
+                          selectedYear: _selectedYear,
+                        ),
+                        const SizedBox(height: 16),
+                        TopTriggersWidget(
+                          triggersData: widget.triggersData,
                           selectedYear: _selectedYear,
                         ),
                         const SizedBox(height: 16),

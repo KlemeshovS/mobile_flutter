@@ -27,10 +27,13 @@ import 'package:wobbly/utils/constants.dart';
 import 'package:wobbly/screens/ratings/ratings_screen.dart';
 import 'package:wobbly/services/score_sync_manager.dart';
 import 'package:wobbly/models/drink_level.dart';
+import 'package:wobbly/models/drink_trigger.dart';
+import 'package:wobbly/utils/triggers_manager.dart';
 import 'package:wobbly/services/session_manager.dart';
 import 'package:wobbly/services/api/user_api_service.dart';
 import 'package:wobbly/services/auth_service.dart';
 import 'package:wobbly/services/calendar_sync_manager.dart';
+import 'package:wobbly/services/triggers_sync_manager.dart';
 import 'package:wobbly/services/app_notification_manager.dart';
 import 'package:wobbly/widgets/app_notification_view.dart';
 import 'package:wobbly/screens/profile/public_user_profile_screen.dart';
@@ -138,6 +141,12 @@ class _MyAppState extends State<MyApp> {
       await CalendarSyncManager().pushToServer();
     } catch (_) {}
 
+    // Синхронизируем дневник триггеров
+    try {
+      await TriggersSyncManager().sync();
+      await TriggersSyncManager().pushToServer();
+    } catch (_) {}
+
     // Проверяем уведомления
     try {
       await AppNotificationManager.shared.checkNewFollowers();
@@ -209,7 +218,9 @@ class MainApp extends StatefulWidget {
 class MainAppState extends State<MainApp> {
   int _selectedTab = 0;
   late Map<String, DayRecord> _daysData;
+  Map<String, List<DrinkTrigger>> _triggersData = {};
   final DataManager _dataManager = DataManager();
+  final TriggersManager _triggersManager = TriggersManager();
   final GlobalKey<CalendarScreenState> _calendarKey = GlobalKey();
   final GlobalKey<StatsScreenState> _statsKey = GlobalKey();
   final GlobalKey<RatingsScreenState> _ratingsKey = GlobalKey();
@@ -292,12 +303,23 @@ class MainAppState extends State<MainApp> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadInstallDate();
     });
+
+    _loadTriggersData();
+  }
+
+  Future<void> _loadTriggersData() async {
+    final data = await _triggersManager.loadTriggers();
+    if (!mounted) return;
+    setState(() {
+      _triggersData = data;
+    });
+    _updateProgress();
   }
 
   Future<void> _resetAchievements() async {
     print('🔄 Сброс ачивок вызван');
     final manager = AchievementManager();
-    await manager.resetAndCheckAllAchievements(_progressDays, _daysData);
+    await manager.resetAndCheckAllAchievements(_progressDays, _daysData, triggersData: _triggersData);
     print('✅ Ачивки сброшены и пересчитаны');
     setState(() {
       _daysData = Map.from(_daysData);
@@ -329,7 +351,7 @@ class MainAppState extends State<MainApp> {
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      AchievementManager().updateAchievements(_progressDays, _daysData).then((
+      AchievementManager().updateAchievements(_progressDays, _daysData, triggersData: _triggersData).then((
           _) {
         _statsKey.currentState?.refreshAchievements();
       });
@@ -339,8 +361,10 @@ class MainAppState extends State<MainApp> {
 
   Future<void> _reloadData() async {
     final newData = await _dataManager.loadData();
+    final newTriggers = await _triggersManager.loadTriggers();
     setState(() {
       _daysData = newData;
+      _triggersData = newTriggers;
     });
     _updateProgress();
     ScoreSyncManager().sendScore(_daysData);
@@ -364,7 +388,7 @@ class MainAppState extends State<MainApp> {
         ReviewPromptView.show(context);
       }
       // Пересчитываем достижения на основе текущих данных
-      await AchievementManager().updateAchievements(_progressDays, _daysData);
+      await AchievementManager().updateAchievements(_progressDays, _daysData, triggersData: _triggersData);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _statsKey.currentState?.refreshAchievements();
       });
@@ -408,10 +432,18 @@ class MainAppState extends State<MainApp> {
         daysDataMap[key] = value;
       });
 
+      final Map<String, List<String>> triggersMap = {};
+      _triggersData.forEach((key, triggers) {
+        if (triggers.isNotEmpty) {
+          triggersMap[key] = triggers.map((t) => t.rawValue).toList();
+        }
+      });
+
       final exportData = {
         'version': '2.0',
         'exportDate': DateTime.now().toIso8601String(),
         'daysData': daysDataMap,
+        if (triggersMap.isNotEmpty) 'triggers': triggersMap,
       };
 
       print('ExportData: Data prepared, ${daysDataMap.length} days');
@@ -488,6 +520,27 @@ class MainAppState extends State<MainApp> {
     });
   }
 
+  Future<void> _updateDayTriggers(DayData dayData, Set<DrinkTrigger> triggers) async {
+    print("🔄 _updateDayTriggers: day=${dayData.key}, triggers=$triggers");
+    setState(() {
+      if (triggers.isEmpty) {
+        _triggersData = {..._triggersData}..remove(dayData.key);
+      } else {
+        _triggersData = {..._triggersData, dayData.key: triggers.toList()};
+      }
+    });
+
+    await _triggersManager.setTriggersForDay(dayData.key, triggers.toList());
+
+    _updateProgress();
+    TriggersSyncManager().markLocalUpdated();
+    TriggersSyncManager().pushToServer();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AppNotificationManager.shared.checkNewAchievements();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     print('🏠 MainApp build: _selectedTab=$_selectedTab');
@@ -510,7 +563,9 @@ class MainAppState extends State<MainApp> {
                     CalendarScreen(
                       key: _calendarKey,
                       daysData: _daysData,
+                      triggersData: _triggersData,
                       onDayRecordUpdated: _updateDayRecord,
+                      onDayTriggersUpdated: _updateDayTriggers,
                       initialScrollOffset: CalendarScreen.computeInitialScrollOffset(
                         widget.initialCalendarViewMode,
                         MediaQuery.of(context).size.width,
@@ -521,6 +576,7 @@ class MainAppState extends State<MainApp> {
                     StatsScreen(
                       key: _statsKey,
                       daysData: _daysData,
+                      triggersData: _triggersData,
                       progressDays: _progressDays,
                       onExport: _exportData,
                       onDataChanged: _reloadData,
