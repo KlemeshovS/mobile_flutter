@@ -1,17 +1,20 @@
 import 'package:wobbly/models/day_record.dart';
 import 'package:wobbly/models/drink_level.dart';
+import 'package:wobbly/models/drink_trigger.dart';
 
 class ExportData {
   final String version;
   final DateTime exportDate;
   final Map<String, String> daysData;          // старый формат
   final Map<String, DayRecord>? dayRecords;    // новый формат (опционально)
+  final Map<String, List<DrinkTrigger>>? triggers; // дневник триггеров (опционально, для обратной совместимости)
 
   ExportData({
     required this.version,
     required this.exportDate,
     required this.daysData,
     this.dayRecords,
+    this.triggers,
   });
 
   factory ExportData.fromJson(Map<String, dynamic> json) {
@@ -61,11 +64,31 @@ class ExportData {
       });
     }
 
+    // Дневник триггеров (опционально — отсутствие поля в старых файлах не должно ничего ломать)
+    Map<String, List<DrinkTrigger>>? triggers;
+    if (json['triggers'] != null) {
+      triggers = {};
+      final triggersMap = json['triggers'] as Map<String, dynamic>;
+      triggersMap.forEach((key, value) {
+        if (value is List) {
+          final parsed = value
+              .whereType<String>()
+              .map(DrinkTrigger.fromRawValue)
+              .whereType<DrinkTrigger>()
+              .toList();
+          if (parsed.isNotEmpty) {
+            triggers![key] = parsed;
+          }
+        }
+      });
+    }
+
     return ExportData(
       version: version,
       exportDate: exportDate,
       daysData: daysData,
       dayRecords: dayRecords,
+      triggers: triggers,
     );
   }
 

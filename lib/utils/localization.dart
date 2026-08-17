@@ -574,6 +574,34 @@ class AppLocalizations {
       'ach_unique_sport_ny_title': 'New Year Masochist',
       'ach_unique_sport_ny_desc': 'While normal people were getting drunk, you were torturing yourself at the gym',
 
+      // Trigger diary — tag labels
+      'trigger_prompt': 'Why? (optional)',
+      'trigger_stress_label': 'Stress',
+      'trigger_boredom_label': 'Boredom',
+      'trigger_party_label': 'Party',
+      'trigger_company_label': 'Peer pressure',
+      'trigger_loneliness_label': 'Loneliness',
+      'trigger_conflict_label': 'Conflict',
+      'trigger_habit_label': 'Habit',
+      'trigger_other_label': 'Other',
+      'top_triggers_title': 'Why you drink',
+
+      // Trigger diary — achievements
+      'ach_trigger_stress_title': 'Stress-Resistant',
+      'ach_trigger_stress_desc': '10 times stress was your excuse. Your boss has no idea he became your personal bartender.',
+      'ach_trigger_boredom_title': 'Cure for Boredom',
+      'ach_trigger_boredom_desc': "10 times the reason wasn't an occasion — it was the lack of one. Boredom is the cheapest bartender in town.",
+      'ach_trigger_party_title': 'Life of the Party',
+      'ach_trigger_party_desc': "10 parties, and you're always the center of attention. The question is whether you remember any of them.",
+      'ach_trigger_company_title': 'Pushover',
+      'ach_trigger_company_desc': '10 times someone said "come on, just one" — and you said yes every time. Your liver doesn\'t have free will either, apparently.',
+      'ach_trigger_loneliness_title': 'Party of One',
+      'ach_trigger_loneliness_desc': '10 times you drank alone. Drinking buddy, conversation partner, and excuse — all in one person. Efficient, really.',
+      'ach_trigger_conflict_title': 'Veteran of Verbal Battles',
+      'ach_trigger_conflict_desc': "10 times a bottle seemed like a better answer than words after a fight. Diplomacy's not your strong suit, but at least it's consistent.",
+      'ach_trigger_habit_title': 'On Autopilot',
+      'ach_trigger_habit_desc': "10 times you didn't even need a reason — your body already knew the way. Pavlov's reflex, but with proof.",
+
       'ach_review_title': 'Connoisseur of Fine Things',
       'ach_review_desc': 'You left a review. Not because you\'re nice. Because you want someone else to survive this too. That\'s almost altruism. Almost.',
       'ach_requirement_review': 'Leave a review in Google Play',
@@ -1307,6 +1335,34 @@ class AppLocalizations {
       'ach_unique_sport_ny_title': 'Новогодний мазохист',
       'ach_unique_sport_ny_desc': 'Пока нормальные люди нажирались, ты истязал себя в спортзале',
 
+      // Дневник триггеров — названия тегов
+      'trigger_prompt': 'Почему? (необязательно)',
+      'trigger_stress_label': 'Стресс',
+      'trigger_boredom_label': 'Скука',
+      'trigger_party_label': 'Тусовка',
+      'trigger_company_label': 'Уговорили',
+      'trigger_loneliness_label': 'Одиночество',
+      'trigger_conflict_label': 'Конфликт',
+      'trigger_habit_label': 'Привычка',
+      'trigger_other_label': 'Другое',
+      'top_triggers_title': 'Почему ты пьёшь',
+
+      // Дневник триггеров — ачивки
+      'ach_trigger_stress_title': 'Стрессоустойчивый',
+      'ach_trigger_stress_desc': '10 раз стресс был твоим поводом. Начальник не в курсе, что стал твоим личным барменом.',
+      'ach_trigger_boredom_title': 'Лекарство от Скуки',
+      'ach_trigger_boredom_desc': '10 раз причиной был не повод, а его отсутствие. Скука — самый дешёвый бармен в городе.',
+      'ach_trigger_party_title': 'Душа Компании',
+      'ach_trigger_party_desc': '10 тусовок, и ты всегда в центре. Вопрос в том, помнишь ли ты хоть одну из них.',
+      'ach_trigger_company_title': 'Тряпка',
+      'ach_trigger_company_desc': '10 раз кто-то сказал «ну давай, по одной» — и ты каждый раз соглашался. Своей воли у печени тоже, видимо, нет.',
+      'ach_trigger_loneliness_title': 'Сам Себе Компания',
+      'ach_trigger_loneliness_desc': '10 раз ты пил в одиночестве. Собутыльник, собеседник и повод — всё в одном лице. Экономично, чё.',
+      'ach_trigger_conflict_title': 'Ветеран Словесных Баталий',
+      'ach_trigger_conflict_desc': '10 раз после ссоры бутылка казалась лучшим ответом, чем слова. Дипломатия так себе, зато стабильно.',
+      'ach_trigger_habit_title': 'На Автопилоте',
+      'ach_trigger_habit_desc': '10 раз даже повод искать не пришлось — тело само знает дорогу. Рефлекс Павлова, только с градусом.',
+
       'ach_review_title': 'Ценитель прекрасного',
       'ach_review_desc': 'Ты оставил отзыв. Не потому что добрый. А потому что хочешь, чтобы кто-то ещё тоже это пережил. Это почти альтруизм. Почти.',
       'ach_requirement_review': 'Оставить отзыв в Google Play',
@@ -1525,6 +1581,7 @@ class AppLocalizations {
 
   // Геттеры для day_selection_sheet.dart
   String get drinkPrompt => translate('drink_prompt');
+  String get triggerPrompt => translate('trigger_prompt');
   String get littleLabel => translate('little_label');
   String get mediumLabel => translate('medium_label');
   String get heavyLabel => translate('heavy_label');

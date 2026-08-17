@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wobbly/models/achievement.dart';
 import 'package:wobbly/models/day_record.dart';
 import 'package:wobbly/models/drink_level.dart';
+import 'package:wobbly/models/drink_trigger.dart';
 
 class AchievementManager {
   static final AchievementManager _instance = AchievementManager._internal();
@@ -399,6 +400,64 @@ class AchievementManager {
       requiredValue: 365,
     ),
 
+    // Дневник триггеров — 10 повторений тега за календарный год
+    Achievement(
+      id: 'trigger_stress_year_10',
+      titleKey: 'ach_trigger_stress_title',
+      descriptionKey: 'ach_trigger_stress_desc',
+      type: AchievementType.triggerCountInYear,
+      requiredValue: 10,
+      trigger: DrinkTrigger.stress,
+    ),
+    Achievement(
+      id: 'trigger_boredom_year_10',
+      titleKey: 'ach_trigger_boredom_title',
+      descriptionKey: 'ach_trigger_boredom_desc',
+      type: AchievementType.triggerCountInYear,
+      requiredValue: 10,
+      trigger: DrinkTrigger.boredom,
+    ),
+    Achievement(
+      id: 'trigger_party_year_10',
+      titleKey: 'ach_trigger_party_title',
+      descriptionKey: 'ach_trigger_party_desc',
+      type: AchievementType.triggerCountInYear,
+      requiredValue: 10,
+      trigger: DrinkTrigger.party,
+    ),
+    Achievement(
+      id: 'trigger_company_year_10',
+      titleKey: 'ach_trigger_company_title',
+      descriptionKey: 'ach_trigger_company_desc',
+      type: AchievementType.triggerCountInYear,
+      requiredValue: 10,
+      trigger: DrinkTrigger.company,
+    ),
+    Achievement(
+      id: 'trigger_loneliness_year_10',
+      titleKey: 'ach_trigger_loneliness_title',
+      descriptionKey: 'ach_trigger_loneliness_desc',
+      type: AchievementType.triggerCountInYear,
+      requiredValue: 10,
+      trigger: DrinkTrigger.loneliness,
+    ),
+    Achievement(
+      id: 'trigger_conflict_year_10',
+      titleKey: 'ach_trigger_conflict_title',
+      descriptionKey: 'ach_trigger_conflict_desc',
+      type: AchievementType.triggerCountInYear,
+      requiredValue: 10,
+      trigger: DrinkTrigger.conflict,
+    ),
+    Achievement(
+      id: 'trigger_habit_year_10',
+      titleKey: 'ach_trigger_habit_title',
+      descriptionKey: 'ach_trigger_habit_desc',
+      type: AchievementType.triggerCountInYear,
+      requiredValue: 10,
+      trigger: DrinkTrigger.habit,
+    ),
+
     // Уникальные ачивки
     Achievement(
       id: 'sober_new_year',
@@ -491,14 +550,17 @@ class AchievementManager {
   }
 
   // Проверить все ачивки на основе данных
-  Future<List<Achievement>> checkAllAchievements(Map<String, DayRecord> daysData) async {
+  Future<List<Achievement>> checkAllAchievements(
+    Map<String, DayRecord> daysData, {
+    Map<String, List<DrinkTrigger>>? triggersData,
+  }) async {
     print('🔍 checkAllAchievements: начало проверки');
     bool changed = false;
 
     for (int i = 0; i < _currentAchievements.length; i++) {
       final ach = _currentAchievements[i];
       if (!ach.isUnlocked) {
-        final shouldUnlock = await _checkAchievement(ach, daysData);
+        final shouldUnlock = await _checkAchievement(ach, daysData, triggersData: triggersData);
         if (shouldUnlock) {
           print('🎉 Должна разблокироваться: ${ach.id}');
           _currentAchievements[i].isUnlocked = true;
@@ -518,7 +580,11 @@ class AchievementManager {
   }
 
   // Проверка одной ачивки
-  Future<bool> _checkAchievement(Achievement ach, Map<String, DayRecord> daysData) async {
+  Future<bool> _checkAchievement(
+    Achievement ach,
+    Map<String, DayRecord> daysData, {
+    Map<String, List<DrinkTrigger>>? triggersData,
+  }) async {
     switch (ach.type) {
       case AchievementType.drinkingStreak:
         return _checkDrinkingStreak(ach.requiredValue, daysData);
@@ -542,6 +608,8 @@ class AchievementManager {
         return false; // разблокируется только вручную через unlockReviewAchievement()
       case AchievementType.noHangoverStreak:
         return _checkNoHangoverStreak(ach.requiredValue, daysData);
+      case AchievementType.triggerCountInYear:
+        return _countTriggerOccurrencesInYear(ach.trigger!, triggersData ?? {}) >= ach.requiredValue;
     }
   }
 
@@ -566,7 +634,11 @@ class AchievementManager {
     }
   }
 
-  Future<List<Achievement>> updateAchievements(int progressDays, Map<String, DayRecord> daysData) async {
+  Future<List<Achievement>> updateAchievements(
+    int progressDays,
+    Map<String, DayRecord> daysData, {
+    Map<String, List<DrinkTrigger>>? triggersData,
+  }) async {
     print('🔄 updateAchievements: проверка всех ачивок');
     bool changed = false;
     for (int i = 0; i < _currentAchievements.length; i++) {
@@ -584,7 +656,7 @@ class AchievementManager {
         // Ручная ачивка — никогда не перезаблокировывать автоматически
       } else {
         // Для остальных типов: полная синхронизация
-        final shouldUnlock = await _checkAchievement(ach, daysData);
+        final shouldUnlock = await _checkAchievement(ach, daysData, triggersData: triggersData);
         if (ach.isUnlocked != shouldUnlock) {
           _currentAchievements[i].isUnlocked = shouldUnlock;
           if (shouldUnlock) {
@@ -638,7 +710,11 @@ class AchievementManager {
     return changed;
   }
 
-  Future<List<Achievement>> resetAndCheckAllAchievements(int progressDays, Map<String, DayRecord> daysData) async {
+  Future<List<Achievement>> resetAndCheckAllAchievements(
+    int progressDays,
+    Map<String, DayRecord> daysData, {
+    Map<String, List<DrinkTrigger>>? triggersData,
+  }) async {
     print('🔄 Сброс всех ачивок и повторная проверка');
     for (var i = 0; i < _currentAchievements.length; i++) {
       _currentAchievements[i].isUnlocked = false;
@@ -646,7 +722,7 @@ class AchievementManager {
     }
     await _saveAchievements();
     await loadAchievements();
-    return await updateAchievements(progressDays, daysData);
+    return await updateAchievements(progressDays, daysData, triggersData: triggersData);
   }
 
   //Проверка спортивных ачивок
@@ -719,6 +795,7 @@ class AchievementManager {
       AchievementType.uniqueEvent: 9,
       AchievementType.milestone: 10,
       AchievementType.leftReview: 11,
+      AchievementType.triggerCountInYear: 12,
     };
 
     final typeCompare = order[a.type]!.compareTo(order[b.type]!);
@@ -820,6 +897,20 @@ class AchievementManager {
     daysData.forEach((key, record) {
       final date = _parseDate(key);
       if (date != null && date.year == year && record.drinkLevel == level) {
+        count++;
+      }
+    });
+    return count;
+  }
+
+  // Кол-во дней в текущем году, когда отмечен конкретный тег-триггер
+  // (день может содержать несколько тегов — считаем каждый как отдельное вхождение).
+  int _countTriggerOccurrencesInYear(DrinkTrigger trigger, Map<String, List<DrinkTrigger>> triggersData) {
+    final year = DateTime.now().year;
+    int count = 0;
+    triggersData.forEach((key, triggers) {
+      final date = _parseDate(key);
+      if (date != null && date.year == year && triggers.contains(trigger)) {
         count++;
       }
     });

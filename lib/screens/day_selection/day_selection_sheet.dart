@@ -3,19 +3,24 @@ import 'package:flutter/material.dart';
 import 'package:wobbly/models/day_record.dart';
 import 'package:wobbly/models/day_data.dart';
 import 'package:wobbly/models/drink_level.dart';
+import 'package:wobbly/models/drink_trigger.dart';
 import 'package:wobbly/app/theme.dart';
 import 'package:wobbly/utils/localization.dart';
 
 class DaySelectionSheet extends StatefulWidget {
   final DayData dayData;
   final DayRecord currentRecord;
+  final List<DrinkTrigger> currentTriggers;
   final Function(DayRecord) onRecordSelected;
+  final Function(Set<DrinkTrigger>) onTriggersSelected;
 
   const DaySelectionSheet({
     super.key,
     required this.dayData,
     required this.currentRecord,
+    this.currentTriggers = const [],
     required this.onRecordSelected,
+    required this.onTriggersSelected,
   });
 
   @override
@@ -25,14 +30,31 @@ class DaySelectionSheet extends StatefulWidget {
 class _DaySelectionSheetState extends State<DaySelectionSheet> {
   late DrinkLevel _selectedDrinkLevel;
   late bool _hasSport;
+  late Set<DrinkTrigger> _selectedTriggers;
   final double _normalSize = 45.0;
   final double _selectedSize = 55.0;
+
+  bool get _isAlcoholDay =>
+      _selectedDrinkLevel == DrinkLevel.little ||
+      _selectedDrinkLevel == DrinkLevel.medium ||
+      _selectedDrinkLevel == DrinkLevel.heavy;
 
   @override
   void initState() {
     super.initState();
     _selectedDrinkLevel = widget.currentRecord.drinkLevel;
     _hasSport = widget.currentRecord.hasSport;
+    _selectedTriggers = Set.from(widget.currentTriggers);
+  }
+
+  void _onTriggerToggled(DrinkTrigger trigger) {
+    setState(() {
+      if (_selectedTriggers.contains(trigger)) {
+        _selectedTriggers.remove(trigger);
+      } else {
+        _selectedTriggers.add(trigger);
+      }
+    });
   }
 
   void _onDrinkLevelSelected(DrinkLevel level) {
@@ -66,6 +88,8 @@ class _DaySelectionSheetState extends State<DaySelectionSheet> {
       hasSport: _hasSport,
     );
     widget.onRecordSelected(record);
+    // Триггеры имеют смысл только для дней с алкоголем.
+    widget.onTriggersSelected(_isAlcoholDay ? _selectedTriggers : {});
     Navigator.pop(context);
   }
 
@@ -75,7 +99,7 @@ class _DaySelectionSheetState extends State<DaySelectionSheet> {
 
     return Container(
       constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.45,
+        maxHeight: MediaQuery.of(context).size.height * (_isAlcoholDay ? 0.7 : 0.45),
       ),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -93,6 +117,7 @@ class _DaySelectionSheetState extends State<DaySelectionSheet> {
       ),
       child: SafeArea(
         top: false, // защищаем только от навигационной панели снизу
+        child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -170,6 +195,38 @@ class _DaySelectionSheetState extends State<DaySelectionSheet> {
               ),
             ),
 
+            // Триггеры (только для алкогольных дней)
+            if (_isAlcoholDay) ...[
+              Container(
+                height: 1,
+                margin: EdgeInsets.symmetric(horizontal: 20),
+                color: Colors.white.withOpacity(0.1),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      localizations.triggerPrompt,
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: DrinkTrigger.values.map(_buildTriggerChip).toList(),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
             // Кнопка ОК
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -195,6 +252,7 @@ class _DaySelectionSheetState extends State<DaySelectionSheet> {
               ),
             ),
           ],
+        ),
         ),
       ),
     );
@@ -260,6 +318,35 @@ class _DaySelectionSheetState extends State<DaySelectionSheet> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTriggerChip(DrinkTrigger trigger) {
+    final localizations = AppLocalizations.of(context);
+    final isSelected = _selectedTriggers.contains(trigger);
+    return GestureDetector(
+      onTap: () => _onTriggerToggled(trigger),
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 200),
+        padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? Color(0xFF8B5CF6).withOpacity(0.3) : Colors.white.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? Color(0xFF8B5CF6) : Colors.white.withOpacity(0.2),
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Text(
+          localizations.translate(trigger.localizationKey),
+          style: TextStyle(
+            fontFamily: 'Inter',
+            color: Colors.white,
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+          ),
         ),
       ),
     );

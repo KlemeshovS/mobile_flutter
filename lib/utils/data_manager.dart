@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/day_record.dart';
 import 'package:wobbly/models/export_data.dart';
+import 'package:wobbly/utils/triggers_manager.dart';
 
 class DataManager {
   static const String _dataKey = 'wobbly_days_data';
@@ -51,6 +52,11 @@ class DataManager {
       // Конвертируем в DayRecord и сохраняем
       final newRecords = exportData.toDayRecords();
       await saveData(newRecords);
+
+      // Триггеры — опциональное поле, отсутствие в старых файлах ничего не ломает
+      if (exportData.triggers != null) {
+        await TriggersManager().mergeFromImport(exportData.triggers!);
+      }
 
       print('Импорт успешен: ${newRecords.length} записей');
       return true;

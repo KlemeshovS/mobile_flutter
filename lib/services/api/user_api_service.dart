@@ -50,6 +50,8 @@ enum UserAPIError {
   notFollowing,
   calendarError,
   notFriends,
+  triggersConflict,
+  triggersTooLarge,
 }
 
 class UserAPIService {
@@ -481,6 +483,10 @@ class UserAPIService {
             return UserAPIError.avatarTooLarge;
           case 'AVATAR_INVALID_IMAGE':
             return UserAPIError.avatarInvalidImage;
+          case 'TRIGGERS_CONFLICT':
+            return UserAPIError.triggersConflict;
+          case 'TRIGGERS_TOO_LARGE':
+            return UserAPIError.triggersTooLarge;
           default:
             return UserAPIError.serverError;
         }
@@ -582,6 +588,41 @@ class UserAPIService {
       throw await _handleError(response);
     }
   }
+  // MARK: - Triggers backup
+
+  Future<TriggersResponse> getTriggers(String token) async {
+    final url = Uri.parse('$_baseUrl/me/calendar/triggers');
+    final headers = _buildHeaders({'Authorization': 'Bearer $token'});
+    final response = await http.get(url, headers: headers);
+    print('📥 TriggersSync GET status: ${response.statusCode}');
+    if (response.statusCode == 200) {
+      return TriggersResponse.fromJson(json.decode(response.body));
+    } else {
+      throw await _handleError(response);
+    }
+  }
+
+  Future<TriggersResponse> putTriggers(
+    String token,
+    Map<String, List<String>> triggers, {
+    String? clientUpdatedAt,
+  }) async {
+    final url = Uri.parse('$_baseUrl/me/calendar/triggers');
+    final headers = _buildHeaders({'Authorization': 'Bearer $token'});
+    final body = json.encode({
+      'triggers': triggers,
+      if (clientUpdatedAt != null) 'clientUpdatedAt': clientUpdatedAt,
+    });
+    print('📤 TriggersSync PUT body: $body');
+    final response = await http.put(url, headers: headers, body: body);
+    print('📥 TriggersSync PUT status: ${response.statusCode}');
+    if (response.statusCode == 200) {
+      return TriggersResponse.fromJson(json.decode(response.body));
+    } else {
+      throw await _handleError(response);
+    }
+  }
+
   Future<FriendCalendarResponse> getFriendCalendar(String token, int userId) async {
     final url = Uri.parse('$_baseUrl/users/$userId/calendar');
     final headers = _buildHeaders({'Authorization': 'Bearer $token'});
