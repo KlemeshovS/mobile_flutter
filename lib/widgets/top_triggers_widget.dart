@@ -27,7 +27,7 @@ class TopTriggersWidget extends StatelessWidget {
 
     final sorted = counts.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
-    return sorted.take(3).toList();
+    return sorted.take(5).toList();
   }
 
   @override
